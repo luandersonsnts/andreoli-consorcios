@@ -66,35 +66,35 @@ export default function SimulationForm() {
     <section id="simule" className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold text-cavalcante-gray mb-4">
+          <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
             DEIXA OS números falarem COM TRANSPARÊNCIA TOTAL
           </h2>
-          <h3 className="text-2xl font-bold text-cavalcante-orange">
-            Faça Simulação na Cavalcante:
+          <h3 className="text-2xl font-bold text-firme-blue">
+            Faça Simulação na Firme INVESTIMENTOS:
           </h3>
         </div>
         
-        <div className="max-w-2xl mx-auto bg-cavalcante-light-gray p-8 rounded-xl">
+        <div className="max-w-2xl mx-auto bg-firme-light-gray p-8 rounded-xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="name" className="block text-cavalcante-gray font-medium mb-2">Nome</Label>
+                <Label htmlFor="name" className="block text-firme-gray font-medium mb-2">Nome</Label>
                 <Input
                   id="name"
                   {...register("name")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="Seu nome completo"
                   data-testid="input-simulation-name"
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <Label htmlFor="phone" className="block text-cavalcante-gray font-medium mb-2">Telefone</Label>
+                <Label htmlFor="phone" className="block text-firme-gray font-medium mb-2">Telefone</Label>
                 <Input
                   id="phone"
                   type="tel"
                   {...register("phone")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="(11) 99999-9999"
                   data-testid="input-simulation-phone"
                 />
@@ -103,7 +103,7 @@ export default function SimulationForm() {
             </div>
             
             <div>
-              <Label htmlFor="email" className="block text-cavalcante-gray font-medium mb-2">E-mail</Label>
+              <Label htmlFor="email" className="block text-firme-gray font-medium mb-2">E-mail</Label>
               <Input
                 id="email"
                 type="email"
@@ -116,7 +116,7 @@ export default function SimulationForm() {
             </div>
             
             <div>
-              <Label className="block text-cavalcante-gray font-medium mb-2">Objetivo de Investimento</Label>
+              <Label className="block text-firme-gray font-medium mb-2">Objetivo de Investimento</Label>
               <Select value={objective} onValueChange={setObjective}>
                 <SelectTrigger className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent" data-testid="select-simulation-objective">
                   <SelectValue placeholder="Selecione seu objetivo" />
@@ -133,7 +133,7 @@ export default function SimulationForm() {
             </div>
             
             <div>
-              <Label htmlFor="monthlyAmount" className="block text-cavalcante-gray font-medium mb-2">Valor para investir mensalmente</Label>
+              <Label htmlFor="monthlyAmount" className="block text-firme-gray font-medium mb-2">Valor para investir mensalmente</Label>
               <Input
                 id="monthlyAmount"
                 {...register("monthlyAmount")}
@@ -145,7 +145,7 @@ export default function SimulationForm() {
             </div>
             
             <div>
-              <Label htmlFor="timeframe" className="block text-cavalcante-gray font-medium mb-2">Prazo do investimento (anos)</Label>
+              <Label htmlFor="timeframe" className="block text-firme-gray font-medium mb-2">Prazo do investimento (anos)</Label>
               <Input
                 id="timeframe"
                 type="number"
@@ -160,7 +160,7 @@ export default function SimulationForm() {
             <Button 
               type="submit" 
               disabled={isSubmitting || mutation.isPending}
-              className="w-full bg-cavalcante-orange text-white py-3 rounded-lg font-medium hover:bg-cavalcante-orange-light transition-colors"
+              className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-simulation"
             >
               {mutation.isPending ? "Enviando..." : "QUERO MINHA SIMULAÇÃO"}

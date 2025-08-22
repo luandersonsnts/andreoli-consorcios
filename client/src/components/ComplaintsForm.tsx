@@ -73,10 +73,10 @@ export default function ComplaintsForm() {
   };
 
   return (
-    <section id="reclameaqui" className="py-16 bg-cavalcante-light-gray">
+    <section id="reclameaqui" className="py-16 bg-firme-light-gray">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold text-cavalcante-gray mb-4">
+          <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
             Reclame Aqui
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -89,23 +89,23 @@ export default function ComplaintsForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="complaintsName" className="block text-cavalcante-gray font-medium mb-2">Nome Completo</Label>
+                <Label htmlFor="complaintsName" className="block text-firme-gray font-medium mb-2">Nome Completo</Label>
                 <Input
                   id="complaintsName"
                   {...register("name")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="Seu nome completo"
                   data-testid="input-complaint-name"
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <Label htmlFor="complaintsEmail" className="block text-cavalcante-gray font-medium mb-2">E-mail</Label>
+                <Label htmlFor="complaintsEmail" className="block text-firme-gray font-medium mb-2">E-mail</Label>
                 <Input
                   id="complaintsEmail"
                   type="email"
                   {...register("email")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="seu@email.com"
                   data-testid="input-complaint-email"
                 />
@@ -115,19 +115,19 @@ export default function ComplaintsForm() {
             
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="complaintsPhone" className="block text-cavalcante-gray font-medium mb-2">Telefone</Label>
+                <Label htmlFor="complaintsPhone" className="block text-firme-gray font-medium mb-2">Telefone</Label>
                 <Input
                   id="complaintsPhone"
                   type="tel"
                   {...register("phone")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="(11) 99999-9999"
                   data-testid="input-complaint-phone"
                 />
                 {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
               </div>
               <div>
-                <Label className="block text-cavalcante-gray font-medium mb-2">Tipo de Manifestação</Label>
+                <Label className="block text-firme-gray font-medium mb-2">Tipo de Manifestação</Label>
                 <Select value={type} onValueChange={setType}>
                   <SelectTrigger className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent" data-testid="select-complaint-type">
                     <SelectValue placeholder="Selecione..." />
@@ -144,7 +144,7 @@ export default function ComplaintsForm() {
             </div>
             
             <div>
-              <Label htmlFor="complaintsSubject" className="block text-cavalcante-gray font-medium mb-2">Assunto</Label>
+              <Label htmlFor="complaintsSubject" className="block text-firme-gray font-medium mb-2">Assunto</Label>
               <Input
                 id="complaintsSubject"
                 {...register("subject")}
@@ -156,7 +156,7 @@ export default function ComplaintsForm() {
             </div>
             
             <div>
-              <Label htmlFor="complaintsMessage" className="block text-cavalcante-gray font-medium mb-2">Mensagem</Label>
+              <Label htmlFor="complaintsMessage" className="block text-firme-gray font-medium mb-2">Mensagem</Label>
               <Textarea
                 id="complaintsMessage"
                 {...register("message")}
@@ -173,7 +173,7 @@ export default function ComplaintsForm() {
                 id="contactAuth"
                 checked={contactAuthorized}
                 onCheckedChange={(checked) => setContactAuthorized(checked === true)}
-                className="w-4 h-4 text-cavalcante-orange border-gray-300 rounded focus:ring-cavalcante-orange"
+                className="w-4 h-4 text-firme-blue border-gray-300 rounded focus:ring-firme-blue"
                 data-testid="checkbox-contact-authorized"
               />
               <Label htmlFor="contactAuth" className="text-sm text-gray-600">
@@ -184,7 +184,7 @@ export default function ComplaintsForm() {
             <Button 
               type="submit" 
               disabled={isSubmitting || mutation.isPending}
-              className="w-full bg-cavalcante-orange text-white py-3 rounded-lg font-medium hover:bg-cavalcante-orange-light transition-colors"
+              className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-complaint"
             >
               <Send className="w-5 h-5 mr-2" />

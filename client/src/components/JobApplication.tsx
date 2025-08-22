@@ -111,33 +111,33 @@ export default function JobApplication() {
             Já imaginou conquistando um ótimo emprego com oportunidade de crescimento em PETROLINA/PE?
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
-            Venha fazer parte do Time Cavalcante Investimentos, uma empresa que conecta clientes aos seus sonhos financeiros. Faça parte!
+            Venha fazer parte do Time Firme INVESTIMENTOS, uma empresa que conecta clientes aos seus sonhos financeiros. Faça parte!
           </p>
           
           <h3 className="text-2xl font-bold text-cavalcante-orange">Envie o seu currículo</h3>
         </div>
         
-        <div className="max-w-2xl mx-auto bg-cavalcante-light-gray p-8 rounded-xl">
+        <div className="max-w-2xl mx-auto bg-firme-light-gray p-8 rounded-xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="jobName" className="block text-cavalcante-gray font-medium mb-2">Nome</Label>
+                <Label htmlFor="jobName" className="block text-firme-gray font-medium mb-2">Nome</Label>
                 <Input
                   id="jobName"
                   {...register("name")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="Seu nome completo"
                   data-testid="input-job-name"
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <Label htmlFor="jobPhone" className="block text-cavalcante-gray font-medium mb-2">Telefone</Label>
+                <Label htmlFor="jobPhone" className="block text-firme-gray font-medium mb-2">Telefone</Label>
                 <Input
                   id="jobPhone"
                   type="tel"
                   {...register("phone")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                   placeholder="(11) 99999-9999"
                   data-testid="input-job-phone"
                 />
@@ -146,7 +146,7 @@ export default function JobApplication() {
             </div>
             
             <div>
-              <Label htmlFor="jobEmail" className="block text-cavalcante-gray font-medium mb-2">E-mail</Label>
+              <Label htmlFor="jobEmail" className="block text-firme-gray font-medium mb-2">E-mail</Label>
               <Input
                 id="jobEmail"
                 type="email"
@@ -159,12 +159,12 @@ export default function JobApplication() {
             </div>
             
             <div>
-              <Label className="block text-cavalcante-gray font-medium mb-2">Envie seu currículo</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-cavalcante-orange transition-colors">
+              <Label className="block text-firme-gray font-medium mb-2">Envie seu currículo</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-firme-blue transition-colors">
                 {selectedFile ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <FileText className="w-8 h-8 text-cavalcante-orange" />
-                    <span className="text-cavalcante-gray font-medium">{selectedFile.name}</span>
+                    <FileText className="w-8 h-8 text-firme-blue" />
+                    <span className="text-firme-gray font-medium">{selectedFile.name}</span>
                     <button
                       type="button"
                       onClick={() => setSelectedFile(null)}
@@ -194,7 +194,7 @@ export default function JobApplication() {
             <Button 
               type="submit" 
               disabled={isSubmitting || mutation.isPending}
-              className="w-full bg-cavalcante-orange text-white py-3 rounded-lg font-medium hover:bg-cavalcante-orange-light transition-colors"
+              className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-job-application"
             >
               {mutation.isPending ? "Enviando..." : "Quero fazer parte do time!"}

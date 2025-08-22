@@ -16,18 +16,18 @@ export default function Home() {
       <Header />
       <Hero />
       <HowItWorks />
-      <section className="py-16 bg-cavalcante-light-gray">
+      <section className="py-16 bg-firme-light-gray">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-cavalcante-gray mb-4">
+          <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
             Junte-se a quem tem o mesmo sonho que você.
           </h2>
-          <h3 className="text-2xl font-bold text-cavalcante-orange mb-8">
-            Faça seus investimentos na Cavalcante Investimentos!
+          <h3 className="text-2xl font-bold text-firme-blue mb-8">
+            Faça seus investimentos na Firme INVESTIMENTOS!
           </h3>
           
           <button 
             onClick={() => document.getElementById('contatos')?.scrollIntoView({ behavior: 'smooth' })}
-            className="bg-cavalcante-orange text-white px-8 py-3 rounded-full font-medium hover:bg-cavalcante-orange-light transition-colors"
+            className="bg-firme-blue text-white px-8 py-3 rounded-full font-medium hover:bg-firme-blue-light transition-colors"
             data-testid="button-learn-more"
           >
             Quero saber mais detalhes

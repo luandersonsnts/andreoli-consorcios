@@ -6,24 +6,24 @@ export default function Hero() {
   };
 
   return (
-    <section id="home" className="pt-20 bg-cavalcante-light-gray min-h-screen flex items-center">
+    <section id="home" className="pt-20 bg-firme-light-gray min-h-screen flex items-center">
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-8 lg:mb-0">
-            <h1 className="text-4xl lg:text-5xl font-bold text-cavalcante-gray mb-4 leading-tight">
+            <h1 className="text-4xl lg:text-5xl font-bold text-firme-gray mb-4 leading-tight">
               REALIZAR O SEU SONHO<br />
-              está <span className="text-cavalcante-orange">mais perto</span> do que<br />
-              <span className="text-cavalcante-orange italic">você imagina!</span>
+              está <span className="text-firme-blue">mais perto</span> do que<br />
+              <span className="text-firme-blue italic">você imagina!</span>
             </h1>
             
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
               Seja construir um patrimônio sólido, planejar sua aposentadoria ou multiplicar seus recursos. 
-              Na <strong>Cavalcante Investimentos</strong> você conquista seus objetivos financeiros com muito mais facilidade.
+              Na <strong>Firme INVESTIMENTOS</strong> você conquista seus objetivos financeiros com muito mais facilidade.
             </p>
             
             <button 
               onClick={scrollToSimulation}
-              className="bg-cavalcante-orange text-white px-8 py-3 rounded-full font-medium hover:bg-cavalcante-orange-light transition-colors inline-flex items-center"
+              className="bg-firme-blue text-white px-8 py-3 rounded-full font-medium hover:bg-firme-blue-light transition-colors inline-flex items-center"
               data-testid="button-simulate-hero"
             >
               <Calculator className="w-5 h-5 mr-2" />

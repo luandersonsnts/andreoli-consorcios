@@ -10,7 +10,7 @@
   --card-foreground: hsl(210, 25%, 7.8431%);
   --popover: hsl(0, 0%, 100%);
   --popover-foreground: hsl(210, 25%, 7.8431%);
-  --primary: hsl(30, 100%, 50%);
+  --primary: hsl(220, 100%, 45%);
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(210, 25%, 7.8431%);
   --secondary-foreground: hsl(0, 0%, 100%);
@@ -40,10 +40,11 @@
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: 1.3rem;
-  --cavalcante-orange: hsl(30, 100%, 50%);
-  --cavalcante-orange-light: hsl(39, 100%, 50%);
-  --cavalcante-gray: hsl(0, 0%, 20%);
-  --cavalcante-light-gray: hsl(0, 0%, 96%);
+  --firme-blue: hsl(220, 100%, 45%);
+  --firme-blue-light: hsl(220, 100%, 55%);
+  --firme-blue-dark: hsl(220, 100%, 35%);
+  --firme-gray: hsl(0, 0%, 20%);
+  --firme-light-gray: hsl(0, 0%, 96%);
 }
 
 .dark {
@@ -53,7 +54,7 @@
   --card-foreground: hsl(0, 0%, 85.0980%);
   --popover: hsl(0, 0%, 0%);
   --popover-foreground: hsl(200, 6.6667%, 91.1765%);
-  --primary: hsl(30, 100%, 50%);
+  --primary: hsl(220, 100%, 45%);
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(195.0000, 15.3846%, 94.9020%);
   --secondary-foreground: hsl(210, 25%, 7.8431%);
@@ -79,10 +80,10 @@
   --sidebar-accent-foreground: hsl(203.7736, 87.6033%, 52.5490%);
   --sidebar-border: hsl(205.7143, 15.7895%, 26.0784%);
   --sidebar-ring: hsl(202.8169, 89.1213%, 53.1373%);
-  --cavalcante-orange: hsl(30, 100%, 50%);
-  --cavalcante-orange-light: hsl(39, 100%, 50%);
-  --cavalcante-gray: hsl(0, 0%, 80%);
-  --cavalcante-light-gray: hsl(0, 0%, 10%);
+  --firme-blue: hsl(220, 100%, 45%);
+  --firme-blue-light: hsl(220, 100%, 55%);
+  --firme-gray: hsl(0, 0%, 80%);
+  --firme-light-gray: hsl(0, 0%, 10%);
 }
 
 @layer base {
@@ -101,39 +102,39 @@
 }
 
 @layer utilities {
-  .text-cavalcante-orange {
-    color: var(--cavalcante-orange);
+  .text-firme-blue {
+    color: var(--firme-blue);
   }
 
-  .text-cavalcante-gray {
-    color: var(--cavalcante-gray);
+  .text-firme-gray {
+    color: var(--firme-gray);
   }
 
-  .bg-cavalcante-orange {
-    background-color: var(--cavalcante-orange);
+  .bg-firme-blue {
+    background-color: var(--firme-blue);
   }
 
-  .bg-cavalcante-orange-light {
-    background-color: var(--cavalcante-orange-light);
+  .bg-firme-blue-light {
+    background-color: var(--firme-blue-light);
   }
 
-  .bg-cavalcante-light-gray {
-    background-color: var(--cavalcante-light-gray);
+  .bg-firme-light-gray {
+    background-color: var(--firme-light-gray);
   }
 
-  .border-cavalcante-orange {
-    border-color: var(--cavalcante-orange);
+  .border-firme-blue {
+    border-color: var(--firme-blue);
   }
 
-  .hover\:bg-cavalcante-orange-light:hover {
-    background-color: var(--cavalcante-orange-light);
+  .hover\:bg-firme-blue-light:hover {
+    background-color: var(--firme-blue-light);
   }
 
-  .hover\:text-cavalcante-orange:hover {
-    color: var(--cavalcante-orange);
+  .hover\:text-firme-blue:hover {
+    color: var(--firme-blue);
   }
 
-  .focus\:ring-cavalcante-orange:focus {
-    --tw-ring-color: var(--cavalcante-orange);
+  .focus\:ring-firme-blue:focus {
+    --tw-ring-color: var(--firme-blue);
   }
 }

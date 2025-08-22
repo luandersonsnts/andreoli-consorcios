@@ -1,6 +1,6 @@
 # Overview
 
-This is a modern full-stack web application for Cavalcante Investimentos, an investment advisory company. The application is built with React for the frontend and Express.js for the backend, designed to showcase investment services and capture leads through various forms. The site includes sections for investment simulations, client testimonials, complaint submissions, and job applications.
+This is a modern full-stack web application for Firme INVESTIMENTOS, an investment advisory company. The application is built with React for the frontend and Express.js for the backend, designed to showcase investment services and capture leads through various forms. The site includes sections for investment simulations, client testimonials, complaint submissions, and job applications. The company uses a blue and white color scheme with a distinctive bear logo.
 
 # User Preferences
 
