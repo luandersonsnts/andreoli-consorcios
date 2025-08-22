@@ -11,14 +11,14 @@ export default function Hero() {
         <div className="flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-8 lg:mb-0">
             <h1 className="text-4xl lg:text-5xl font-bold text-firme-gray mb-4 leading-tight">
-              REALIZAR O SEU SONHO<br />
-              está <span className="text-firme-blue">mais perto</span> do que<br />
-              <span className="text-firme-blue italic">você imagina!</span>
+              CONSTRUA SEU<br />
+              <span className="text-firme-blue">PATRIMÔNIO</span> com<br />
+              <span className="text-firme-blue italic">inteligência!</span>
             </h1>
             
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              Seja construir um patrimônio sólido, planejar sua aposentadoria ou multiplicar seus recursos. 
-              Na <strong>Firme INVESTIMENTOS</strong> você conquista seus objetivos financeiros com muito mais facilidade.
+              Tenha acesso às melhores estratégias de investimento e construa uma base financeira sólida para o seu futuro. 
+              Na <strong>FIRME INVESTIMENTOS</strong> você encontra soluções personalizadas para cada perfil de investidor.
             </p>
             
             <button 
@@ -27,7 +27,7 @@ export default function Hero() {
               data-testid="button-simulate-hero"
             >
               <Calculator className="w-5 h-5 mr-2" />
-              Simular agora
+              Começar agora
             </button>
           </div>
           

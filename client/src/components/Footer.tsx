@@ -10,14 +10,14 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="/attached_assets/Screenshot_2025-08-21-22-46-14-904_com.instagram.android-edit_1755827387110.jpg" 
-                alt="Firme Investimentos Logo" 
+                src="/attached_assets/Screenshot_2025-08-21-22-46-14-904_com.instagram.android-edit_1755828171351.jpg" 
+                alt="FIRME INVESTIMENTOS Logo" 
                 className="w-10 h-10 rounded-full mr-3"
               />
-              <span className="text-white font-bold text-xl">Firme INVESTIMENTOS</span>
+              <span className="text-white font-bold text-xl">FIRME INVESTIMENTOS</span>
             </div>
             <p className="text-gray-300">
-              Transformando sonhos em realidade através de investimentos inteligentes.
+              Construindo patrimônios sólidos com estratégias de investimento personalizadas.
             </p>
           </div>
           

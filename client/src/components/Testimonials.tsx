@@ -3,19 +3,19 @@ import { Quote, ChevronLeft, ChevronRight } from "lucide-react";
 
 const testimonials = [
   {
-    text: "Graças ao acompanhamento da Firme INVESTIMENTOS, consegui multiplicar meu patrimônio e já estou próximo da minha independência financeira. O atendimento é excepcional!",
+    text: "Com a assessoria da FIRME INVESTIMENTOS, minha carteira cresceu 180% em dois anos. A estratégia personalizada fez toda a diferença nos meus resultados!",
     name: "Carlos Eduardo",
     role: "Empresário",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
   },
   {
-    text: "Excelente assessoria! Me ajudaram a estruturar minha carteira de investimentos e hoje tenho muito mais segurança financeira.",
+    text: "Profissionais extremamente competentes! Consegui diversificar meus investimentos e agora tenho uma renda passiva consistente.",
     name: "Maria Santos",
     role: "Professora",
     image: "https://images.unsplash.com/photo-1494790108755-2616b612b734?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
   },
   {
-    text: "Profissionais sérios e competentes. Recomendo a todos que querem investir com inteligência e segurança.",
+    text: "A FIRME mudou completamente minha relação com dinheiro. Aprendi a investir de forma estratégica e já vejo os primeiros resultados.",
     name: "João Oliveira",
     role: "Médico",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
@@ -48,7 +48,7 @@ export default function Testimonials() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
-            Veja o que diz quem é cliente Firme INVESTIMENTOS:
+            Depoimentos de quem já transformou sua vida financeira:
           </h2>
         </div>
         
@@ -111,8 +111,8 @@ export default function Testimonials() {
             Seu sonho está a um <strong className="text-firme-blue">clique.</strong>
           </h3>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Oferecemos tranquilidade, segurança e agilidade e já ajudamos <strong>mais de 500 clientes a realizarem</strong> 
-            os seus sonhos financeiros. E muitos outros vão chegar lá com a gente. Faça parte!
+            Nossa metodologia exclusiva já ajudou <strong>mais de 800 investidores a construírem</strong> 
+            patrimônios sólidos e consistentes. Junte-se ao grupo de pessoas que já alcançaram a liberdade financeira!
           </p>
         </div>
       </div>

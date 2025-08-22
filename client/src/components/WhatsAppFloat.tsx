@@ -25,7 +25,7 @@ export default function WhatsAppFloat() {
     <>
       {/* WhatsApp Float Button */}
       <a 
-        href="https://api.whatsapp.com/send?phone=558799143-6244&text=Olá,%20estou%20interessado%20em%20investimentos.%20Quero%20ajuda%20da%20Firme%20INVESTIMENTOS!" 
+        href="https://api.whatsapp.com/send?phone=558799143-6244&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20FIRME%20INVESTIMENTOS%20para%20construir%20meu%20patrimônio!" 
         className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors z-50"
         data-testid="whatsapp-float"
       >

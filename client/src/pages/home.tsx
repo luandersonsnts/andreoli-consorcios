@@ -19,10 +19,10 @@ export default function Home() {
       <section className="py-16 bg-firme-light-gray">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
-            Junte-se a quem tem o mesmo sonho que você.
+            Junte-se aos investidores que já transformaram suas vidas.
           </h2>
           <h3 className="text-2xl font-bold text-firme-blue mb-8">
-            Faça seus investimentos na Firme INVESTIMENTOS!
+            Construa seu patrimônio com a FIRME INVESTIMENTOS!
           </h3>
           
           <button 

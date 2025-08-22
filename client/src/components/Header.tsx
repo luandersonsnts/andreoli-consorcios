@@ -15,11 +15,11 @@ export default function Header() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <img 
-            src="/attached_assets/Screenshot_2025-08-21-22-46-14-904_com.instagram.android-edit_1755827387110.jpg" 
-            alt="Firme Investimentos Logo" 
+            src="/attached_assets/Screenshot_2025-08-21-22-46-14-904_com.instagram.android-edit_1755828171351.jpg" 
+            alt="FIRME INVESTIMENTOS Logo" 
             className="w-12 h-12 rounded-full mr-3"
           />
-          <span className="text-firme-gray font-bold text-xl">Firme INVESTIMENTOS</span>
+          <span className="text-firme-gray font-bold text-xl">FIRME INVESTIMENTOS</span>
         </div>
         
         <nav className="hidden md:flex space-x-8">

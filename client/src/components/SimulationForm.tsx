@@ -67,10 +67,10 @@ export default function SimulationForm() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
-            DEIXA OS números falarem COM TRANSPARÊNCIA TOTAL
+            PROJETE SEU FUTURO FINANCEIRO
           </h2>
           <h3 className="text-2xl font-bold text-firme-blue">
-            Faça Simulação na Firme INVESTIMENTOS:
+            Simule seu plano de investimentos:
           </h3>
         </div>
         
@@ -163,7 +163,7 @@ export default function SimulationForm() {
               className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-simulation"
             >
-              {mutation.isPending ? "Enviando..." : "QUERO MINHA SIMULAÇÃO"}
+              {mutation.isPending ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
             </Button>
           </form>
         </div>

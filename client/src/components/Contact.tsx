@@ -16,14 +16,14 @@ export default function Contact() {
           
           <div>
             <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-6">
-              Na Firme INVESTIMENTOS você conquista seus objetivos financeiros com muito mais facilidade.
+              Na FIRME INVESTIMENTOS você encontra as melhores soluções para construir um patrimônio sólido e duradouro.
             </h2>
             
             <h3 className="text-2xl font-bold text-firme-blue mb-8">Contatos</h3>
             
             <div className="space-y-4">
               <a 
-                href="https://api.whatsapp.com/send?phone=558799143-6244&text=Olá,%20estou%20interessado%20em%20investimentos.%20Quero%20ajuda%20da%20Firme%20INVESTIMENTOS%20para%20conquistar%20meus%20objetivos%20financeiros!" 
+                href="https://api.whatsapp.com/send?phone=558799143-6244&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20FIRME%20INVESTIMENTOS%20para%20construir%20meu%20patrimônio!" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >

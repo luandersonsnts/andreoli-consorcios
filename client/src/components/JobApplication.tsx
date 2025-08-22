@@ -107,14 +107,14 @@ export default function JobApplication() {
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold text-cavalcante-gray mb-4">
-            Já imaginou conquistando um ótimo emprego com oportunidade de crescimento em PETROLINA/PE?
+          <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
+            FAÇA PARTE DE UMA EQUIPE VENCEDORA EM PETROLINA/PE
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
-            Venha fazer parte do Time Firme INVESTIMENTOS, uma empresa que conecta clientes aos seus sonhos financeiros. Faça parte!
+            Junte-se ao time da FIRME INVESTIMENTOS e ajude pessoas a transformarem suas vidas financeiras. Oportunidades de crescimento e desenvolvimento profissional te esperam!
           </p>
           
-          <h3 className="text-2xl font-bold text-cavalcante-orange">Envie o seu currículo</h3>
+          <h3 className="text-2xl font-bold text-firme-blue">Candidate-se agora</h3>
         </div>
         
         <div className="max-w-2xl mx-auto bg-firme-light-gray p-8 rounded-xl">
@@ -197,7 +197,7 @@ export default function JobApplication() {
               className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-job-application"
             >
-              {mutation.isPending ? "Enviando..." : "Quero fazer parte do time!"}
+              {mutation.isPending ? "Enviando..." : "ENVIAR CANDIDATURA"}
             </Button>
           </form>
         </div>

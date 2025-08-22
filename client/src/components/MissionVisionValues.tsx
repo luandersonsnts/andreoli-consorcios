@@ -10,7 +10,7 @@ export default function MissionVisionValues() {
               <Target className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold text-firme-gray mb-4">MISSÃO</h3>
-            <p className="text-gray-600">Democratizar o acesso a investimentos de qualidade e proporcionar crescimento patrimonial sustentável para nossos clientes.</p>
+            <p className="text-gray-600">Transformar vidas através da educação financeira e estratégias de investimento personalizadas, construindo patrimônios sólidos e duradouros.</p>
           </div>
           
           <div className="text-center bg-firme-light-gray p-8 rounded-xl">
@@ -18,7 +18,7 @@ export default function MissionVisionValues() {
               <Eye className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold text-firme-gray mb-4">VISÃO</h3>
-            <p className="text-gray-600">Ser reconhecida como a principal empresa de assessoria em investimentos do Nordeste, transformando a vida financeira das pessoas.</p>
+            <p className="text-gray-600">Ser referência nacional em assessoria de investimentos, sendo a primeira escolha de quem busca excelência e resultados consistentes.</p>
           </div>
           
           <div className="text-center bg-firme-light-gray p-8 rounded-xl">
@@ -26,7 +26,7 @@ export default function MissionVisionValues() {
               <Heart className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold text-firme-gray mb-4">VALORES</h3>
-            <p className="text-gray-600">Transparência, ética, compromisso com resultados e excelência no atendimento ao cliente são nossos pilares fundamentais.</p>
+            <p className="text-gray-600">Integridade, inovação, foco no cliente e busca contínua por resultados superiores guiam todas as nossas decisões e ações.</p>
           </div>
         </div>
       </div>
