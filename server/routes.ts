@@ -5,7 +5,8 @@ import { storage } from "./storage";
 import { 
   insertSimulationSchema,
   insertComplaintSchema,
-  insertJobApplicationSchema
+  insertJobApplicationSchema,
+  insertConsortiumSimulationSchema
 } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -138,6 +139,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching job applications:', error);
       res.status(500).json({ message: "Erro ao buscar candidaturas" });
+    }
+  });
+
+  // Consortium simulation endpoint
+  app.post("/api/consortium-simulations", async (req, res) => {
+    try {
+      const validatedData = insertConsortiumSimulationSchema.parse(req.body);
+      const consortiumSimulation = await storage.createConsortiumSimulation(validatedData);
+      
+      console.log('New consortium simulation received:', consortiumSimulation);
+      
+      res.json({ 
+        success: true, 
+        message: "Simulação de consórcio enviada com sucesso! Entraremos em contato em breve.",
+        id: consortiumSimulation.id 
+      });
+    } catch (error) {
+      console.error('Error creating consortium simulation:', error);
+      res.status(400).json({ 
+        success: false, 
+        message: "Erro ao enviar simulação de consórcio. Verifique os dados e tente novamente." 
+      });
+    }
+  });
+
+  // Get all consortium simulations (for admin purposes)
+  app.get("/api/consortium-simulations", async (req, res) => {
+    try {
+      const consortiumSimulations = await storage.getConsortiumSimulations();
+      res.json(consortiumSimulations);
+    } catch (error) {
+      console.error('Error fetching consortium simulations:', error);
+      res.status(500).json({ message: "Erro ao buscar simulações de consórcios" });
     }
   });
 

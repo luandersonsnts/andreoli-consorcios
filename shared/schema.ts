@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, boolean, integer, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -61,6 +61,23 @@ export const insertJobApplicationSchema = createInsertSchema(jobApplications).om
   createdAt: true,
 });
 
+export const consortiumSimulations = pgTable('consortium_simulations', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 20 }).notNull(),
+  creditValue: decimal('credit_value', { precision: 15, scale: 2 }).notNull(),
+  useEmbedded: boolean('use_embedded').default(false),
+  maxInstallmentValue: decimal('max_installment_value', { precision: 15, scale: 2 }).notNull(),
+  installmentCount: integer('installment_count').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const insertConsortiumSimulationSchema = createInsertSchema(consortiumSimulations).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertSimulation = z.infer<typeof insertSimulationSchema>;
@@ -69,3 +86,5 @@ export type InsertComplaint = z.infer<typeof insertComplaintSchema>;
 export type Complaint = typeof complaints.$inferSelect;
 export type InsertJobApplication = z.infer<typeof insertJobApplicationSchema>;
 export type JobApplication = typeof jobApplications.$inferSelect;
+export type InsertConsortiumSimulation = z.infer<typeof insertConsortiumSimulationSchema>;
+export type ConsortiumSimulation = typeof consortiumSimulations.$inferSelect;

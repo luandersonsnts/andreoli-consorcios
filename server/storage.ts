@@ -6,7 +6,9 @@ import {
   type Complaint,
   type InsertComplaint,
   type JobApplication,
-  type InsertJobApplication
+  type InsertJobApplication,
+  type ConsortiumSimulation,
+  type InsertConsortiumSimulation
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -20,6 +22,8 @@ export interface IStorage {
   getComplaints(): Promise<Complaint[]>;
   createJobApplication(jobApplication: InsertJobApplication): Promise<JobApplication>;
   getJobApplications(): Promise<JobApplication[]>;
+  createConsortiumSimulation(consortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation>;
+  getConsortiumSimulations(): Promise<ConsortiumSimulation[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -27,12 +31,14 @@ export class MemStorage implements IStorage {
   private simulations: Map<string, Simulation>;
   private complaints: Map<string, Complaint>;
   private jobApplications: Map<string, JobApplication>;
+  private consortiumSimulations: Map<string, ConsortiumSimulation>;
 
   constructor() {
     this.users = new Map();
     this.simulations = new Map();
     this.complaints = new Map();
     this.jobApplications = new Map();
+    this.consortiumSimulations = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -100,6 +106,24 @@ export class MemStorage implements IStorage {
 
   async getJobApplications(): Promise<JobApplication[]> {
     return Array.from(this.jobApplications.values()).sort(
+      (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+    );
+  }
+
+  async createConsortiumSimulation(insertConsortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation> {
+    const id = randomUUID();
+    const consortiumSimulation: ConsortiumSimulation = {
+      ...insertConsortiumSimulation,
+      id: Number(id.replace(/-/g, '').substring(0, 8), 16),
+      useEmbedded: insertConsortiumSimulation.useEmbedded ?? false,
+      createdAt: new Date()
+    };
+    this.consortiumSimulations.set(id, consortiumSimulation);
+    return consortiumSimulation;
+  }
+
+  async getConsortiumSimulations(): Promise<ConsortiumSimulation[]> {
+    return Array.from(this.consortiumSimulations.values()).sort(
       (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
     );
   }

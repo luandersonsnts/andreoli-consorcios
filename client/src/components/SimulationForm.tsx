@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { TrendingUp, PiggyBank, Calculator } from 'lucide-react';
+import ConsortiumSimulationForm from './ConsortiumSimulationForm';
 import type { z } from "zod";
 
 type SimulationFormData = z.infer<typeof insertSimulationSchema>;
@@ -17,6 +19,7 @@ export default function SimulationForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [objective, setObjective] = useState("");
+  const [simulationType, setSimulationType] = useState<'investment' | 'consortium'>('investment');
 
   const {
     register,
@@ -62,6 +65,10 @@ export default function SimulationForm() {
     mutation.mutate({ ...data, objective });
   };
 
+  if (simulationType === 'consortium') {
+    return <ConsortiumSimulationForm />;
+  }
+
   return (
     <section id="simule" className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -69,9 +76,43 @@ export default function SimulationForm() {
           <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
             PROJETE SEU FUTURO FINANCEIRO
           </h2>
-          <h3 className="text-2xl font-bold text-firme-blue">
-            Simule seu plano de investimentos:
+          <h3 className="text-2xl font-bold text-firme-blue mb-4">
+            Escolha o tipo de simulação:
           </h3>
+          
+          {/* Seletor de tipo de simulação */}
+          <div className="flex justify-center gap-4 mb-8">
+            <Button
+              onClick={() => setSimulationType('investment')}
+              variant={simulationType === 'investment' ? 'default' : 'outline'}
+              className={`px-6 py-3 ${
+                simulationType === 'investment'
+                  ? 'bg-firme-blue text-white'
+                  : 'border-firme-blue text-firme-blue hover:bg-firme-blue hover:text-white'
+              }`}
+              data-testid="button-investment-simulation"
+            >
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Investimentos Tradicionais
+            </Button>
+            <Button
+              onClick={() => setSimulationType('consortium')}
+              variant={simulationType === 'consortium' ? 'default' : 'outline'}
+              className={`px-6 py-3 ${
+                simulationType === 'consortium'
+                  ? 'bg-firme-blue text-white'
+                  : 'border-firme-blue text-firme-blue hover:bg-firme-blue hover:text-white'
+              }`}
+              data-testid="button-consortium-simulation"
+            >
+              <PiggyBank className="w-5 h-5 mr-2" />
+              Consórcio
+            </Button>
+          </div>
+          
+          <h4 className="text-xl font-bold text-firme-gray">
+            Simule seu plano de investimentos:
+          </h4>
         </div>
         
         <div className="max-w-2xl mx-auto bg-firme-light-gray p-8 rounded-xl">
@@ -108,7 +149,7 @@ export default function SimulationForm() {
                 id="email"
                 type="email"
                 {...register("email")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                 placeholder="seu@email.com"
                 data-testid="input-simulation-email"
               />
@@ -137,7 +178,7 @@ export default function SimulationForm() {
               <Input
                 id="monthlyAmount"
                 {...register("monthlyAmount")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                 placeholder="R$ 0,00"
                 data-testid="input-simulation-amount"
               />
@@ -150,7 +191,7 @@ export default function SimulationForm() {
                 id="timeframe"
                 type="number"
                 {...register("timeframe")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firme-blue focus:border-transparent"
                 placeholder="5"
                 data-testid="input-simulation-timeframe"
               />
@@ -163,6 +204,7 @@ export default function SimulationForm() {
               className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-simulation"
             >
+              <Calculator className="w-5 h-5 mr-2" />
               {mutation.isPending ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
             </Button>
           </form>

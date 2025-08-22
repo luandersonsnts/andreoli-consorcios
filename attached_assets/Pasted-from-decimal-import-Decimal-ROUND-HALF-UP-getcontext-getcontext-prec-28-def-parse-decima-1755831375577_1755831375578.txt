@@ -1,0 +1,77 @@
+from decimal import Decimal, ROUND_HALF_UP, getcontext
+
+getcontext().prec = 28
+
+def parse_decimal(valor: str) -> Decimal:
+    valor = valor.strip().replace(".", "").replace(",", ".")
+    return Decimal(valor)
+
+def money_br(x: Decimal) -> str:
+    v = x.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    s = f"{v:.2f}"
+    inte, dec = s.split('.')
+    inte = int(inte)
+    return f"R$ {inte:,.0f}".replace(',', 'X').replace('.', ',').replace('X', '.') + f",{dec}"
+
+# Entradas
+valor_carta = parse_decimal(input("Valor da carta: "))
+valor_cliente = parse_decimal(input("Valor que o cliente deseja utilizar: "))
+grupo = input("Número do grupo: ")
+parcela = parse_decimal(input("Valor da primeira parcela: "))
+total_parcelas = int(input("Quantidade total de parcelas: "))
+
+# Últimas assembleias
+a1 = parse_decimal(input("Assembleia 1 (%): "))
+a2 = parse_decimal(input("Assembleia 2 (%): "))
+a3 = parse_decimal(input("Assembleia 3 (%): "))
+
+# Taxa administrativa do grupo
+taxa_adm_pct = parse_decimal(input("Taxa Adm (%): ") or "16")
+
+# Percentual do lance = mínimo das 3 últimas + 4%
+pct_lance = min(a1, a2, a3) + Decimal(4)
+
+# Base para cálculo do lance = soma das parcelas
+base_lance = parcela * Decimal(total_parcelas)
+
+# Embutido máximo (15% do total da base)
+embutido_max = (base_lance * Decimal('0.15')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+# Lance total (percentual das assembleias)
+lance_total = (base_lance * pct_lance / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+# Lance que o cliente realmente precisa pagar
+lance_cliente = (lance_total - embutido_max).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+# Parcelas restantes
+parcelas_restantes = total_parcelas - 1
+
+# Nova parcela após contemplação
+nova_parcela = (parcela - (lance_total / parcelas_restantes)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+if nova_parcela < 0:
+    nova_parcela = Decimal('0.00')
+
+# Encargos fixos (informativos)
+fundo_reserva = (valor_carta * Decimal('0.005')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+taxa_adm = (valor_carta * (taxa_adm_pct / 100)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+seguro_vida = (valor_carta * Decimal('0.0012') * Decimal(total_parcelas)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+seguro_quebra = (valor_carta * Decimal('0.0007') * Decimal(total_parcelas)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+# Saída final
+print("\n===== PROPOSTA =====")
+print(f"grupo: {grupo}")
+print(f"valor da carta: {money_br(valor_carta)}")
+print(f"valor desejado pelo cliente: {money_br(valor_cliente)}")
+print(f"1ª parcela: {money_br(parcela)}")
+print(f"lance deduzido: {money_br(lance_cliente)}  (total: {money_br(lance_total)} | embutido: {money_br(embutido_max)})")
+print(f"quantidade restantes de parcela: {parcelas_restantes}")
+print(f"reajuste das parcelas após contemplação: {money_br(nova_parcela)}")
+
+print("\n--- Encargos informativos ---")
+print(f"Fundo de Reserva (0,5%): {money_br(fundo_reserva)}")
+print(f"Taxa Adm ({taxa_adm_pct}%): {money_br(taxa_adm)}")
+print(f"Seguro de Vida (0,12% ao mês): {money_br(seguro_vida)}")
+print(f"Seguro de Quebra (0,07% ao mês): {money_br(seguro_quebra)}")
+
+# Pausa para não fechar automaticamente
+input("\nPressione ENTER para sair...")
