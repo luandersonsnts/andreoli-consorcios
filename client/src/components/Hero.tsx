@@ -1,0 +1,45 @@
+import { Calculator } from "lucide-react";
+
+export default function Hero() {
+  const scrollToSimulation = () => {
+    document.getElementById('simule')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <section id="home" className="pt-20 bg-cavalcante-light-gray min-h-screen flex items-center">
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex flex-col lg:flex-row items-center">
+          <div className="lg:w-1/2 mb-8 lg:mb-0">
+            <h1 className="text-4xl lg:text-5xl font-bold text-cavalcante-gray mb-4 leading-tight">
+              REALIZAR O SEU SONHO<br />
+              está <span className="text-cavalcante-orange">mais perto</span> do que<br />
+              <span className="text-cavalcante-orange italic">você imagina!</span>
+            </h1>
+            
+            <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+              Seja construir um patrimônio sólido, planejar sua aposentadoria ou multiplicar seus recursos. 
+              Na <strong>Cavalcante Investimentos</strong> você conquista seus objetivos financeiros com muito mais facilidade.
+            </p>
+            
+            <button 
+              onClick={scrollToSimulation}
+              className="bg-cavalcante-orange text-white px-8 py-3 rounded-full font-medium hover:bg-cavalcante-orange-light transition-colors inline-flex items-center"
+              data-testid="button-simulate-hero"
+            >
+              <Calculator className="w-5 h-5 mr-2" />
+              Simular agora
+            </button>
+          </div>
+          
+          <div className="lg:w-1/2 relative">
+            <img 
+              src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" 
+              alt="Investimentos e crescimento financeiro" 
+              className="rounded-xl shadow-lg w-full h-auto"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
