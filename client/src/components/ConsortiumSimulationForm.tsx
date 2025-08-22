@@ -343,6 +343,30 @@ export default function ConsortiumSimulationForm() {
                     PROPOSTA GERADA
                   </h3>
                   
+                  {/* Proposta no formato exato solicitado */}
+                  <div className="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                    <div className="text-center text-white font-bold mb-4">===== PROPOSTA =====</div>
+                    <div className="space-y-1">
+                      <div>grupo: {calculation.grupo}</div>
+                      <div>valor da carta: {formatMoney(calculation.valorCarta)}</div>
+                      <div>valor desejado pelo cliente: {formatMoney(calculation.valorCarta)}</div>
+                      <div>1ª parcela: {formatMoney(calculation.parcelaAtual)}</div>
+                      <div>lance deduzido: {formatMoney(calculation.lanceDeduzido)} (total: {formatMoney(calculation.lanceTotal)}{calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})</div>
+                      <div>quantidade restantes de parcela: {calculation.parcelasRestantes}</div>
+                      <div>reajuste das parcelas após contemplação: {formatMoney(calculation.novaParcelaValor)}</div>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-700">
+                      <div className="text-white font-bold mb-2">--- Encargos informativos ---</div>
+                      <div className="space-y-1">
+                        <div>Fundo de Reserva (0,5%): {formatMoney(calculation.encargos.fundoReserva)}</div>
+                        <div>Taxa Adm (16%): {formatMoney(calculation.encargos.taxaAdm)}</div>
+                        <div>Seguro de Vida (0,12% ao mês): {formatMoney(calculation.encargos.seguroVida)}</div>
+                        <div>Seguro de Quebra (0,07% ao mês): {formatMoney(calculation.encargos.seguroQuebra)}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="space-y-4">
                     <div className="bg-firme-light-gray p-4 rounded-lg">
                       <h4 className="font-bold text-firme-gray mb-3">Informações do Grupo</h4>
@@ -421,19 +445,20 @@ export default function ConsortiumSimulationForm() {
                       onClick={() => {
                         const whatsappMessage = `Olá! Gostaria de contratar o consórcio com as seguintes informações:
 
-📊 *PROPOSTA DE CONSÓRCIO*
-Grupo: ${calculation.grupo}
-Valor da carta: ${formatMoney(calculation.valorCarta)}
-1ª Parcela: ${formatMoney(calculation.parcelaAtual)}
-Lance deduzido: ${formatMoney(calculation.lanceDeduzido)}
-${calculation.lanceEmbutido > 0 ? `Lance embutido: ${formatMoney(calculation.lanceEmbutido)}\n` : ''}Parcelas restantes: ${calculation.parcelasRestantes}
-Reajuste após contemplação: ${formatMoney(calculation.novaParcelaValor)}
+===== PROPOSTA =====
+grupo: ${calculation.grupo}
+valor da carta: ${formatMoney(calculation.valorCarta)}
+valor desejado pelo cliente: ${formatMoney(calculation.valorCarta)}
+1ª parcela: ${formatMoney(calculation.parcelaAtual)}
+lance deduzido: ${formatMoney(calculation.lanceDeduzido)} (total: ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})
+quantidade restantes de parcela: ${calculation.parcelasRestantes}
+reajuste das parcelas após contemplação: ${formatMoney(calculation.novaParcelaValor)}
 
-💼 *ENCARGOS INFORMATIVOS*
-Fundo Reserva: ${formatMoney(calculation.encargos.fundoReserva)}
-Taxa Adm: ${formatMoney(calculation.encargos.taxaAdm)}
-Seguro Vida: ${formatMoney(calculation.encargos.seguroVida)}
-Seguro Quebra: ${formatMoney(calculation.encargos.seguroQuebra)}
+--- Encargos informativos ---
+Fundo de Reserva (0,5%): ${formatMoney(calculation.encargos.fundoReserva)}
+Taxa Adm (16%): ${formatMoney(calculation.encargos.taxaAdm)}
+Seguro de Vida (0,12% ao mês): ${formatMoney(calculation.encargos.seguroVida)}
+Seguro de Quebra (0,07% ao mês): ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
                         const whatsappUrl = `https://api.whatsapp.com/send?phone=558799143-6244&text=${encodeURIComponent(whatsappMessage)}`;
