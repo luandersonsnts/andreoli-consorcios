@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { TrendingUp, PiggyBank, Calculator } from 'lucide-react';
-import ConsortiumSimulationForm from './ConsortiumSimulationForm';
+import NewConsortiumSimulationForm from './NewConsortiumSimulationForm';
 import type { z } from "zod";
 
 type SimulationFormData = z.infer<typeof insertSimulationSchema>;
@@ -66,7 +66,7 @@ export default function SimulationForm() {
   };
 
   if (simulationType === 'consortium') {
-    return <ConsortiumSimulationForm />;
+    return <NewConsortiumSimulationForm />;
   }
 
   return (

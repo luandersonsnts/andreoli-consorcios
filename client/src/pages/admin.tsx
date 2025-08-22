@@ -17,6 +17,8 @@ interface ConsortiumSimulation {
   name: string;
   email: string;
   phone: string;
+  category: string;
+  groupId: string;
   creditValue: string;
   useEmbedded: boolean;
   maxInstallmentValue: string;
@@ -139,6 +141,8 @@ export default function AdminPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grupo</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Crédito</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Parcela Máx</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Parcelas</th>
@@ -152,6 +156,15 @@ export default function AdminPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{simulation.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{simulation.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{simulation.phone}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {simulation.category === 'automovel' ? 'Automóvel' : 
+                           simulation.category === 'imovel' ? 'Imóvel' :
+                           simulation.category === 'servicos' ? 'Serviços' : 
+                           simulation.category === 'pesados' ? 'Pesados' : simulation.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{simulation.groupId}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R$ {parseFloat(simulation.creditValue).toLocaleString('pt-BR')}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R$ {parseFloat(simulation.maxInstallmentValue).toLocaleString('pt-BR')}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{simulation.installmentCount}x</td>

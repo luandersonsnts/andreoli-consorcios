@@ -66,6 +66,8 @@ export const consortiumSimulations = pgTable('consortium_simulations', {
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
   phone: varchar('phone', { length: 20 }).notNull(),
+  category: varchar('category', { length: 50 }).notNull(), // automovel, imovel, servicos, pesados
+  groupId: varchar('group_id', { length: 50 }).notNull(), // ID do grupo escolhido
   creditValue: decimal('credit_value', { precision: 15, scale: 2 }).notNull(),
   useEmbedded: boolean('use_embedded').default(false),
   maxInstallmentValue: decimal('max_installment_value', { precision: 15, scale: 2 }).notNull(),

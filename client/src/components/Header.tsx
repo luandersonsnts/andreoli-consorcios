@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import logoPath from "@assets/logo_1755893657223.png";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -15,9 +16,9 @@ export default function Header() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <img 
-            src="/attached_assets/Screenshot_2025-08-21-22-46-14-904_com.instagram.android-edit_1755828171351.jpg" 
+            src={logoPath}
             alt="FIRME INVESTIMENTOS Logo" 
-            className="w-12 h-12 rounded-full mr-3"
+            className="w-12 h-12 mr-3"
           />
           <span className="text-firme-gray font-bold text-xl">FIRME INVESTIMENTOS</span>
         </div>

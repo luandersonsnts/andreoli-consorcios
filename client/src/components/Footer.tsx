@@ -1,3 +1,5 @@
+import logoPath from "@assets/logo_1755893657223.png";
+
 export default function Footer() {
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
@@ -10,15 +12,20 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="/attached_assets/Screenshot_2025-08-21-22-46-14-904_com.instagram.android-edit_1755828171351.jpg" 
+                src={logoPath}
                 alt="FIRME INVESTIMENTOS Logo" 
-                className="w-10 h-10 rounded-full mr-3"
+                className="w-10 h-10 mr-3"
               />
               <span className="text-white font-bold text-xl">FIRME INVESTIMENTOS</span>
             </div>
-            <p className="text-gray-300">
+            <p className="text-gray-300 mb-4">
               Construindo patrimônios sólidos com estratégias de investimento personalizadas.
             </p>
+            <div className="text-gray-300 text-sm">
+              <p>📍 Rua Dr. José Mariano, 114B</p>
+              <p>Cidade Garanhuns - PE</p>
+              <p>📞 (87) 98162-0542</p>
+            </div>
           </div>
           
           <div className="md:text-right">
