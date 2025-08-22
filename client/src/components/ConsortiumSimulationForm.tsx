@@ -153,6 +153,20 @@ export default function ConsortiumSimulationForm() {
     mutation.mutate(data);
   };
 
+  const handleCalculateOnly = () => {
+    const formData = watch();
+    if (formData.creditValue && formData.maxInstallmentValue && formData.installmentCount) {
+      const result = calculateConsortium({
+        ...formData,
+        name: formData.name || '',
+        phone: formData.phone || '',
+        email: formData.email || '',
+        useEmbedded: useEmbedded
+      });
+      setCalculation(result);
+    }
+  };
+
   const creditValue = watch("creditValue");
   const maxInstallmentValue = watch("maxInstallmentValue");
 
@@ -297,15 +311,26 @@ export default function ConsortiumSimulationForm() {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || mutation.isPending}
-                  className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
-                  data-testid="button-submit-consortium-simulation"
-                >
-                  <Calculator className="w-5 h-5 mr-2" />
-                  {mutation.isPending ? "Calculando..." : "CALCULAR CONSÓRCIO"}
-                </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    type="button"
+                    onClick={handleCalculateOnly}
+                    className="bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-medium transition-colors"
+                    data-testid="button-calculate-only"
+                  >
+                    <Calculator className="w-5 h-5 mr-2" />
+                    SIMULAR APENAS
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || mutation.isPending}
+                    className="bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
+                    data-testid="button-submit-consortium-simulation"
+                  >
+                    <Calculator className="w-5 h-5 mr-2" />
+                    {mutation.isPending ? "Enviando..." : "SIMULAR E ENVIAR"}
+                  </Button>
+                </div>
               </form>
             </div>
 
@@ -388,6 +413,40 @@ export default function ConsortiumSimulationForm() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Botão para contratar */}
+                  <div className="mt-6 pt-4 border-t">
+                    <Button
+                      onClick={() => {
+                        const whatsappMessage = `Olá! Gostaria de contratar o consórcio com as seguintes informações:
+
+📊 *PROPOSTA DE CONSÓRCIO*
+Grupo: ${calculation.grupo}
+Valor da carta: ${formatMoney(calculation.valorCarta)}
+1ª Parcela: ${formatMoney(calculation.parcelaAtual)}
+Lance deduzido: ${formatMoney(calculation.lanceDeduzido)}
+${calculation.lanceEmbutido > 0 ? `Lance embutido: ${formatMoney(calculation.lanceEmbutido)}\n` : ''}Parcelas restantes: ${calculation.parcelasRestantes}
+Reajuste após contemplação: ${formatMoney(calculation.novaParcelaValor)}
+
+💼 *ENCARGOS INFORMATIVOS*
+Fundo Reserva: ${formatMoney(calculation.encargos.fundoReserva)}
+Taxa Adm: ${formatMoney(calculation.encargos.taxaAdm)}
+Seguro Vida: ${formatMoney(calculation.encargos.seguroVida)}
+Seguro Quebra: ${formatMoney(calculation.encargos.seguroQuebra)}
+
+Por favor, me ajudem com os próximos passos!`;
+                        const whatsappUrl = `https://api.whatsapp.com/send?phone=558799143-6244&text=${encodeURIComponent(whatsappMessage)}`;
+                        window.open(whatsappUrl, '_blank');
+                      }}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"
+                      data-testid="button-hire-consortium"
+                    >
+                      📱 DESEJO CONTRATAR
+                    </Button>
+                    <p className="text-center text-sm text-gray-500 mt-2">
+                      Você será direcionado para o WhatsApp com todas as informações da sua simulação
+                    </p>
                   </div>
                 </div>
               ) : (

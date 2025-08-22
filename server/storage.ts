@@ -111,14 +111,15 @@ export class MemStorage implements IStorage {
   }
 
   async createConsortiumSimulation(insertConsortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation> {
-    const id = randomUUID();
+    const uuid = randomUUID();
+    const numericId = Math.floor(Math.random() * 1000000) + 1;
     const consortiumSimulation: ConsortiumSimulation = {
       ...insertConsortiumSimulation,
-      id: Number(id.replace(/-/g, '').substring(0, 8), 16),
+      id: numericId,
       useEmbedded: insertConsortiumSimulation.useEmbedded ?? false,
       createdAt: new Date()
     };
-    this.consortiumSimulations.set(id, consortiumSimulation);
+    this.consortiumSimulations.set(uuid, consortiumSimulation);
     return consortiumSimulation;
   }
 
