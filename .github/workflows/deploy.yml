@@ -37,6 +37,12 @@ jobs:
           NODE_ENV: production
           VITE_STATIC_SITE: 'true'
 
+      - name: Add .nojekyll file
+        run: touch ./dist/public/.nojekyll
+
+      - name: Copy index.html to 404.html for SPA routing
+        run: cp ./dist/public/index.html ./dist/public/404.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
