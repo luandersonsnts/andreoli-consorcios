@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { isStaticSite, openWhatsAppWithMessage } from "@/lib/runtimeEnv";
 import { Send, Info } from "lucide-react";
 import type { z } from "zod";
 
@@ -65,11 +66,38 @@ export default function ComplaintsForm() {
   });
 
   const onSubmit = (data: ComplaintFormData) => {
-    mutation.mutate({ 
-      ...data, 
-      type, 
-      contactAuthorized: contactAuthorized ? "sim" : "não" 
-    });
+    if (isStaticSite) {
+      const typeLabel = type === "reclamacao" ? "Reclamação" : type === "sugestao" ? "Sugestão" : "Elogio";
+      const message = `*MANIFESTAÇÃO - FIRME INVESTIMENTOS*
+
+👤 *Dados do Cliente:*
+Nome: ${data.name}
+Email: ${data.email}
+Telefone: ${data.phone}
+
+📋 *Tipo:* ${typeLabel}
+📌 *Assunto:* ${data.subject}
+
+💬 *Mensagem:*
+${data.message}
+
+✅ *Autoriza contato:* ${contactAuthorized ? "Sim" : "Não"}`;
+
+      openWhatsAppWithMessage(message);
+      toast({
+        title: "Redirecionando para WhatsApp",
+        description: "Continue sua manifestação pelo WhatsApp!"
+      });
+      reset();
+      setType("");
+      setContactAuthorized(false);
+    } else {
+      mutation.mutate({ 
+        ...data, 
+        type, 
+        contactAuthorized: contactAuthorized ? "sim" : "não" 
+      });
+    }
   };
 
   return (

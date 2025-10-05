@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { isStaticSite, openWhatsAppWithMessage } from "@/lib/runtimeEnv";
+import { formatInvestmentForWhatsApp } from "@/lib/consortiumCalculator";
 import { TrendingUp, PiggyBank, Calculator } from 'lucide-react';
 import NewConsortiumSimulationForm from './NewConsortiumSimulationForm';
 import type { z } from "zod";
@@ -62,7 +64,25 @@ export default function SimulationForm() {
   });
 
   const onSubmit = (data: SimulationFormData) => {
-    mutation.mutate({ ...data, objective });
+    if (isStaticSite) {
+      const message = formatInvestmentForWhatsApp(
+        data.name,
+        data.phone,
+        data.email,
+        objective,
+        data.monthlyAmount,
+        data.timeframe
+      );
+      openWhatsAppWithMessage(message);
+      toast({
+        title: "Redirecionando para WhatsApp",
+        description: "Você será redirecionado para continuar pelo WhatsApp!"
+      });
+      reset();
+      setObjective("");
+    } else {
+      mutation.mutate({ ...data, objective });
+    }
   };
 
   if (simulationType === 'consortium') {
@@ -200,12 +220,12 @@ export default function SimulationForm() {
             
             <Button 
               type="submit" 
-              disabled={isSubmitting || mutation.isPending}
+              disabled={isSubmitting || (!isStaticSite && mutation.isPending)}
               className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-simulation"
             >
               <Calculator className="w-5 h-5 mr-2" />
-              {mutation.isPending ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
+              {(!isStaticSite && mutation.isPending) ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
             </Button>
           </form>
         </div>

@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Calculator, TrendingUp, PiggyBank, ArrowLeft } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { isStaticSite, openWhatsAppWithMessage } from '@/lib/runtimeEnv';
+import { calculateConsortium, formatConsortiumForWhatsApp } from '@/lib/consortiumCalculator';
 import { ConsortiumCategory, ConsortiumGroup, getGroupById } from '../../../shared/consortiumTypes';
 import ConsortiumCategorySelector from './ConsortiumCategorySelector';
 import ConsortiumGroupSelector from './ConsortiumGroupSelector';
@@ -177,8 +179,29 @@ export default function NewConsortiumSimulationForm() {
     setCalculation(result);
     setStep('result');
     
-    // Enviar dados para o backend
-    mutation.mutate(data);
+    if (isStaticSite) {
+      const creditValue = parseFloat(data.creditValue);
+      const installments = parseInt(data.installmentCount);
+      const calculation = calculateConsortium(
+        data.category,
+        data.groupId,
+        creditValue,
+        installments
+      );
+      const message = formatConsortiumForWhatsApp(
+        data.name,
+        data.phone,
+        data.email,
+        calculation
+      );
+      openWhatsAppWithMessage(message);
+      toast({
+        title: "Simulação calculada!",
+        description: "Continue a conversa pelo WhatsApp para mais detalhes."
+      });
+    } else {
+      mutation.mutate(data);
+    }
   };
 
   const handleCalculateOnly = () => {
