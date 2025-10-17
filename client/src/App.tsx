@@ -7,6 +7,7 @@ import AdminPage from "./pages/admin";
 import NotFound from "./pages/not-found";
 
 function AppRoutes() {
+  console.log("🛣️ Renderizando rotas...");
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -17,10 +18,16 @@ function AppRoutes() {
 }
 
 function App() {
+  const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
+  console.log("🏠 App iniciando...");
+  console.log("📍 Base URL configurada:", baseUrl);
+  console.log("🌐 URL atual:", window.location.href);
+  console.log("📂 Pathname atual:", window.location.pathname);
+  
   return (
     <QueryClientProvider client={queryClient}>
       {/* Ensure routing works under Vite base (e.g., /firmeinvest/) */}
-      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+      <WouterRouter base={baseUrl}>
         <AppRoutes />
       </WouterRouter>
     </QueryClientProvider>
