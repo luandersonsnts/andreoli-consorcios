@@ -12,13 +12,13 @@ const testimonials = [
     text: "Profissionais extremamente competentes! Consegui diversificar meus investimentos e agora tenho uma renda passiva consistente.",
     name: "Maria Santos",
     role: "Professora",
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b734?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
   },
   {
     text: "A FIRME mudou completamente minha relação com dinheiro. Aprendi a investir de forma estratégica e já vejo os primeiros resultados.",
     name: "João Oliveira",
     role: "Médico",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
   }
 ];
 
@@ -79,8 +79,8 @@ export default function Testimonials() {
             </p>
             
             <div className="flex items-center justify-center space-x-4">
-              <img 
-                src={current.image}
+              <img
+                src={current.image as string}
                 alt={`${current.name} - Cliente satisfeito`}
                 className="w-16 h-16 rounded-full object-cover"
                 data-testid="img-testimonial-avatar"

@@ -1,11 +1,10 @@
-import type { Config } from "tailwindcss";
-
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   darkMode: ["class"],
   content: [
-    "./client/index.html", 
+    "./client/index.html",
     "./client/src/**/*.{js,jsx,ts,tsx}",
-    "./client/src/components/**/*.{js,jsx,ts,tsx}"
+    "./client/src/components/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
@@ -42,22 +41,17 @@ export default {
           DEFAULT: "var(--accent)",
           foreground: "var(--accent-foreground)",
         },
-        destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
-        },
-        border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
         chart: {
-          "1": "var(--chart-1)",
-          "2": "var(--chart-2)",
-          "3": "var(--chart-3)",
-          "4": "var(--chart-4)",
-          "5": "var(--chart-5)",
+          1: "var(--chart-1)",
+          2: "var(--chart-2)",
+          3: "var(--chart-3)",
+          4: "var(--chart-4)",
+          5: "var(--chart-5)",
         },
         sidebar: {
-          DEFAULT: "var(--sidebar-background)",
+          DEFAULT: "var(--sidebar)",
           foreground: "var(--sidebar-foreground)",
           primary: "var(--sidebar-primary)",
           "primary-foreground": "var(--sidebar-primary-foreground)",
@@ -66,10 +60,10 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
-        'firme-blue': "var(--firme-blue)",
-        'firme-blue-light': "var(--firme-blue-light)",
-        'firme-gray': "var(--firme-gray)",
-        'firme-light-gray': "var(--firme-light-gray)",
+        "firme-blue": "var(--firme-blue)",
+        "firme-blue-light": "var(--firme-blue-light)",
+        "firme-gray": "var(--firme-gray)",
+        "firme-light-gray": "var(--firme-light-gray)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
@@ -78,20 +72,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
@@ -101,4 +87,4 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-} satisfies Config;
+};

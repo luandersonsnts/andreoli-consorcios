@@ -434,26 +434,37 @@ export default function NewConsortiumSimulationForm() {
                     </Button>
                   </div>
                   
-                  {/* Proposta no formato terminal */}
-                  <div className="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
-                    <div className="text-center text-white font-bold mb-4">===== PROPOSTA =====</div>
-                    <div className="space-y-1">
-                      <div>grupo: {calculation.grupo}</div>
-                      <div>valor da carta: {formatMoney(calculation.valorCarta)}</div>
-                      <div>valor desejado pelo cliente: {formatMoney(calculation.valorCarta)}</div>
-                      <div>1ª parcela: {formatMoney(calculation.parcelaAtual)}</div>
-                      <div>lance deduzido: {formatMoney(calculation.lanceDeduzido)} (total: {formatMoney(calculation.lanceTotal)}{calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})</div>
-                      <div>quantidade restantes de parcela: {calculation.parcelasRestantes}</div>
-                      <div>reajuste das parcelas após contemplação: {formatMoney(calculation.novaParcelaValor)}</div>
-                    </div>
-                    
-                    <div className="mt-4 pt-4 border-t border-gray-700">
-                      <div className="text-white font-bold mb-2">--- Encargos informativos ---</div>
-                      <div className="space-y-1">
-                        <div>Fundo de Reserva ({selectedGroup.fundReserve}%): {formatMoney(calculation.encargos.fundoReserva)}</div>
-                        <div>Taxa Adm ({selectedGroup.adminTax}%): {formatMoney(calculation.encargos.taxaAdm)}</div>
-                        <div>Seguro de Vida ({selectedGroup.insuranceRate}% ao mês): {formatMoney(calculation.encargos.seguroVida)}</div>
-                        <div>Seguro de Quebra: {formatMoney(calculation.encargos.seguroQuebra)}</div>
+                  {/* Proposta no formato refinado */}
+                  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-6">
+                    <div className="text-center font-bold text-firme-blue mb-4">PROPOSTA</div>
+                    <div className="space-y-3 text-firme-gray">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Grupo</span>
+                        <span className="font-bold">{calculation.grupo}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Valor da carta</span>
+                        <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Valor desejado pelo cliente</span>
+                        <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">1ª parcela</span>
+                        <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Lance deduzido</span>
+                        <span className="font-bold">{formatMoney(calculation.lanceDeduzido)} (total: {formatMoney(calculation.lanceTotal)}{calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Parcelas restantes</span>
+                        <span className="font-bold">{calculation.parcelasRestantes}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Reajuste após contemplação</span>
+                        <span className="font-bold">{formatMoney(calculation.novaParcelaValor)}</span>
                       </div>
                     </div>
                   </div>
@@ -472,12 +483,6 @@ valor desejado pelo cliente: ${formatMoney(calculation.valorCarta)}
 lance deduzido: ${formatMoney(calculation.lanceDeduzido)} (total: ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})
 quantidade restantes de parcela: ${calculation.parcelasRestantes}
 reajuste das parcelas após contemplação: ${formatMoney(calculation.novaParcelaValor)}
-
---- Encargos informativos ---
-Fundo de Reserva (${selectedGroup.fundReserve}%): ${formatMoney(calculation.encargos.fundoReserva)}
-Taxa Adm (${selectedGroup.adminTax}%): ${formatMoney(calculation.encargos.taxaAdm)}
-Seguro de Vida (${selectedGroup.insuranceRate}% ao mês): ${formatMoney(calculation.encargos.seguroVida)}
-Seguro de Quebra: ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
                         const whatsappUrl = `https://api.whatsapp.com/send?phone=5587981620542&text=${encodeURIComponent(whatsappMessage)}`;

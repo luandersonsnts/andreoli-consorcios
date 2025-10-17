@@ -23,7 +23,7 @@ export default function Hero() {
             
             <button 
               onClick={scrollToSimulation}
-              className="bg-firme-blue text-white px-8 py-3 rounded-full font-medium hover:bg-firme-blue-light transition-colors inline-flex items-center"
+              className="relative z-50 bg-firme-blue text-white px-8 py-3 rounded-full font-medium hover:bg-firme-blue-light transition-colors inline-flex items-center"
               data-testid="button-simulate-hero"
             >
               <Calculator className="w-5 h-5 mr-2" />
@@ -32,9 +32,9 @@ export default function Hero() {
           </div>
           
           <div className="lg:w-1/2 relative">
-            <img 
-              src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" 
-              alt="Investimentos e crescimento financeiro" 
+            <img
+              src="https://images.unsplash.com/photo-1560472355-536de3962603?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=600"
+              alt="Investimentos e crescimento financeiro"
               className="rounded-xl shadow-lg w-full h-auto"
             />
           </div>

@@ -160,7 +160,7 @@ export default function JobApplication() {
             
             <div>
               <Label className="block text-firme-gray font-medium mb-2">Envie seu currículo</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-firme-blue transition-colors">
+              <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-firme-blue transition-colors">
                 {selectedFile ? (
                   <div className="flex items-center justify-center space-x-2">
                     <FileText className="w-8 h-8 text-firme-blue" />

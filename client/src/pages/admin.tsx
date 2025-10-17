@@ -1,5 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+
+// Simple API request function to replace the missing import
+const apiRequest = async (endpoint: string) => {
+  const response = await fetch(`/api${endpoint}`);
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+};
 
 interface Simulation {
   id: string;

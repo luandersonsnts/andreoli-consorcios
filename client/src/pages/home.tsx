@@ -1,14 +1,14 @@
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import HowItWorks from "@/components/HowItWorks";
-import SimulationForm from "@/components/SimulationForm";
-import Testimonials from "@/components/Testimonials";
-import MissionVisionValues from "@/components/MissionVisionValues";
-import ComplaintsForm from "@/components/ComplaintsForm";
-import JobApplication from "@/components/JobApplication";
-import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
-import WhatsAppFloat from "@/components/WhatsAppFloat";
+import Header from "../components/Header";
+import Hero from "../components/Hero";
+import HowItWorks from "../components/HowItWorks";
+import SimulationForm from "../components/SimulationForm";
+import Testimonials from "../components/Testimonials";
+import MissionVisionValues from "../components/MissionVisionValues";
+import ComplaintsForm from "../components/ComplaintsForm";
+import JobApplication from "../components/JobApplication";
+import Contact from "../components/Contact";
+import Footer from "../components/Footer";
+import WhatsAppFloat from "../components/WhatsAppFloat";
 
 export default function Home() {
   return (
@@ -34,9 +34,9 @@ export default function Home() {
           </button>
           
           <div className="mt-12">
-            <img 
-              src="https://images.unsplash.com/photo-1560472355-536de3962603?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=600" 
-              alt="Equipe de investimentos trabalhando com dados financeiros" 
+            <img
+              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
+              alt="Equipe de investimentos trabalhando com dados financeiros"
               className="rounded-xl shadow-lg w-full h-auto max-w-4xl mx-auto"
             />
           </div>

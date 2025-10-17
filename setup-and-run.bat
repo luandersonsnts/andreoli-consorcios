@@ -1,0 +1,6 @@
+@echo off
+echo Installing cross-env package...
+call npm install cross-env --save-dev
+
+echo Starting the client-only development server...
+call npm run dev:client
