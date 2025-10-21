@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Painel Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste do Painel Administrativo</h1>
+        
+        <div class="section">
+            <h2>1. Teste de Login</h2>
+            <button onclick="testLogin()">Fazer Login</button>
+            <div id="loginResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>2. Teste de Candidaturas</h2>
+            <button onclick="testJobApplications()">Buscar Candidaturas</button>
+            <div id="jobApplicationsResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>3. Teste Completo</h2>
+            <button onclick="testComplete()">Teste Completo (Login + Candidaturas)</button>
+            <div id="completeResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<p>Fazendo login...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Login bem-sucedido!</h3>
+                            <p>Token obtido: ${authToken.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Erro no login</h3>
+                            <p>Status: ${response.status}</p>
+                            <pre>${errorText}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Erro de conexão</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testJobApplications() {
+            const resultDiv = document.getElementById('jobApplicationsResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Faça login primeiro!</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Buscando candidaturas...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/job-applications', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const withResume = data.filter(app => app.resumeFilename);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Candidaturas encontradas!</h3>
+                            <p>Total: ${data.length}</p>
+                            <p>Com currículo: ${withResume.length}</p>
+                            <h4>Dados das candidaturas:</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Erro ao buscar candidaturas</h3>
+                            <p>Status: ${response.status}</p>
+                            <pre>${errorText}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Erro de conexão</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testComplete() {
+            const resultDiv = document.getElementById('completeResult');
+            resultDiv.innerHTML = '<p>Executando teste completo...</p>';
+            
+            try {
+                // Passo 1: Login
+                const loginResponse = await fetch('http://localhost:5000/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (!loginResponse.ok) {
+                    throw new Error(`Login falhou: ${loginResponse.status}`);
+                }
+                
+                const loginData = await loginResponse.json();
+                const token = loginData.token;
+                
+                // Passo 2: Buscar candidaturas
+                const jobResponse = await fetch('http://localhost:5000/api/job-applications', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!jobResponse.ok) {
+                    throw new Error(`Busca de candidaturas falhou: ${jobResponse.status}`);
+                }
+                
+                const jobData = await jobResponse.json();
+                const withResume = jobData.filter(app => app.resumeFilename);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✅ Teste completo bem-sucedido!</h3>
+                        <p><strong>Login:</strong> ✅ Sucesso</p>
+                        <p><strong>Candidaturas:</strong> ✅ ${jobData.length} encontradas</p>
+                        <p><strong>Com currículo:</strong> ${withResume.length}</p>
+                        <h4>Resumo das candidaturas:</h4>
+                        <ul>
+                            ${jobData.map(app => `
+                                <li>
+                                    <strong>${app.name}</strong> - ${app.email} 
+                                    ${app.resumeFilename ? '📄' : '❌'} 
+                                    (${new Date(app.createdAt).toLocaleDateString('pt-BR')})
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Erro no teste completo</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

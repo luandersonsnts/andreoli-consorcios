@@ -80,9 +80,9 @@ export default function ConsortiumButtons({ onCategorySelect }: ConsortiumButton
           <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
             Escolha seu <span className="text-transparent bg-gradient-to-r from-firme-blue to-blue-600 bg-clip-text">Consórcio</span>
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Selecione o tipo de consórcio que melhor atende às suas necessidades e realize seu sonho
-          </p>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          Selecione o tipo de consórcio que melhor atende às suas necessidades e conquiste seus objetivos
+        </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 max-w-7xl mx-auto">
@@ -92,29 +92,23 @@ export default function ConsortiumButtons({ onCategorySelect }: ConsortiumButton
               <button
                 key={type.id}
                 onClick={() => handleButtonClick(type.id)}
-                className={`group relative bg-gradient-to-br ${type.color} ${type.hoverColor} text-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col items-center justify-center min-h-[140px] overflow-hidden`}
+                className={`group relative bg-gradient-to-br ${type.color} ${type.hoverColor} text-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col items-center justify-center min-h-[140px] overflow-hidden interactive-card`}
                 data-testid={`consortium-button-${type.id}`}
               >
-                {/* Efeito de brilho */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                
                 {/* Ícone */}
-                <div className="mb-3 transform transition-transform duration-300 group-hover:scale-110">
-                  <Icon className="w-8 h-8" />
+                <div className="mb-3 transform transition-all duration-300 group-hover:scale-110 relative z-10">
+                  <Icon className="w-8 h-8 drop-shadow-lg" />
                 </div>
                 
                 {/* Nome */}
-                <h3 className="font-bold text-sm text-center mb-1 relative z-10">
+                <h3 className="font-bold text-sm text-center mb-1 relative z-10 transition-all duration-300 drop-shadow-sm">
                   {type.name}
                 </h3>
                 
                 {/* Descrição */}
-                <p className="text-xs text-center opacity-90 relative z-10 leading-tight">
+                <p className="text-xs text-center opacity-90 relative z-10 leading-tight transition-all duration-300 group-hover:opacity-100">
                   {type.description}
                 </p>
-
-                {/* Elemento decorativo */}
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0"></div>
               </button>
             );
           })}

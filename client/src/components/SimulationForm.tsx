@@ -142,8 +142,8 @@ export default function SimulationForm() {
     <section id="simule" className="py-16 bg-gradient-to-b from-white via-blue-50/20 to-white relative overflow-hidden">
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 right-20 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-700"></div>
-        <div className="absolute bottom-10 left-20 w-48 h-48 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1200"></div>
+        <div className="absolute top-10 right-20 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
+        <div className="absolute bottom-10 left-20 w-48 h-48 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-40"></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
@@ -168,7 +168,7 @@ export default function SimulationForm() {
               data-testid="button-investment-simulation"
             >
               <span className="relative z-10 flex items-center">
-                <TrendingUp className={`w-5 h-5 mr-2 transition-transform duration-300 ${simulationType === 'investment' ? 'animate-pulse' : 'group-hover:rotate-12'}`} />
+                <TrendingUp className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" />
                 Investimentos Tradicionais
               </span>
               {simulationType !== 'investment' && (
@@ -186,7 +186,7 @@ export default function SimulationForm() {
               data-testid="button-consortium-simulation"
             >
               <span className="relative z-10 flex items-center">
-                <PiggyBank className={`w-5 h-5 mr-2 transition-transform duration-300 ${simulationType === 'consortium' ? 'animate-pulse' : 'group-hover:rotate-12'}`} />
+                <PiggyBank className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" />
                 Consórcio
               </span>
               {simulationType !== 'consortium' && (

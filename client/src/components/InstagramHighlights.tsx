@@ -62,9 +62,9 @@ export default function InstagramHighlights() {
     <section id="clientes" className="py-16 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 relative overflow-hidden">
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-r from-orange-400 to-red-400 rounded-full opacity-15 animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10 animate-bounce delay-500"></div>
+        <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20"></div>
+        <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-r from-orange-400 to-red-400 rounded-full opacity-15"></div>
+        <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -181,7 +181,7 @@ export default function InstagramHighlights() {
         {/* Call to action */}
         <div className="text-center mt-12">
           <p className="text-lg text-gray-600 mb-6">
-            Quer ser o próximo destaque? <span className="font-semibold text-firme-blue">Realize seu sonho também!</span>
+            Quer ser o próximo destaque? <span className="font-semibold text-firme-blue">Conquiste seus objetivos também!</span>
           </p>
           <button
             onClick={() => window.open('https://www.instagram.com/andreoli_consorcio/', '_blank')}

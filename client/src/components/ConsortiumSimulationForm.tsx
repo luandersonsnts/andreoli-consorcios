@@ -194,7 +194,7 @@ export default function ConsortiumSimulationForm() {
             SIMULAÇÃO DE CONSÓRCIO
           </h2>
           <h3 className="text-2xl font-bold text-firme-blue">
-            Realize seu sonho com estratégia inteligente:
+            Conquiste seus objetivos com planejamento inteligente:
           </h3>
         </div>
         

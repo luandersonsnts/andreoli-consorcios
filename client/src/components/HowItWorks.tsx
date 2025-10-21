@@ -3,8 +3,8 @@ export default function HowItWorks() {
     <section id="comofunciona" className="py-16 bg-gradient-to-b from-white via-blue-50/30 to-white relative overflow-hidden">
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-500"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-1500"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-40"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">

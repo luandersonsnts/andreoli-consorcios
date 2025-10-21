@@ -16,14 +16,17 @@ export default function Contact() {
           
           <div>
             <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-6">
-          Na ANDREOLI CONSÓRCIOS você encontra as melhores condições para realizar seus sonhos.
-        </h2>
+              Entre em contato conosco
+            </h2>
+            <p className="text-lg text-gray-600 mb-6">
+              Estamos prontos para ajudar você a conquistar seus objetivos. Fale com nossos especialistas!
+            </p>
             
             <h3 className="text-2xl font-bold text-firme-blue mb-8">Contatos</h3>
             
             <div className="space-y-4">
               <a 
-                href="https://api.whatsapp.com/send?phone=557498121-3461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20realizar%20meu%20sonho!" 
+                href="https://api.whatsapp.com/send?phone=557498121-3461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20conquistar%20meus%20objetivos!" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "../components/Header";
 import Hero from "../components/Hero";
+import InstagramTestimonials from "../components/InstagramTestimonials";
 import ConsortiumButtons from "../components/ConsortiumButtons";
 import HowItWorks from "../components/HowItWorks";
 import NewConsortiumSimulationForm from "../components/NewConsortiumSimulationForm";
@@ -25,6 +26,7 @@ export default function Home() {
     <div className="font-sans bg-white">
       <Header />
       <Hero />
+      <InstagramTestimonials />
       <ConsortiumButtons onCategorySelect={handleCategorySelect} />
       <HowItWorks />
       <NewConsortiumSimulationForm preSelectedCategory={selectedCategory} />

@@ -25,7 +25,7 @@ export default function WhatsAppFloat() {
     <>
       {/* WhatsApp Float Button */}
       <a 
-        href="https://api.whatsapp.com/send?phone=557498121-3461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20realizar%20meu%20sonho!" 
+        href="https://wa.me/5511999999999?text=Olá! Gostaria de mais informações sobre consórcios para conquistar meus objetivos!" 
         className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors z-50"
         data-testid="whatsapp-float"
       >

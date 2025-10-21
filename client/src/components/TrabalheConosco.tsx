@@ -20,7 +20,7 @@ export default function TrabalheConosco() {
               <span className="block text-firme-blue">VENCEDORA EM JUAZEIRO/BA</span>
             </h2>
             <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-              Junte-se ao time da <strong className="text-firme-blue">ANDREOLI CONSÓRCIOS</strong> e ajude pessoas a realizarem seus sonhos. 
+              Junte-se ao time da <strong className="text-firme-blue">ANDREOLI CONSÓRCIOS</strong> e ajude pessoas a conquistarem seus objetivos. 
               Oportunidades de crescimento e desenvolvimento profissional te esperam!
             </p>
           </div>

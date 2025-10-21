@@ -147,4 +147,64 @@
   .focus\:ring-firme-blue:focus {
     --tw-ring-color: var(--firme-blue);
   }
+
+  /* Efeitos hover interativos */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .hover-glow {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-color-shift {
+    transition: all 0.3s ease;
+  }
+
+  .hover-color-shift:hover {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+  }
+
+  .interactive-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .interactive-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(29, 78, 216, 0.05));
+  }
+
+  .pulse-on-hover:hover {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
 }

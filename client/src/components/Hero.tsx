@@ -15,22 +15,23 @@ export default function Hero() {
   return (
     <section id="home" className="pt-20 bg-gradient-to-br from-firme-light-gray via-blue-50 to-white min-h-screen flex items-center relative overflow-hidden">
       {/* Elementos decorativos de fundo */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-firme-blue rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-200 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-200 rounded-full opacity-15 blur-lg"></div>
       </div>
       
       <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-8 lg:mb-0">
             <div className="mb-6 inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-firme-blue/10 rounded-full border border-blue-200">
-              <Sparkles className="w-4 h-4 text-firme-blue mr-2 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-firme-blue mr-2" />
               <span className="text-sm font-medium text-firme-blue">Conquiste seu futuro</span>
             </div>
             
             <h1 className="text-4xl lg:text-5xl font-bold text-firme-gray mb-4 leading-tight">
               Tire seu<br />
-              <span className="text-transparent bg-gradient-to-r from-firme-blue to-blue-600 bg-clip-text animate-pulse">SONHO</span> do papel<br />
+              <span className="text-transparent bg-gradient-to-r from-firme-blue to-blue-600 bg-clip-text">SONHO</span> do papel<br />
               com <span className="text-transparent bg-gradient-to-r from-firme-blue to-blue-600 bg-clip-text italic">consórcio!</span>
             </h1>
             
@@ -69,12 +70,13 @@ export default function Hero() {
               <img
                 src="/hero-office.jpg"
                 alt="Escritório Andreoli Consórcios"
+                loading="lazy"
                 className="rounded-xl shadow-2xl w-full h-auto max-h-[350px] lg:max-h-[420px] object-cover transition-all duration-500 group-hover:scale-105 group-hover:shadow-3xl"
               />
               
               {/* Elementos flutuantes decorativos */}
-              <div className="absolute -top-4 -right-4 w-8 h-8 bg-firme-blue rounded-full opacity-80 animate-bounce delay-300"></div>
-              <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-blue-400 rounded-full opacity-60 animate-bounce delay-700"></div>
+              <div className="absolute -top-4 -right-4 w-8 h-8 bg-firme-blue rounded-full opacity-80"></div>
+              <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-blue-400 rounded-full opacity-60"></div>
             </div>
           </div>
         </div>

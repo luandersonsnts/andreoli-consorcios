@@ -7,8 +7,8 @@ export default function Footer() {
     <footer className="bg-gradient-to-br from-firme-gray via-gray-800 to-firme-gray text-white py-8 relative overflow-hidden">
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-32 h-32 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-500"></div>
-        <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-blue-400/10 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-1000"></div>
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-40"></div>
+        <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-blue-400/10 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
@@ -29,7 +29,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-300 mb-4 group-hover:text-gray-200 transition-colors duration-300">
-              Realizando sonhos através de consórcios com as melhores condições do mercado.
+              Especialistas em consórcios com as melhores condições do mercado.
             </p>
             <div className="text-gray-300 text-sm space-y-1 group-hover:text-gray-200 transition-colors duration-300">
               <p className="hover:text-firme-blue transition-colors duration-200 cursor-default">📍 Av. Raul Alves - Santo Antonio</p>

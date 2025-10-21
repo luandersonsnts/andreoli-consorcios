@@ -31,20 +31,19 @@ export default function Header() {
   return (
     <header className="bg-gradient-to-r from-white via-blue-50 to-white shadow-lg fixed w-full top-0 z-50 backdrop-blur-sm border-b border-blue-100">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div className="flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
+        <div className="flex items-center group cursor-pointer transition-all duration-300">
           <div className="relative">
             <img 
-              src="/andreoli-logo.svg?v=3"
+              src="/andreoli-logo.svg?v=5"
               alt="ANDREOLI CONSÓRCIOS Logo" 
-              className="w-16 h-16 mr-4 object-contain transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 drop-shadow-lg"
+              className="w-32 h-32 mr-6 object-contain transition-all duration-300 group-hover:scale-105"
               onError={(e) => {
                 console.error('Erro ao carregar logo:', e);
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <div className="absolute inset-0 bg-blue-400 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
           </div>
-          <span className="text-firme-gray font-bold text-2xl bg-gradient-to-r from-firme-gray to-firme-blue bg-clip-text group-hover:text-transparent transition-all duration-300 drop-shadow-sm">
+          <span className="text-andreoli-gray font-bold text-4xl transition-all duration-300 group-hover:text-andreoli-blue tracking-wide">
             ANDREOLI CONSÓRCIOS
           </span>
         </div>
@@ -52,60 +51,53 @@ export default function Header() {
         <nav className="hidden md:flex space-x-2">
           <button 
             onClick={() => scrollToSection('home')} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50"
             data-testid="nav-home"
           >
-            <span className="relative z-10">Inicio</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            Inicio
           </button>
           <button 
             onClick={() => scrollToSection('comofunciona')} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50"
             data-testid="nav-how-it-works"
           >
-            <span className="relative z-10">Como funciona</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            Como funciona
           </button>
           <button 
             onClick={() => scrollToSection('clientes')} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50"
             data-testid="nav-clients"
           >
-            <span className="relative z-10">Nossos clientes</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            Nossos clientes
           </button>
           <button 
             onClick={() => scrollToSection('reclameaqui')} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50"
             data-testid="nav-complaints"
           >
-            <span className="relative z-10">Reclame Aqui</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            Reclame Aqui
           </button>
           <button 
             onClick={() => scrollToSection('contatos')} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50"
             data-testid="nav-contact"
           >
-            <span className="relative z-10">Contatos</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            Contatos
           </button>
           <button 
             onClick={() => scrollToSection('trabalheconosco')} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50"
             data-testid="nav-careers"
           >
-            <span className="relative z-10">Trabalhe conosco</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            Trabalhe conosco
           </button>
           <button 
             onClick={handleLogin} 
-            className="relative px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 hover:shadow-md hover:scale-105 group flex items-center gap-1"
+            className="px-4 py-2 text-firme-gray hover:text-firme-blue transition-all duration-300 rounded-lg hover:bg-blue-50 flex items-center gap-1"
             data-testid="nav-login"
           >
-            <LogIn className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
-            <span className="relative z-10">Login</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+            <LogIn className="h-4 w-4" />
+            Login
           </button>
         </nav>
         
@@ -116,7 +108,7 @@ export default function Header() {
         >
           <span className="relative z-10 flex items-center gap-2">
             Simular agora
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-white rounded-full"></div>
           </span>
           <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
           <div className="absolute -inset-1 bg-gradient-to-r from-firme-blue to-blue-600 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>

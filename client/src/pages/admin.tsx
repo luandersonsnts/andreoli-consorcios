@@ -122,30 +122,18 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
     }
   };
 
-  const { data: consortiumSimulations = [] } = useQuery({
-    queryKey: ["/api/consortium-simulations"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/consortium-simulations");
-      return response.json();
-    },
+  const { data: consortiumSimulations = [], isLoading: isLoadingConsortium } = useQuery({
+    queryKey: ['/api/consortium-simulations'],
     enabled: !isStaticSite
   });
 
-  const { data: complaints = [] } = useQuery({
-    queryKey: ["/api/complaints"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/complaints");
-      return response.json();
-    },
+  const { data: complaints = [], isLoading: isLoadingComplaints } = useQuery({
+    queryKey: ['/api/complaints'],
     enabled: !isStaticSite
   });
 
-  const { data: jobApplications = [] } = useQuery({
-    queryKey: ["/api/job-applications"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/job-applications");
-      return response.json();
-    },
+  const { data: jobApplications = [], isLoading: isLoadingJobs } = useQuery({
+    queryKey: ['/api/job-applications'],
     enabled: !isStaticSite
   });
 
@@ -168,13 +156,13 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
 
   // Prepare chart data - Categorias de consórcio
   const chartData = [
-    { name: 'ELETROS', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'ELETROS').length, color: '#3B82F6' },
-    { name: 'Carro', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'Carro').length, color: '#10B981' },
-    { name: 'Imóveis', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'Imóveis').length, color: '#F59E0B' },
-    { name: 'Motos', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'Moto').length, color: '#8B5CF6' },
-    { name: 'Serviços', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'Serviços').length, color: '#EF4444' },
-    { name: 'Barcos', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'Barco').length, color: '#06B6D4' },
-    { name: 'Energia Solar', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'Energia Solar').length, color: '#F97316' },
+    { name: 'Eletros', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'eletros').length, color: '#3B82F6' },
+    { name: 'Carros', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'carro').length, color: '#10B981' },
+    { name: 'Imóveis', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'imovel').length, color: '#F59E0B' },
+    { name: 'Motos', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'moto').length, color: '#8B5CF6' },
+    { name: 'Serviços', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'servicos').length, color: '#EF4444' },
+    { name: 'Barcos', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'barco').length, color: '#06B6D4' },
+    { name: 'Energia Solar', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'energia_solar').length, color: '#F97316' },
   ];
 
   // Monthly data for bar chart - apenas consórcios
@@ -334,8 +322,8 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
 
           <Card>
             <CardHeader>
-              <CardTitle>Simulações por Mês ({new Date().getFullYear()})</CardTitle>
-              <CardDescription>Comparativo mensal de simulações</CardDescription>
+              <CardTitle>Simulações por Mês (2025)</CardTitle>
+              <CardDescription>Comparativo mensal de consórcios</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
