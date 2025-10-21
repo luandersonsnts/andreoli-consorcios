@@ -1,13 +1,39 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import multer, { FileFilterCallback } from "multer";
+import jwt from "jsonwebtoken";
+import express from "express";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { 
   insertSimulationSchema,
   insertComplaintSchema,
   insertJobApplicationSchema,
-  insertConsortiumSimulationSchema
+  insertConsortiumSimulationSchema,
+  insertUserSchema
 } from "@shared/schema";
+
+// JWT secret - in production, this should be in environment variables
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+
+// Middleware to verify JWT token
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    (req as any).user = user;
+    next();
+  });
+};
 
 // Configure multer for file uploads
 const upload = multer({
@@ -32,7 +58,118 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Route to download resume files
+  app.get("/api/download-resume/:filename", authenticateToken, async (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'uploads', filename);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Arquivo não encontrado" });
+    }
+    
+    try {
+      // Get the job application to find the candidate's name
+      const application = await storage.getJobApplicationByResumeFilename(filename);
+      let downloadFilename = 'curriculo.pdf';
+      
+      if (application && application.name) {
+        // Create a clean filename with candidate's name
+        const cleanName = application.name
+          .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+          .replace(/\s+/g, '_') // Replace spaces with underscores
+          .toLowerCase();
+        downloadFilename = `curriculo_${cleanName}.pdf`;
+      }
+      
+      // Set proper headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+      
+      res.download(filePath, downloadFilename, (err) => {
+        if (err) {
+          console.error('Error downloading file:', err);
+          res.status(500).json({ message: "Erro ao baixar arquivo" });
+        }
+      });
+    } catch (error) {
+      console.error('Error getting application data:', error);
+      // Fallback to generic filename
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="curriculo.pdf"`);
+      res.download(filePath, 'curriculo.pdf');
+    }
+  });
+
+  // Admin login endpoint
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      const user = await storage.authenticateUser(username, password);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, username: user.username },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({ 
+        success: true, 
+        token,
+        user: { id: user.id, username: user.username }
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/register", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const user = await storage.createUser(validatedData);
+      
+      res.json({ 
+        success: true, 
+        message: "Admin user created successfully",
+        user: { id: user.id, username: user.username }
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(400).json({ message: "Error creating admin user" });
+    }
+  });
+
+  // Admin dashboard stats endpoint
+  app.get("/api/admin/stats", authenticateToken, async (req, res) => {
+    try {
+      const stats = await storage.getSimulationStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      res.status(500).json({ message: "Error fetching statistics" });
+    }
+  });
+
   // Investment simulation endpoint
   app.post("/api/simulations", async (req, res) => {
     try {
@@ -57,13 +194,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all simulations (for admin purposes)
-  app.get("/api/simulations", async (req, res) => {
+  app.get("/api/simulations", authenticateToken, async (req, res) => {
     try {
       const simulations = await storage.getSimulations();
       res.json(simulations);
     } catch (error) {
       console.error('Error fetching simulations:', error);
       res.status(500).json({ message: "Erro ao buscar simulações" });
+    }
+  });
+
+  // Update simulation WhatsApp status
+  app.patch("/api/simulations/:id/whatsapp", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const simulation = await storage.updateSimulationWhatsAppStatus(id);
+      res.json({ success: true, simulation });
+    } catch (error) {
+      console.error('Error updating simulation WhatsApp status:', error);
+      res.status(500).json({ message: "Erro ao atualizar status do WhatsApp" });
     }
   });
 
@@ -91,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all complaints (for admin purposes)
-  app.get("/api/complaints", async (req, res) => {
+  app.get("/api/complaints", authenticateToken, async (req, res) => {
     try {
       const complaints = await storage.getComplaints();
       res.json(complaints);
@@ -132,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all job applications (for admin purposes)
-  app.get("/api/job-applications", async (req, res) => {
+  app.get("/api/job-applications", authenticateToken, async (req, res) => {
     try {
       const jobApplications = await storage.getJobApplications();
       res.json(jobApplications);
@@ -165,13 +314,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all consortium simulations (for admin purposes)
-  app.get("/api/consortium-simulations", async (req, res) => {
+  app.get("/api/consortium-simulations", authenticateToken, async (req, res) => {
     try {
       const consortiumSimulations = await storage.getConsortiumSimulations();
       res.json(consortiumSimulations);
     } catch (error) {
       console.error('Error fetching consortium simulations:', error);
       res.status(500).json({ message: "Erro ao buscar simulações de consórcios" });
+    }
+  });
+
+  // Test endpoint to check UTF-8 encoding
+  app.get("/api/test-encoding", authenticateToken, async (req, res) => {
+    try {
+      const consortiumSimulations = await storage.getConsortiumSimulations();
+      let textResponse = "Teste de Encoding UTF-8:\n\n";
+      
+      consortiumSimulations.forEach((sim, index) => {
+        textResponse += `${index + 1}. Nome: ${sim.name}\n`;
+        textResponse += `   Categoria: ${sim.category}\n`;
+        textResponse += `   Email: ${sim.email}\n\n`;
+      });
+      
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.send(textResponse);
+    } catch (error) {
+      console.error('Error in test encoding:', error);
+      res.status(500).send("Erro no teste de encoding");
+    }
+  });
+
+  // Update consortium simulation WhatsApp status
+  app.patch("/api/consortium-simulations/:id/whatsapp", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const simulation = await storage.updateConsortiumSimulationWhatsAppStatus(parseInt(id));
+      res.json({ success: true, simulation });
+    } catch (error) {
+      console.error('Error updating consortium simulation WhatsApp status:', error);
+      res.status(500).json({ message: "Erro ao atualizar status do WhatsApp" });
     }
   });
 

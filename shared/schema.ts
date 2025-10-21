@@ -1,27 +1,30 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, boolean, integer, serial } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
-export const simulations = pgTable("simulations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const simulations = sqliteTable("simulations", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   objective: text("objective").notNull(),
   monthlyAmount: text("monthly_amount").notNull(),
   timeframe: text("timeframe").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  whatsappSent: integer("whatsapp_sent", { mode: 'boolean' }).default(false),
+  whatsappSentAt: integer("whatsapp_sent_at", { mode: 'timestamp' }),
+  createdAt: integer("created_at", { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
-export const complaints = pgTable("complaints", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const complaints = sqliteTable("complaints", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
@@ -29,16 +32,16 @@ export const complaints = pgTable("complaints", {
   subject: text("subject").notNull(),
   message: text("message").notNull(),
   contactAuthorized: text("contact_authorized").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
-export const jobApplications = pgTable("job_applications", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const jobApplications = sqliteTable("job_applications", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   resumeFilename: text("resume_filename"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -61,18 +64,20 @@ export const insertJobApplicationSchema = createInsertSchema(jobApplications).om
   createdAt: true,
 });
 
-export const consortiumSimulations = pgTable('consortium_simulations', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull(),
-  phone: varchar('phone', { length: 20 }).notNull(),
-  category: varchar('category', { length: 50 }).notNull(), // automovel, imovel, servicos, pesados
-  groupId: varchar('group_id', { length: 50 }).notNull(), // ID do grupo escolhido
-  creditValue: decimal('credit_value', { precision: 15, scale: 2 }).notNull(),
-  useEmbedded: boolean('use_embedded').default(false),
-  maxInstallmentValue: decimal('max_installment_value', { precision: 15, scale: 2 }).notNull(),
+export const consortiumSimulations = sqliteTable('consortium_simulations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  category: text('category').notNull(), // automovel, imovel, servicos, pesados
+  groupId: text('group_id').notNull(), // ID do grupo escolhido
+  creditValue: real('credit_value').notNull(),
+  useEmbedded: integer('use_embedded', { mode: 'boolean' }).default(false),
+  maxInstallmentValue: real('max_installment_value').notNull(),
   installmentCount: integer('installment_count').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  whatsappSent: integer("whatsapp_sent", { mode: 'boolean' }).default(false),
+  whatsappSentAt: integer("whatsapp_sent_at", { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull(),
 });
 
 export const insertConsortiumSimulationSchema = createInsertSchema(consortiumSimulations).omit({

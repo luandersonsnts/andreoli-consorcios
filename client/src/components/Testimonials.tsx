@@ -3,7 +3,7 @@ import { Quote, ChevronLeft, ChevronRight } from "lucide-react";
 
 const testimonials = [
   {
-    text: "Com a assessoria da FIRME INVESTIMENTOS, minha carteira cresceu 180% em dois anos. A estratégia personalizada fez toda a diferença nos meus resultados!",
+    text: "Com a ANDREOLI CONSÓRCIOS, consegui meu carro novo em apenas 6 meses. O atendimento foi excelente e as condições, as melhores do mercado!",
     name: "Carlos Eduardo",
     role: "Empresário",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
@@ -15,7 +15,7 @@ const testimonials = [
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
   },
   {
-    text: "A FIRME mudou completamente minha relação com dinheiro. Aprendi a investir de forma estratégica e já vejo os primeiros resultados.",
+    text: "A ANDREOLI CONSÓRCIOS me ajudou a conquistar minha casa própria. O processo foi transparente e sem complicações.",
     name: "João Oliveira",
     role: "Médico",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"

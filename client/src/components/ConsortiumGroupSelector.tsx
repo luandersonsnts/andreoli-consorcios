@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ConsortiumCategory, ConsortiumGroup, getGroupsByCategory } from '../../../shared/consortiumTypes';
+import { ConsortiumCategory, ConsortiumGroup, getGroupsByCategory } from '@shared/consortiumTypes';
 
 interface ConsortiumGroupSelectorProps {
   category: ConsortiumCategory;

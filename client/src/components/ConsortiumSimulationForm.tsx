@@ -46,35 +46,46 @@ function calculateConsortium(data: ConsortiumFormData): ConsortiumCalculationRes
   const maxInstallment = parseFloat(data.maxInstallmentValue);
   const installmentCount = parseInt(data.installmentCount);
   
-  // Grupo aleatório entre 200-999
-  const grupo = Math.floor(Math.random() * 800) + 200;
+  // Grupo aleatório entre 1000-9999 (mais realista)
+  const grupo = Math.floor(Math.random() * 9000) + 1000;
   
-  // Base para cálculo do lance = soma das parcelas
-  const baseLance = maxInstallment * installmentCount;
+  // CÁLCULO CORRETO BASEADO NA METODOLOGIA ANDREOLI:
   
-  // Percentual do lance aleatório entre 45% a 59%
-  const pctLance = Math.random() * (59 - 45) + 45;
+  // 1. Taxas padrão (quando não há grupo específico)
+  const taxaAdmPercentual = 0.16; // 16% padrão
+  const fundoReservaPercentual = 0.005; // 0.5% padrão
   
-  // Lance total (percentual das assembleias simulado)
-  const lanceTotal = (baseLance * pctLance / 100);
+  // 2. Encargos sobre o valor do crédito
+  const taxaAdm = creditValue * taxaAdmPercentual;
+  const fundoReserva = creditValue * fundoReservaPercentual;
   
-  // Embutido máximo (15% do total da base) se selecionado
-  const lanceEmbutido = data.useEmbedded ? (baseLance * 0.15) : 0;
+  // 3. Total que será pago = Valor do crédito + Taxa Adm + Fundo de Reserva
+  const totalQueSerapago = creditValue + taxaAdm + fundoReserva;
   
-  // Lance que o cliente realmente precisa pagar
+  // 4. Parcela mensal real = Total / Número de parcelas
+  const parcelaMensalReal = totalQueSerapago / installmentCount;
+  
+  // 5. CÁLCULO DO LANCE (metodologia Andreoli):
+  // Lance médio = 53% do total das parcelas informadas pelo cliente
+  const totalParcelasPagas = maxInstallment * installmentCount;
+  let lanceTotal = totalParcelasPagas * 0.53;
+  
+  // 6. Lance embutido (se selecionado) = 15% do total das parcelas
+  const lanceEmbutido = data.useEmbedded ? (totalParcelasPagas * 0.15) : 0;
+  
+  // 7. Lance que o cliente realmente precisa pagar
   const lanceDeduzido = lanceTotal - lanceEmbutido;
   
-  // Parcelas restantes
+  // 8. Parcelas restantes após contemplação
   const parcelasRestantes = installmentCount - 1;
   
-  // Nova parcela após contemplação
-  const novaParcelaValor = Math.max(0, maxInstallment - (lanceTotal / parcelasRestantes));
+  // 9. Nova parcela após contemplação = (Total do plano - Lance pago) / Parcelas restantes
+  const totalRestante = totalQueSerapago - lanceDeduzido;
+  const novaParcelaValor = parcelasRestantes > 0 ? Math.max(0, totalRestante / parcelasRestantes) : 0;
   
-  // Encargos fixos (informativos)
-  const fundoReserva = creditValue * 0.005;
-  const taxaAdm = creditValue * 0.16; // 16% padrão
-  const seguroVida = creditValue * 0.0012 * installmentCount;
-  const seguroQuebra = creditValue * 0.0007 * installmentCount;
+  // 10. Seguros (informativos)
+  const seguroVida = creditValue * 0.0012 * installmentCount; // 0,12% ao mês
+  const seguroQuebra = creditValue * 0.0007 * installmentCount; // 0,07% ao mês
   
   return {
     grupo,
@@ -461,7 +472,7 @@ Seguro de Vida (0,12% ao mês): ${formatMoney(calculation.encargos.seguroVida)}
 Seguro de Quebra (0,07% ao mês): ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=558799143-6244&text=${encodeURIComponent(whatsappMessage)}`;
+                        const whatsappUrl = `https://api.whatsapp.com/send?phone=557498121-3461&text=${encodeURIComponent(whatsappMessage)}`;
                         window.open(whatsappUrl, '_blank');
                       }}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"

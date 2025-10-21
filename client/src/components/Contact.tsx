@@ -16,46 +16,46 @@ export default function Contact() {
           
           <div>
             <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-6">
-              Na FIRME INVESTIMENTOS você encontra as melhores soluções para construir um patrimônio sólido e duradouro.
-            </h2>
+          Na ANDREOLI CONSÓRCIOS você encontra as melhores condições para realizar seus sonhos.
+        </h2>
             
             <h3 className="text-2xl font-bold text-firme-blue mb-8">Contatos</h3>
             
             <div className="space-y-4">
               <a 
-                href="https://api.whatsapp.com/send?phone=558799143-6244&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20FIRME%20INVESTIMENTOS%20para%20construir%20meu%20patrimônio!" 
+                href="https://api.whatsapp.com/send?phone=557498121-3461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20realizar%20meu%20sonho!" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >
                 <SiWhatsapp className="text-green-500 text-xl mr-3" />
-(87) 99143-6244
+(74) 98121-3461
               </a>
               
               <a 
-                href="tel:+558799143-6244" 
+                href="tel:+557498121-3461" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-phone"
               >
                 <Phone className="text-firme-blue text-xl mr-3" />
-(87) 99143-6244
+(74) 98121-3461
               </a>
               
               <a 
-                href="mailto:contato@firmeinvestimentos.com.br" 
+                href="mailto:luandersonsilvasantos@gmail.com" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-email"
               >
                 <Mail className="text-firme-blue text-xl mr-3" />
-contato@firmeinvestimentos.com.br
+luandersonsilvasantos@gmail.com
               </a>
               
               <a 
-                href="https://www.google.com/maps/place/Av.+Anízio+Moura+Leal,+241+-+Km2,+Petrolina+-+PE" 
+                href="https://www.google.com/maps/place/Av.+Raul+Alves+-+Santo+Antonio,+Juazeiro+-+BA,+48903-260" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-address"
               >
                 <MapPin className="text-firme-blue text-xl mr-3" />
-                Av. Anízio Moura Leal, 241 - Km2, Petrolina-Pe
+                Av. Raul Alves - Santo Antonio, Juazeiro - BA, 48903-260
               </a>
             </div>
           </div>

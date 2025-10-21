@@ -1,0 +1,49 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="400" fill="#f5f5f5"/>
+  
+  <!-- Office background with purple gradient -->
+  <rect x="0" y="0" width="400" height="280" fill="url(#purpleGradient)"/>
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6f42c1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8e44ad;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Company logo AC -->
+  <text x="200" y="60" text-anchor="middle" fill="white" font-size="48" font-weight="bold" font-family="Arial, sans-serif">AC</text>
+  <text x="200" y="85" text-anchor="middle" fill="white" font-size="16" font-family="Arial, sans-serif">ANDREOLI</text>
+  <text x="200" y="105" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif">CONSÓRCIO</text>
+  
+  <!-- Two people - woman and man -->
+  <!-- Woman (left) -->
+  <circle cx="150" cy="180" r="35" fill="#d4a574"/>
+  <rect x="130" y="215" width="40" height="50" fill="#ff1493" rx="5"/>
+  <!-- Hair -->
+  <path d="M115,160 Q150,140 185,160 Q185,180 150,180 Q115,180 115,160" fill="#2c1810"/>
+  
+  <!-- Man (right) -->
+  <circle cx="250" cy="180" r="35" fill="#c4915c"/>
+  <rect x="230" y="215" width="40" height="50" fill="#deb887" rx="5"/>
+  <!-- Hair -->
+  <path d="M225,160 Q250,145 275,160 Q275,175 250,175 Q225,175 225,160" fill="#2c1810"/>
+  
+  <!-- Car in background -->
+  <rect x="60" y="200" width="70" height="35" fill="#e6e6e6" rx="6"/>
+  <circle cx="80" cy="240" r="8" fill="#333"/>
+  <circle cx="110" cy="240" r="8" fill="#333"/>
+  <rect x="65" y="205" width="20" height="15" fill="#87ceeb" rx="2"/>
+  
+  <!-- Document/contract -->
+  <rect x="180" y="190" width="40" height="30" fill="white" rx="3" stroke="#ccc" stroke-width="1"/>
+  <line x1="185" y1="200" x2="215" y2="200" stroke="#333" stroke-width="1"/>
+  <line x1="185" y1="205" x2="210" y2="205" stroke="#333" stroke-width="1"/>
+  <line x1="185" y1="210" x2="215" y2="210" stroke="#333" stroke-width="1"/>
+  
+  <!-- Text overlay with quote -->
+  <rect x="20" y="320" width="360" height="70" fill="rgba(0,0,0,0.85)" rx="35"/>
+  <text x="200" y="345" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Arial, sans-serif">de entrada você só pagou o</text>
+  <text x="200" y="365" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Arial, sans-serif">lance quando foi contemplada</text>
+  <text x="200" y="380" text-anchor="middle" fill="#ffd700" font-size="12" font-family="Arial, sans-serif">💰 Larissa - Cliente Andreoli</text>
+</svg>

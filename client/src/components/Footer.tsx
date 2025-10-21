@@ -1,30 +1,40 @@
-import logoPath from "@assets/logo_1755893657223.png";
-
 export default function Footer() {
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <footer className="bg-firme-gray text-white py-8">
-      <div className="container mx-auto px-4">
+    <footer className="bg-gradient-to-br from-firme-gray via-gray-800 to-firme-gray text-white py-8 relative overflow-hidden">
+      {/* Elementos decorativos de fundo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-500"></div>
+        <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-blue-400/10 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-1000"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <div className="flex items-center mb-4">
+          <div className="group">
+            <div className="flex items-center mb-4 transition-transform duration-300 group-hover:scale-105">
               <img 
-                src={logoPath}
-                alt="FIRME INVESTIMENTOS Logo" 
-                className="w-10 h-10 mr-3"
+                src="/andreoli-logo.svg?v=3"
+                alt="ANDREOLI CONSÓRCIOS Logo" 
+                className="w-14 h-14 mr-4 object-contain transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 drop-shadow-lg"
+                onError={(e) => {
+                  console.error('Erro ao carregar logo no footer:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
-              <span className="text-white font-bold text-xl">FIRME INVESTIMENTOS</span>
+              <span className="text-white font-bold text-2xl group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-blue-200 group-hover:bg-clip-text transition-all duration-300 drop-shadow-sm">
+                ANDREOLI CONSÓRCIOS
+              </span>
             </div>
-            <p className="text-gray-300 mb-4">
-              Construindo patrimônios sólidos com estratégias de investimento personalizadas.
+            <p className="text-gray-300 mb-4 group-hover:text-gray-200 transition-colors duration-300">
+              Realizando sonhos através de consórcios com as melhores condições do mercado.
             </p>
-            <div className="text-gray-300 text-sm">
-              <p>📍 Rua Dr. José Mariano, 114B</p>
-              <p>Cidade Garanhuns - PE</p>
-              <p>📞 (87) 98162-0542</p>
+            <div className="text-gray-300 text-sm space-y-1 group-hover:text-gray-200 transition-colors duration-300">
+              <p className="hover:text-firme-blue transition-colors duration-200 cursor-default">📍 Av. Raul Alves - Santo Antonio</p>
+              <p className="hover:text-firme-blue transition-colors duration-200 cursor-default">Juazeiro - BA, 48903-260</p>
+              <p className="hover:text-firme-blue transition-colors duration-200 cursor-default">📞 (74) 98121-3461</p>
             </div>
           </div>
           
@@ -32,41 +42,46 @@ export default function Footer() {
             <nav className="mb-4 space-x-6">
               <button 
                 onClick={() => scrollToSection('home')} 
-                className="text-gray-300 hover:text-firme-blue transition-colors"
+                className="relative text-gray-300 hover:text-firme-blue transition-all duration-300 hover:scale-110 hover:font-medium group"
                 data-testid="footer-nav-home"
               >
-                Home
+                <span className="relative z-10">Inicio</span>
+                <div className="absolute inset-0 bg-firme-blue/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -m-1"></div>
               </button>
               <button 
                 onClick={() => scrollToSection('comofunciona')} 
-                className="text-gray-300 hover:text-firme-blue transition-colors"
+                className="relative text-gray-300 hover:text-firme-blue transition-all duration-300 hover:scale-110 hover:font-medium group"
                 data-testid="footer-nav-how-it-works"
               >
-                Como funciona
+                <span className="relative z-10">Como funciona</span>
+                <div className="absolute inset-0 bg-firme-blue/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -m-1"></div>
               </button>
               <button 
                 onClick={() => scrollToSection('clientes')} 
-                className="text-gray-300 hover:text-firme-blue transition-colors"
+                className="relative text-gray-300 hover:text-firme-blue transition-all duration-300 hover:scale-110 hover:font-medium group"
                 data-testid="footer-nav-clients"
               >
-                Nossos clientes
+                <span className="relative z-10">Nossos clientes</span>
+                <div className="absolute inset-0 bg-firme-blue/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -m-1"></div>
               </button>
               <button 
                 onClick={() => scrollToSection('reclameaqui')} 
-                className="text-gray-300 hover:text-firme-blue transition-colors"
+                className="relative text-gray-300 hover:text-firme-blue transition-all duration-300 hover:scale-110 hover:font-medium group"
                 data-testid="footer-nav-complaints"
               >
-                Reclame Aqui
+                <span className="relative z-10">Reclame Aqui</span>
+                <div className="absolute inset-0 bg-firme-blue/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -m-1"></div>
               </button>
               <button 
                 onClick={() => scrollToSection('contatos')} 
-                className="text-gray-300 hover:text-firme-blue transition-colors"
+                className="relative text-gray-300 hover:text-firme-blue transition-all duration-300 hover:scale-110 hover:font-medium group"
                 data-testid="footer-nav-contact"
               >
-                Contatos
+                <span className="relative z-10">Contatos</span>
+                <div className="absolute inset-0 bg-firme-blue/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -m-1"></div>
               </button>
             </nav>
-            <p className="text-gray-300 text-sm">
+            <p className="text-gray-300 text-sm hover:text-gray-200 transition-colors duration-300">
               2025 © Todos os Direitos Reservados.
             </p>
           </div>

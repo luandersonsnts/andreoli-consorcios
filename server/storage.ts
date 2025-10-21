@@ -8,126 +8,394 @@ import {
   type JobApplication,
   type InsertJobApplication,
   type ConsortiumSimulation,
-  type InsertConsortiumSimulation
+  type InsertConsortiumSimulation,
+  users,
+  simulations,
+  complaints,
+  jobApplications,
+  consortiumSimulations
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import { eq, gte, lte, desc } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  authenticateUser(username: string, password: string): Promise<User | null>;
   createSimulation(simulation: InsertSimulation): Promise<Simulation>;
   getSimulations(): Promise<Simulation[]>;
+  updateSimulationWhatsAppStatus(id: string): Promise<Simulation>;
   createComplaint(complaint: InsertComplaint): Promise<Complaint>;
   getComplaints(): Promise<Complaint[]>;
   createJobApplication(jobApplication: InsertJobApplication): Promise<JobApplication>;
   getJobApplications(): Promise<JobApplication[]>;
+  getJobApplicationByResumeFilename(filename: string): Promise<JobApplication | undefined>;
   createConsortiumSimulation(consortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation>;
   getConsortiumSimulations(): Promise<ConsortiumSimulation[]>;
+  updateConsortiumSimulationWhatsAppStatus(id: number): Promise<ConsortiumSimulation>;
+  getSimulationStats(): Promise<{
+    totalSimulations: number;
+    totalConsortiumSimulations: number;
+    simulationsThisMonth: number;
+    consortiumSimulationsThisMonth: number;
+  }>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private simulations: Map<string, Simulation>;
-  private complaints: Map<string, Complaint>;
-  private jobApplications: Map<string, JobApplication>;
-  private consortiumSimulations: Map<string, ConsortiumSimulation>;
+// Initialize database connection
+let db: any = null;
+try {
+  const databasePath = process.env.DATABASE_URL || "./database.sqlite";
+  const sqlite = new Database(databasePath);
+  
+  // Configure SQLite for UTF-8 encoding
+  sqlite.pragma('encoding = "UTF-8"');
+  sqlite.pragma('journal_mode = WAL');
+  sqlite.pragma('synchronous = NORMAL');
+  sqlite.pragma('cache_size = 1000');
+  sqlite.pragma('foreign_keys = ON');
+  sqlite.pragma('temp_store = MEMORY');
+  
+  db = drizzle(sqlite);
+  console.log("Database connected successfully with UTF-8 encoding:", databasePath);
+} catch (error) {
+  console.error("Failed to connect to database:", error);
+}
+
+// In-memory storage fallback
+class MemoryStorage implements IStorage {
+  private users: User[] = [];
+  private simulations: Simulation[] = [];
+  private complaints: Complaint[] = [];
+  private jobApplications: JobApplication[] = [];
+  private consortiumSimulations: ConsortiumSimulation[] = [];
+  private consortiumIdCounter = 1;
 
   constructor() {
-    this.users = new Map();
-    this.simulations = new Map();
-    this.complaints = new Map();
-    this.jobApplications = new Map();
-    this.consortiumSimulations = new Map();
+    // Create a default admin user for testing
+    this.initializeDefaultAdmin();
+  }
+
+  private async initializeDefaultAdmin() {
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    this.users.push({
+      id: randomUUID(),
+      username: 'admin',
+      password: hashedPassword,
+      createdAt: new Date()
+    });
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    return this.users.find(user => user.id === id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    return this.users.find(user => user.username === username);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    const user: User = {
+      id: randomUUID(),
+      username: insertUser.username,
+      password: hashedPassword,
+      createdAt: new Date()
+    };
+    this.users.push(user);
     return user;
   }
 
+  async authenticateUser(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
+  }
+
   async createSimulation(insertSimulation: InsertSimulation): Promise<Simulation> {
-    const id = randomUUID();
-    const simulation: Simulation = { 
-      ...insertSimulation, 
-      id, 
-      createdAt: new Date() 
+    const simulation: Simulation = {
+      id: randomUUID(),
+      ...insertSimulation,
+      whatsappSent: false,
+      whatsappSentAt: null,
+      createdAt: new Date()
     };
-    this.simulations.set(id, simulation);
+    this.simulations.push(simulation);
     return simulation;
   }
 
   async getSimulations(): Promise<Simulation[]> {
-    return Array.from(this.simulations.values()).sort(
-      (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-    );
+    return this.simulations;
+  }
+
+  async updateSimulationWhatsAppStatus(id: string): Promise<Simulation> {
+    const simulation = this.simulations.find(s => s.id === id);
+    if (!simulation) {
+      throw new Error("Simulation not found");
+    }
+    simulation.whatsappSent = true;
+    simulation.whatsappSentAt = new Date();
+    return simulation;
   }
 
   async createComplaint(insertComplaint: InsertComplaint): Promise<Complaint> {
-    const id = randomUUID();
-    const complaint: Complaint = { 
-      ...insertComplaint, 
-      id, 
-      createdAt: new Date() 
+    const complaint: Complaint = {
+      id: randomUUID(),
+      ...insertComplaint,
+      createdAt: new Date()
     };
-    this.complaints.set(id, complaint);
+    this.complaints.push(complaint);
     return complaint;
   }
 
   async getComplaints(): Promise<Complaint[]> {
-    return Array.from(this.complaints.values()).sort(
-      (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-    );
+    return this.complaints;
   }
 
   async createJobApplication(insertJobApplication: InsertJobApplication): Promise<JobApplication> {
-    const id = randomUUID();
-    const jobApplication: JobApplication = { 
-      ...insertJobApplication, 
-      id, 
-      createdAt: new Date(),
-      resumeFilename: insertJobApplication.resumeFilename || null
+    const jobApplication: JobApplication = {
+      id: randomUUID(),
+      ...insertJobApplication,
+      resumeFilename: insertJobApplication.resumeFilename ?? null,
+      createdAt: new Date()
     };
-    this.jobApplications.set(id, jobApplication);
+    this.jobApplications.push(jobApplication);
     return jobApplication;
   }
 
   async getJobApplications(): Promise<JobApplication[]> {
-    return Array.from(this.jobApplications.values()).sort(
-      (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-    );
+    return this.jobApplications;
+  }
+
+  async getJobApplicationByResumeFilename(filename: string): Promise<JobApplication | undefined> {
+    return this.jobApplications.find(app => app.resumeFilename === filename);
   }
 
   async createConsortiumSimulation(insertConsortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation> {
-    const uuid = randomUUID();
-    const numericId = Math.floor(Math.random() * 1000000) + 1;
     const consortiumSimulation: ConsortiumSimulation = {
+      id: this.consortiumIdCounter++,
       ...insertConsortiumSimulation,
-      id: numericId,
-      useEmbedded: insertConsortiumSimulation.useEmbedded ?? false,
+      useEmbedded: insertConsortiumSimulation.useEmbedded ?? null,
+      whatsappSent: false,
+      whatsappSentAt: null,
       createdAt: new Date()
     };
-    this.consortiumSimulations.set(uuid, consortiumSimulation);
+    this.consortiumSimulations.push(consortiumSimulation);
     return consortiumSimulation;
   }
 
   async getConsortiumSimulations(): Promise<ConsortiumSimulation[]> {
-    return Array.from(this.consortiumSimulations.values()).sort(
-      (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-    );
+    return this.consortiumSimulations;
+  }
+
+  async updateConsortiumSimulationWhatsAppStatus(id: number): Promise<ConsortiumSimulation> {
+    const simulation = this.consortiumSimulations.find(s => s.id === id);
+    if (!simulation) {
+      throw new Error("Consortium simulation not found");
+    }
+    simulation.whatsappSent = true;
+    simulation.whatsappSentAt = new Date();
+    return simulation;
+  }
+
+  async getSimulationStats(): Promise<{
+    totalSimulations: number;
+    totalConsortiumSimulations: number;
+    simulationsThisMonth: number;
+    consortiumSimulationsThisMonth: number;
+  }> {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const simulationsThisMonth = this.simulations.filter(s => {
+      if (!s.createdAt) return false;
+      const date = new Date(s.createdAt);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    }).length;
+
+    const consortiumSimulationsThisMonth = this.consortiumSimulations.filter(s => {
+      if (!s.createdAt) return false;
+      const date = new Date(s.createdAt);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    }).length;
+
+    return {
+      totalSimulations: this.simulations.length,
+      totalConsortiumSimulations: this.consortiumSimulations.length,
+      simulationsThisMonth,
+      consortiumSimulationsThisMonth
+    };
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  constructor() {
+    // Initialize default admin user
+    this.initializeDefaultAdmin();
+  }
+
+  private async initializeDefaultAdmin() {
+    try {
+      if (!db) return;
+      
+      // Check if admin user already exists
+      const existingAdmin = await db.select().from(users).where(eq(users.username, 'admin')).limit(1);
+      
+      if (existingAdmin.length === 0) {
+        // Create default admin user
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        await db.insert(users).values({
+          username: 'admin',
+          password: hashedPassword
+        });
+        console.log("Default admin user created successfully");
+      }
+    } catch (error) {
+      console.error("Error initializing default admin:", error);
+    }
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    if (!db) throw new Error("Database not initialized");
+    // Hash password before storing
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    const userWithHashedPassword = { ...insertUser, password: hashedPassword };
+    
+    const result = await db.insert(users).values(userWithHashedPassword).returning();
+    return result[0];
+  }
+
+  async authenticateUser(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
+  }
+
+  async createSimulation(insertSimulation: InsertSimulation): Promise<Simulation> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.insert(simulations).values(insertSimulation).returning();
+    return result[0];
+  }
+
+  async getSimulations(): Promise<Simulation[]> {
+    if (!db) throw new Error("Database not initialized");
+    return await db.select().from(simulations).orderBy(desc(simulations.createdAt));
+  }
+
+  async createComplaint(insertComplaint: InsertComplaint): Promise<Complaint> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.insert(complaints).values(insertComplaint).returning();
+    return result[0];
+  }
+
+  async getComplaints(): Promise<Complaint[]> {
+    if (!db) throw new Error("Database not initialized");
+    return await db.select().from(complaints).orderBy(desc(complaints.createdAt));
+  }
+
+  async createJobApplication(insertJobApplication: InsertJobApplication): Promise<JobApplication> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.insert(jobApplications).values(insertJobApplication).returning();
+    return result[0];
+  }
+
+  async getJobApplications(): Promise<JobApplication[]> {
+    if (!db) throw new Error("Database not initialized");
+    return await db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
+  }
+
+  async getJobApplicationByResumeFilename(filename: string): Promise<JobApplication | undefined> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.select().from(jobApplications).where(eq(jobApplications.resumeFilename, filename)).limit(1);
+    return result[0] || undefined;
+  }
+
+  async createConsortiumSimulation(insertConsortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db.insert(consortiumSimulations).values(insertConsortiumSimulation).returning();
+    return result[0];
+  }
+
+  async getConsortiumSimulations(): Promise<ConsortiumSimulation[]> {
+    if (!db) throw new Error("Database not initialized");
+    return await db.select().from(consortiumSimulations).orderBy(desc(consortiumSimulations.createdAt));
+  }
+
+  async updateSimulationWhatsAppStatus(id: string): Promise<Simulation> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db
+      .update(simulations)
+      .set({ 
+        whatsappSent: true, 
+        whatsappSentAt: new Date() 
+      })
+      .where(eq(simulations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateConsortiumSimulationWhatsAppStatus(id: number): Promise<ConsortiumSimulation> {
+    if (!db) throw new Error("Database not initialized");
+    const result = await db
+      .update(consortiumSimulations)
+      .set({ 
+        whatsappSent: true, 
+        whatsappSentAt: new Date() 
+      })
+      .where(eq(consortiumSimulations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getSimulationStats(): Promise<{
+    totalSimulations: number;
+    totalConsortiumSimulations: number;
+    simulationsThisMonth: number;
+    consortiumSimulationsThisMonth: number;
+  }> {
+    if (!db) throw new Error("Database not initialized");
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const [
+      totalSims,
+      totalConsortiumSims,
+      monthSims,
+      monthConsortiumSims
+    ] = await Promise.all([
+      db.select().from(simulations),
+      db.select().from(consortiumSimulations),
+      db.select().from(simulations).where(gte(simulations.createdAt, startOfMonth)),
+      db.select().from(consortiumSimulations).where(gte(consortiumSimulations.createdAt, startOfMonth))
+    ]);
+
+    return {
+      totalSimulations: totalSims.length,
+      totalConsortiumSimulations: totalConsortiumSims.length,
+      simulationsThisMonth: monthSims.length,
+      consortiumSimulationsThisMonth: monthConsortiumSims.length,
+    };
+  }
+}
+
+// Use database storage if available, otherwise fallback to memory storage
+export const storage: IStorage = db ? new DatabaseStorage() : new MemoryStorage();

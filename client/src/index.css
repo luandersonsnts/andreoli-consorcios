@@ -41,9 +41,9 @@
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: 1.3rem;
-  --firme-blue: hsl(220, 100%, 45%);
-  --firme-blue-light: hsl(220, 100%, 55%);
-  --firme-blue-dark: hsl(220, 100%, 35%);
+  --firme-blue: hsl(0, 0%, 0%);
+  --firme-blue-light: hsl(0, 0%, 20%);
+  --firme-blue-dark: hsl(0, 0%, 0%);
   --firme-gray: hsl(0, 0%, 20%);
   --firme-light-gray: hsl(0, 0%, 96%);
 }
@@ -81,8 +81,8 @@
   --sidebar-accent-foreground: hsl(203.7736, 87.6033%, 52.5490%);
   --sidebar-border: hsl(205.7143, 15.7895%, 26.0784%);
   --sidebar-ring: hsl(202.8169, 89.1213%, 53.1373%);
-  --firme-blue: hsl(220, 100%, 45%);
-  --firme-blue-light: hsl(220, 100%, 55%);
+  --firme-blue: hsl(0, 0%, 100%);
+  --firme-blue-light: hsl(0, 0%, 80%);
   --firme-gray: hsl(0, 0%, 80%);
   --firme-light-gray: hsl(0, 0%, 10%);
 }

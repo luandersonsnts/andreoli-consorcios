@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isStaticSite, openWhatsAppWithMessage } from "@/lib/runtimeEnv";
-import { formatInvestmentForWhatsApp } from "@/lib/consortiumCalculator";
+import { formatInvestmentForWhatsApp, calculateInvestment, type InvestmentCalculation } from "@/lib/consortiumCalculator";
 import { TrendingUp, PiggyBank, Calculator } from 'lucide-react';
 import NewConsortiumSimulationForm from './NewConsortiumSimulationForm';
+import { InvestmentProjection } from './InvestmentProjection';
 import type { z } from "zod";
 
 type SimulationFormData = z.infer<typeof insertSimulationSchema>;
@@ -20,13 +21,25 @@ type SimulationFormData = z.infer<typeof insertSimulationSchema>;
 export default function SimulationForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [objective, setObjective] = useState("");
   const [simulationType, setSimulationType] = useState<'investment' | 'consortium'>('investment');
+  const [showProjection, setShowProjection] = useState(false);
+  const [projectionData, setProjectionData] = useState<{
+    calculation: InvestmentCalculation;
+    clientData: {
+      name: string;
+      phone: string;
+      email: string;
+      objective: string;
+    };
+    simulationId?: string;
+  } | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting }
   } = useForm<SimulationFormData>({
     resolver: zodResolver(insertSimulationSchema),
@@ -40,18 +53,27 @@ export default function SimulationForm() {
     }
   });
 
+  const objective = watch("objective");
+
   const mutation = useMutation({
     mutationFn: async (data: SimulationFormData) => {
       const response = await apiRequest("POST", "/api/simulations", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Atualizar projectionData com o ID da simulação
+      if (projectionData && result.id) {
+        setProjectionData({
+          ...projectionData,
+          simulationId: result.id
+        });
+      }
+      
       toast({
         title: "Simulação enviada!",
         description: "Recebemos sua solicitação e entraremos em contato em breve."
       });
       reset();
-      setObjective("");
       queryClient.invalidateQueries({ queryKey: ['/api/simulations'] });
     },
     onError: () => {
@@ -64,37 +86,70 @@ export default function SimulationForm() {
   });
 
   const onSubmit = (data: SimulationFormData) => {
-    if (isStaticSite) {
-      const message = formatInvestmentForWhatsApp(
-        data.name,
-        data.phone,
-        data.email,
-        objective,
-        data.monthlyAmount,
-        data.timeframe
-      );
-      openWhatsAppWithMessage(message);
-      toast({
-        title: "Redirecionando para WhatsApp",
-        description: "Você será redirecionado para continuar pelo WhatsApp!"
-      });
-      reset();
-      setObjective("");
-    } else {
-      mutation.mutate({ ...data, objective });
+    // Calcular a projeção
+    const monthlyAmount = parseFloat(data.monthlyAmount.replace(/[^\d,]/g, '').replace(',', '.'));
+    const timeframeYears = parseInt(data.timeframe);
+    
+    const calculation = calculateInvestment(monthlyAmount, timeframeYears);
+    
+    const clientData = {
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      objective: data.objective
+    };
+    
+    // Exibir a projeção
+    setProjectionData({ calculation, clientData });
+    setShowProjection(true);
+    
+    // Salvar no banco se não for site estático
+    if (!isStaticSite) {
+      mutation.mutate(data);
     }
   };
 
-  if (simulationType === 'consortium') {
-    return <NewConsortiumSimulationForm />;
-  }
+  const handleSendWhatsApp = async () => {
+    if (!projectionData) return;
+    
+    const message = formatInvestmentForWhatsApp(
+      projectionData.clientData.name,
+      projectionData.clientData.phone,
+      projectionData.clientData.email,
+      projectionData.clientData.objective,
+      projectionData.calculation.monthlyAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+      projectionData.calculation.timeframe.toString()
+    );
+    
+    openWhatsAppWithMessage(message);
+    
+    // Registrar o envio via WhatsApp se não for site estático e tiver ID da simulação
+    if (!isStaticSite && projectionData.simulationId) {
+      try {
+        await apiRequest("PATCH", `/api/simulations/${projectionData.simulationId}/whatsapp`, {});
+      } catch (error) {
+        console.error('Erro ao registrar envio do WhatsApp:', error);
+      }
+    }
+    
+    toast({
+      title: "Redirecionando para WhatsApp",
+      description: "Você será redirecionado para continuar pelo WhatsApp!"
+    });
+  };
 
   return (
-    <section id="simule" className="py-16 bg-white">
-      <div className="container mx-auto px-4">
+    <section id="simule" className="py-16 bg-gradient-to-b from-white via-blue-50/20 to-white relative overflow-hidden">
+      {/* Elementos decorativos de fundo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-10 right-20 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-700"></div>
+        <div className="absolute bottom-10 left-20 w-48 h-48 bg-firme-blue/20 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse delay-1200"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
-            PROJETE SEU FUTURO FINANCEIRO
+            PROJETE SEU <span className="text-transparent bg-gradient-to-r from-firme-blue to-blue-600 bg-clip-text">FUTURO FINANCEIRO</span>
           </h2>
           <h3 className="text-2xl font-bold text-firme-blue mb-4">
             Escolha o tipo de simulação:
@@ -105,37 +160,53 @@ export default function SimulationForm() {
             <Button
               onClick={() => setSimulationType('investment')}
               variant={simulationType === 'investment' ? 'default' : 'outline'}
-              className={`px-6 py-3 ${
+              className={`relative group px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg overflow-hidden ${
                 simulationType === 'investment'
-                  ? 'bg-firme-blue text-white'
-                  : 'border-firme-blue text-firme-blue hover:bg-firme-blue hover:text-white'
+                  ? 'bg-gradient-to-r from-firme-blue to-blue-600 text-white shadow-lg'
+                  : 'border-2 border-firme-blue text-firme-blue hover:bg-firme-blue hover:text-white'
               }`}
               data-testid="button-investment-simulation"
             >
-              <TrendingUp className="w-5 h-5 mr-2" />
-              Investimentos Tradicionais
+              <span className="relative z-10 flex items-center">
+                <TrendingUp className={`w-5 h-5 mr-2 transition-transform duration-300 ${simulationType === 'investment' ? 'animate-pulse' : 'group-hover:rotate-12'}`} />
+                Investimentos Tradicionais
+              </span>
+              {simulationType !== 'investment' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-firme-blue to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              )}
             </Button>
             <Button
               onClick={() => setSimulationType('consortium')}
               variant={simulationType === 'consortium' ? 'default' : 'outline'}
-              className={`px-6 py-3 ${
+              className={`relative group px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg overflow-hidden ${
                 simulationType === 'consortium'
-                  ? 'bg-firme-blue text-white'
-                  : 'border-firme-blue text-firme-blue hover:bg-firme-blue hover:text-white'
+                  ? 'bg-gradient-to-r from-firme-blue to-blue-600 text-white shadow-lg'
+                  : 'border-2 border-firme-blue text-firme-blue hover:bg-firme-blue hover:text-white'
               }`}
               data-testid="button-consortium-simulation"
             >
-              <PiggyBank className="w-5 h-5 mr-2" />
-              Consórcio
+              <span className="relative z-10 flex items-center">
+                <PiggyBank className={`w-5 h-5 mr-2 transition-transform duration-300 ${simulationType === 'consortium' ? 'animate-pulse' : 'group-hover:rotate-12'}`} />
+                Consórcio
+              </span>
+              {simulationType !== 'consortium' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-firme-blue to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              )}
             </Button>
           </div>
-          
-          <h4 className="text-xl font-bold text-firme-gray">
-            Simule seu plano de investimentos:
-          </h4>
         </div>
+
+        {simulationType === 'consortium' ? (
+          <NewConsortiumSimulationForm />
+        ) : (
+          <>
+            <div className="text-center mb-8">
+              <h4 className="text-xl font-bold text-firme-gray">
+                Simule seu plano de investimentos:
+              </h4>
+            </div>
         
-        <div className="max-w-2xl mx-auto bg-firme-light-gray p-8 rounded-xl">
+        <div className="max-w-2xl mx-auto bg-gradient-to-br from-white to-blue-50/50 p-8 rounded-xl shadow-xl border border-blue-100 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -178,7 +249,7 @@ export default function SimulationForm() {
             
             <div>
               <Label className="block text-firme-gray font-medium mb-2">Objetivo de Investimento</Label>
-              <Select value={objective} onValueChange={setObjective}>
+              <Select value={objective} onValueChange={(value) => setValue("objective", value)}>
                 <SelectTrigger className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent" data-testid="select-simulation-objective">
                   <SelectValue placeholder="Selecione seu objetivo" />
                 </SelectTrigger>
@@ -190,7 +261,7 @@ export default function SimulationForm() {
                   <SelectItem value="educacao-filhos">Educação dos filhos</SelectItem>
                 </SelectContent>
               </Select>
-              {!objective && errors.objective && <p className="text-red-500 text-sm mt-1">Selecione um objetivo</p>}
+              {errors.objective && <p className="text-red-500 text-sm mt-1">{errors.objective.message}</p>}
             </div>
             
             <div>
@@ -221,14 +292,31 @@ export default function SimulationForm() {
             <Button 
               type="submit" 
               disabled={isSubmitting || (!isStaticSite && mutation.isPending)}
-              className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
+              className="relative group w-full bg-gradient-to-r from-firme-blue to-blue-600 text-white py-4 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl overflow-hidden"
               data-testid="button-submit-simulation"
             >
-              <Calculator className="w-5 h-5 mr-2" />
-              {(!isStaticSite && mutation.isPending) ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
+              <span className="relative z-10 flex items-center justify-center">
+                <Calculator className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" />
+                {(!isStaticSite && mutation.isPending) ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
+                {!isSubmitting && !(!isStaticSite && mutation.isPending) && (
+                  <TrendingUp className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                )}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-firme-blue to-blue-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
             </Button>
           </form>
         </div>
+        
+        {showProjection && projectionData && (
+          <InvestmentProjection
+            calculation={projectionData.calculation}
+            clientData={projectionData.clientData}
+            onSendWhatsApp={handleSendWhatsApp}
+          />
+        )}
+          </>
+        )}
       </div>
     </section>
   );

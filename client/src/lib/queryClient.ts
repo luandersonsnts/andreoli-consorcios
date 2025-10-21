@@ -1,7 +1,20 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Function to handle logout when token expires
+function handleTokenExpired() {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  // Reload the page to trigger re-authentication
+  window.location.reload();
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Handle token expiration or invalid token
+    if (res.status === 401 || res.status === 403) {
+      handleTokenExpired();
+      throw new Error('Token expirado ou inválido');
+    }
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
@@ -12,9 +25,21 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers: Record<string, string> = {};
+  
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Add JWT token if available
+  const token = localStorage.getItem('admin_token');
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,12 +54,26 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const headers: Record<string, string> = {};
+    
+    // Add JWT token if available
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(queryKey.join("/") as string, {
+      headers,
       credentials: "include",
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401 || res.status === 403) {
+      if (unauthorizedBehavior === "returnNull") {
+        return null;
+      } else {
+        handleTokenExpired();
+        return null; // Return null to prevent further processing
+      }
     }
 
     await throwIfResNotOk(res);

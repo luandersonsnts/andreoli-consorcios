@@ -1,5 +1,21 @@
 import { CONSORTIUM_GROUPS } from '@shared/consortiumTypes';
 
+export interface InvestmentCalculation {
+  monthlyAmount: number;
+  timeframe: number;
+  totalInvested: number;
+  totalReturn: number;
+  profit: number;
+  annualRate: number;
+  monthlyRate: number;
+  yearlyBreakdown: Array<{
+    year: number;
+    totalInvested: number;
+    totalReturn: number;
+    profit: number;
+  }>;
+}
+
 export interface ConsortiumCalculation {
   creditValue: number;
   monthlyPayment: number;
@@ -13,6 +29,49 @@ export interface ConsortiumCalculation {
     category: string;
     adminRate: number;
     fundRate: number;
+  };
+}
+
+export function calculateInvestment(
+  monthlyAmount: number,
+  timeframeYears: number,
+  annualRate: number = 12 // Taxa anual padrão de 12%
+): InvestmentCalculation {
+  const monthlyRate = annualRate / 100 / 12;
+  const totalMonths = timeframeYears * 12;
+  
+  // Cálculo de juros compostos para aportes mensais
+  // FV = PMT * [((1 + r)^n - 1) / r]
+  const futureValue = monthlyAmount * (((1 + monthlyRate) ** totalMonths - 1) / monthlyRate);
+  
+  const totalInvested = monthlyAmount * totalMonths;
+  const profit = futureValue - totalInvested;
+  
+  // Breakdown anual
+  const yearlyBreakdown = [];
+  for (let year = 1; year <= timeframeYears; year++) {
+    const monthsInYear = year * 12;
+    const yearlyFutureValue = monthlyAmount * (((1 + monthlyRate) ** monthsInYear - 1) / monthlyRate);
+    const yearlyInvested = monthlyAmount * monthsInYear;
+    const yearlyProfit = yearlyFutureValue - yearlyInvested;
+    
+    yearlyBreakdown.push({
+      year,
+      totalInvested: yearlyInvested,
+      totalReturn: yearlyFutureValue,
+      profit: yearlyProfit
+    });
+  }
+  
+  return {
+    monthlyAmount,
+    timeframe: timeframeYears,
+    totalInvested,
+    totalReturn: futureValue,
+    profit,
+    annualRate,
+    monthlyRate: monthlyRate * 100,
+    yearlyBreakdown
   };
 }
 
@@ -59,7 +118,7 @@ export function formatConsortiumForWhatsApp(
   email: string,
   calculation: ConsortiumCalculation
 ): string {
-  return `*SIMULAÇÃO DE CONSÓRCIO - FIRME INVESTIMENTOS*
+  return `*SIMULAÇÃO DE CONSÓRCIO - ANDREOLI CONSÓRCIOS*
 
 👤 *Dados do Cliente:*
 Nome: ${name}
@@ -90,7 +149,7 @@ export function formatInvestmentForWhatsApp(
   monthlyAmount: string,
   timeframe: string
 ): string {
-  return `*SIMULAÇÃO DE INVESTIMENTO - FIRME INVESTIMENTOS*
+  return `*SIMULAÇÃO DE INVESTIMENTO - ANDREOLI CONSÓRCIOS*
 
 👤 *Dados do Cliente:*
 Nome: ${name}

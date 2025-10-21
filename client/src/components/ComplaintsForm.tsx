@@ -68,7 +68,7 @@ export default function ComplaintsForm() {
   const onSubmit = (data: ComplaintFormData) => {
     if (isStaticSite) {
       const typeLabel = type === "reclamacao" ? "Reclamação" : type === "sugestao" ? "Sugestão" : "Elogio";
-      const message = `*MANIFESTAÇÃO - FIRME INVESTIMENTOS*
+      const message = `*MANIFESTAÇÃO - ANDREOLI CONSÓRCIOS*
 
 👤 *Dados do Cliente:*
 Nome: ${data.name}

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Car, Home, Wrench, Truck } from 'lucide-react';
-import { ConsortiumCategory, CATEGORY_LABELS, getGroupsByCategory } from '../../../shared/consortiumTypes';
+import { Car, Home, Wrench, Truck, Zap, Bike, Ship, Sun } from 'lucide-react';
+import { ConsortiumCategory, CATEGORY_LABELS, getGroupsByCategory } from '@shared/consortiumTypes';
 
 interface ConsortiumCategorySelectorProps {
   onCategorySelect: (category: ConsortiumCategory) => void;
@@ -21,11 +21,18 @@ export default function ConsortiumCategorySelector({
     groups: number;
   }> = [
     {
-      id: 'automovel',
-      label: 'Automóveis e Motos',
+      id: 'eletros',
+      label: 'Eletros',
+      icon: Zap,
+      description: 'Eletrodomésticos e eletrônicos',
+      groups: getGroupsByCategory('eletros').length
+    },
+    {
+      id: 'carro',
+      label: 'Carros',
       icon: Car,
-      description: 'Carros, motos zero km ou seminovos',
-      groups: getGroupsByCategory('automovel').length
+      description: 'Carros zero km ou seminovos',
+      groups: getGroupsByCategory('carro').length
     },
     {
       id: 'imovel',
@@ -35,6 +42,13 @@ export default function ConsortiumCategorySelector({
       groups: getGroupsByCategory('imovel').length
     },
     {
+      id: 'moto',
+      label: 'Motos',
+      icon: Bike,
+      description: 'Motos zero km ou seminovas',
+      groups: getGroupsByCategory('moto').length
+    },
+    {
       id: 'servicos',
       label: 'Serviços',
       icon: Wrench,
@@ -42,11 +56,18 @@ export default function ConsortiumCategorySelector({
       groups: getGroupsByCategory('servicos').length
     },
     {
-      id: 'pesados',
-      label: 'Veículos Pesados',
-      icon: Truck,
-      description: 'Caminhões, tratores, máquinas',
-      groups: getGroupsByCategory('pesados').length
+      id: 'barco',
+      label: 'Barcos',
+      icon: Ship,
+      description: 'Embarcações e equipamentos náuticos',
+      groups: getGroupsByCategory('barco').length
+    },
+    {
+      id: 'energia_solar',
+      label: 'Energia Solar',
+      icon: Sun,
+      description: 'Sistemas de energia solar',
+      groups: getGroupsByCategory('energia_solar').length
     }
   ];
 

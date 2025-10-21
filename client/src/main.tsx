@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-console.log("🚀 Iniciando aplicação FirmeInvest...");
+console.log("🚀 Iniciando aplicação Andreoli Consórcios...");
 console.log("📍 Base URL:", import.meta.env.BASE_URL);
 console.log("🔧 Modo estático:", import.meta.env.VITE_STATIC_SITE);
 

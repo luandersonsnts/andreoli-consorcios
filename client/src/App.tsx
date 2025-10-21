@@ -1,6 +1,8 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "./contexts/AuthContext";
+import { Toaster } from "./components/ui/toaster";
 // Removed problematic imports
 import Home from "./pages/home";
 import AdminPage from "./pages/admin";
@@ -26,10 +28,13 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Ensure routing works under Vite base (e.g., /firmeinvest/) */}
-      <WouterRouter base={baseUrl}>
-        <AppRoutes />
-      </WouterRouter>
+      <AuthProvider>
+        {/* Ensure routing works under Vite base (e.g., /andreoliconsorcios/) */}
+        <WouterRouter base={baseUrl}>
+          <AppRoutes />
+        </WouterRouter>
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

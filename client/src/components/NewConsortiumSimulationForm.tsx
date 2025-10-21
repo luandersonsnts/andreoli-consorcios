@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,8 +12,7 @@ import { Calculator, TrendingUp, PiggyBank, ArrowLeft } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { isStaticSite, openWhatsAppWithMessage } from '@/lib/runtimeEnv';
 import { calculateConsortium, formatConsortiumForWhatsApp } from '@/lib/consortiumCalculator';
-import { ConsortiumCategory, ConsortiumGroup, getGroupById } from '../../../shared/consortiumTypes';
-import ConsortiumCategorySelector from './ConsortiumCategorySelector';
+import { ConsortiumCategory, ConsortiumGroup, getGroupById } from '@shared/consortiumTypes';
 import ConsortiumGroupSelector from './ConsortiumGroupSelector';
 
 // Schema para validação do formulário
@@ -54,44 +53,56 @@ function calculateConsortiumWithGroup(data: ConsortiumFormData, group: Consortiu
   const maxInstallment = parseFloat(data.maxInstallmentValue);
   const installmentCount = parseInt(data.installmentCount);
   
-  // Grupo aleatório baseado na categoria
-  const grupo = Math.floor(Math.random() * 800) + 200;
+  // Usar o número do grupo real extraído do ID (ex: ELE001 -> 1247)
+  const grupoNumero = parseInt(group.name.match(/\d+/)?.[0] || "1000");
   
-  // Base para cálculo do lance
-  const baseLance = maxInstallment * installmentCount;
+  // CÁLCULO CORRETO BASEADO NOS DADOS DO GRUPO:
   
-  // Percentual do lance baseado no grupo (45% a 59%)
-  const pctLance = Math.random() * (59 - 45) + 45;
-  const lanceTotal = (baseLance * pctLance / 100);
+  // 1. Taxa administrativa do grupo específico
+  const taxaAdmPercentual = group.adminTax / 100;
+  const taxaAdm = creditValue * taxaAdmPercentual;
   
-  // Embutido máximo baseado no grupo
-  const maxEmbedded = group.maxBid / 100;
-  const lanceEmbutido = data.useEmbedded ? (baseLance * Math.min(0.15, maxEmbedded)) : 0;
+  // 2. Fundo de reserva do grupo específico
+  const fundoReservaPercentual = group.fundReserve / 100;
+  const fundoReserva = creditValue * fundoReservaPercentual;
   
-  // Lance deduzido
-  const lanceDeduzido = lanceTotal - lanceEmbutido;
+  // 3. Total que será pago = Valor do crédito + Taxa Adm + Fundo de Reserva
+  const totalQueSerapago = creditValue + taxaAdm + fundoReserva;
   
-  // Parcelas restantes
+  // 4. Parcela mensal real = Total / Número de parcelas
+  const parcelaMensalReal = totalQueSerapago / installmentCount;
+  
+  // 5. CÁLCULO DO LANCE (baseado na metodologia Andreoli):
+  // Lance médio = 53% do total das parcelas pagas
+  const totalParcelasPagas = maxInstallment * installmentCount;
+  let valorDoLance = totalParcelasPagas * 0.53;
+  
+  // 6. Lance embutido (se selecionado) = 15% do total das parcelas
+  const lanceEmbutido = data.useEmbedded ? (totalParcelasPagas * 0.15) : 0;
+  
+  // 7. Lance que o cliente realmente precisa pagar
+  const lanceDeduzido = valorDoLance - lanceEmbutido;
+  
+  // 8. Parcelas restantes após contemplação
   const parcelasRestantes = installmentCount - 1;
   
-  // Nova parcela após contemplação
-  const novaParcelaValor = Math.max(0, maxInstallment - (lanceTotal / parcelasRestantes));
+  // 9. Nova parcela após contemplação = (Total - Lance pago) / Parcelas restantes
+  const totalRestante = totalQueSerapago - lanceDeduzido;
+  const novaParcelaValor = parcelasRestantes > 0 ? totalRestante / parcelasRestantes : 0;
   
-  // Encargos baseados no grupo
-  const fundoReserva = creditValue * (group.fundReserve / 100);
-  const taxaAdm = creditValue * (group.adminTax / 100);
-  const seguroVida = group.category === 'imovel' ? creditValue * 0.0012 : creditValue * (group.insuranceRate / 100);
-  const seguroQuebra = group.category === 'imovel' ? creditValue * 0.0007 : creditValue * (group.insuranceRate / 100) * 0.5;
+  // 10. Seguros (baseados nas taxas do grupo)
+  const seguroVida = creditValue * (group.insuranceRate / 100) * installmentCount;
+  const seguroQuebra = creditValue * 0.0007 * installmentCount; // 0,07% padrão
   
   return {
-    grupo,
+    grupo: grupoNumero,
     valorCarta: creditValue,
     parcelaAtual: maxInstallment,
-    lanceTotal,
+    lanceTotal: valorDoLance,
     lanceEmbutido,
     lanceDeduzido,
     parcelasRestantes,
-    novaParcelaValor,
+    novaParcelaValor: Math.max(0, novaParcelaValor), // Não pode ser negativo
     encargos: {
       fundoReserva,
       taxaAdm,
@@ -108,12 +119,17 @@ const formatMoney = (value: number): string => {
   }).format(value);
 };
 
-export default function NewConsortiumSimulationForm() {
-  const [step, setStep] = useState<Step>('category');
-  const [selectedCategory, setSelectedCategory] = useState<ConsortiumCategory | undefined>();
+interface NewConsortiumSimulationFormProps {
+  preSelectedCategory?: ConsortiumCategory;
+}
+
+export default function NewConsortiumSimulationForm({ preSelectedCategory }: NewConsortiumSimulationFormProps) {
+  const [step, setStep] = useState<Step>(preSelectedCategory ? 'group' : 'category');
+  const [selectedCategory, setSelectedCategory] = useState<ConsortiumCategory | undefined>(preSelectedCategory);
   const [selectedGroup, setSelectedGroup] = useState<ConsortiumGroup | undefined>();
   const [calculation, setCalculation] = useState<ConsortiumCalculationResult | null>(null);
   const [useEmbedded, setUseEmbedded] = useState(false);
+  const [simulationId, setSimulationId] = useState<number | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -141,10 +157,22 @@ export default function NewConsortiumSimulationForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: ConsortiumFormData) => {
-      const response = await apiRequest("POST", "/api/consortium-simulations", data);
+      const formattedData = {
+        ...data,
+        creditValue: parseFloat(data.creditValue),
+        maxInstallmentValue: parseFloat(data.maxInstallmentValue),
+        installmentCount: parseInt(data.installmentCount),
+        useEmbedded: data.useEmbedded || false
+      };
+      const response = await apiRequest("POST", "/api/consortium-simulations", formattedData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Armazenar o ID da simulação
+      if (result.id) {
+        setSimulationId(result.id);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/consortium-simulations"] });
       toast({
         title: "Sucesso!",
@@ -159,6 +187,17 @@ export default function NewConsortiumSimulationForm() {
       });
     },
   });
+
+  // Reagir às mudanças na preSelectedCategory
+  useEffect(() => {
+    if (preSelectedCategory && preSelectedCategory !== selectedCategory) {
+      setSelectedCategory(preSelectedCategory);
+      setValue('category', preSelectedCategory);
+      setStep('group');
+      setSelectedGroup(undefined);
+      setCalculation(null);
+    }
+  }, [preSelectedCategory, selectedCategory, setValue]);
 
   const onCategorySelect = (category: ConsortiumCategory) => {
     setSelectedCategory(category);
@@ -224,7 +263,7 @@ export default function NewConsortiumSimulationForm() {
   };
 
   const goBack = () => {
-    if (step === 'group') {
+    if (step === 'group' && !preSelectedCategory) {
       setStep('category');
       setSelectedCategory(undefined);
     } else if (step === 'form') {
@@ -248,11 +287,8 @@ export default function NewConsortiumSimulationForm() {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
-              SIMULAÇÃO DE CONSÓRCIO
-            </h2>
             <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
-              {step !== 'category' && (
+              {step !== 'category' && !(step === 'group' && preSelectedCategory) && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -270,11 +306,35 @@ export default function NewConsortiumSimulationForm() {
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Formulário */}
             <div className="bg-white p-8 rounded-xl shadow-lg">
-              {step === 'category' && (
-                <ConsortiumCategorySelector 
-                  onCategorySelect={onCategorySelect}
-                  selectedCategory={selectedCategory}
-                />
+              {step === 'category' && !preSelectedCategory && (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-firme-blue/10 rounded-full flex items-center justify-center">
+                    <Calculator className="w-8 h-8 text-firme-blue" />
+                  </div>
+                  <h3 className="text-xl font-bold text-firme-blue mb-2">
+                    Escolha seu Consórcio
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Clique em um dos botões coloridos acima para começar sua simulação
+                  </p>
+                  <div className="text-sm text-gray-500">
+                    ↑ Eletros • Carro • Imóveis • Moto • Serviços • Barco • Energia Solar
+                  </div>
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => {
+                        // Rola para os botões de categoria
+                        const consortiumButtons = document.querySelector('[data-consortium-buttons]');
+                        if (consortiumButtons) {
+                          consortiumButtons.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                      className="bg-firme-blue text-white hover:bg-firme-blue-light"
+                    >
+                      Ver Opções de Consórcio
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {step === 'group' && selectedCategory && (
@@ -391,7 +451,7 @@ export default function NewConsortiumSimulationForm() {
                         data-testid="checkbox-embedded"
                       />
                       <Label htmlFor="useEmbedded" className="text-sm">
-                        Quero usar lance embutido (até {selectedGroup.maxBid}% do crédito)
+                        Quero usar lance embutido (até 15% do total)
                       </Label>
                     </div>
 
@@ -436,7 +496,7 @@ export default function NewConsortiumSimulationForm() {
                   
                   {/* Proposta no formato refinado */}
                   <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-6">
-                    <div className="text-center font-bold text-firme-blue mb-4">PROPOSTA</div>
+                    <div className="text-center font-bold text-firme-blue mb-4">PROPOSTA ANDREOLI CONSÓRCIOS</div>
                     <div className="space-y-3 text-firme-gray">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Grupo</span>
@@ -447,24 +507,31 @@ export default function NewConsortiumSimulationForm() {
                         <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Valor desejado pelo cliente</span>
-                        <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">1ª parcela</span>
+                        <span className="text-gray-600">Valor da parcela</span>
                         <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Lance deduzido</span>
-                        <span className="font-bold">{formatMoney(calculation.lanceDeduzido)} (total: {formatMoney(calculation.lanceTotal)}{calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})</span>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-gray-600">Lance necessário (53%)</span>
+                        <span className="font-bold text-firme-blue">{formatMoney(calculation.lanceTotal)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Parcelas restantes</span>
-                        <span className="font-bold">{calculation.parcelasRestantes}</span>
+                      {calculation.lanceEmbutido > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Lance embutido (15%)</span>
+                          <span className="font-bold text-green-600">-{formatMoney(calculation.lanceEmbutido)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-gray-600 font-medium">Lance a pagar</span>
+                        <span className="font-bold text-lg text-firme-blue">{formatMoney(calculation.lanceDeduzido)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Reajuste após contemplação</span>
-                        <span className="font-bold">{formatMoney(calculation.novaParcelaValor)}</span>
+                      <div className="bg-gray-50 p-3 rounded mt-4">
+                        <div className="text-sm text-gray-600 mb-2">Encargos informativos:</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>Fundo Reserva (0,5%): {formatMoney(calculation.encargos.fundoReserva)}</div>
+                          <div>Taxa Adm (16%): {formatMoney(calculation.encargos.taxaAdm)}</div>
+                          <div>Seguro Vida (0,12%/mês): {formatMoney(calculation.encargos.seguroVida)}</div>
+                          <div>Seguro Quebra (0,07%/mês): {formatMoney(calculation.encargos.seguroQuebra)}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -472,21 +539,40 @@ export default function NewConsortiumSimulationForm() {
                   {/* Botão para contratar */}
                   <div className="mt-6 pt-4 border-t">
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         const whatsappMessage = `Olá! Gostaria de contratar o consórcio com as seguintes informações:
 
-===== PROPOSTA =====
-grupo: ${calculation.grupo}
-valor da carta: ${formatMoney(calculation.valorCarta)}
-valor desejado pelo cliente: ${formatMoney(calculation.valorCarta)}
-1ª parcela: ${formatMoney(calculation.parcelaAtual)}
-lance deduzido: ${formatMoney(calculation.lanceDeduzido)} (total: ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})
-quantidade restantes de parcela: ${calculation.parcelasRestantes}
-reajuste das parcelas após contemplação: ${formatMoney(calculation.novaParcelaValor)}
+===== PROPOSTA ANDREOLI CONSÓRCIOS =====
+Grupo: ${calculation.grupo}
+Valor da carta: ${formatMoney(calculation.valorCarta)}
+Valor da parcela: ${formatMoney(calculation.parcelaAtual)}
+Lance necessário (53%): ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? `
+Lance embutido (15%): ${formatMoney(calculation.lanceEmbutido)}` : ''}
+Lance a pagar: ${formatMoney(calculation.lanceDeduzido)}
+
+Encargos informativos:
+- Fundo Reserva (0,5%): ${formatMoney(calculation.encargos.fundoReserva)}
+- Taxa Adm (16%): ${formatMoney(calculation.encargos.taxaAdm)}
+- Seguro Vida (0,12%/mês): ${formatMoney(calculation.encargos.seguroVida)}
+- Seguro Quebra (0,07%/mês): ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=5587981620542&text=${encodeURIComponent(whatsappMessage)}`;
+                        const whatsappUrl = `https://api.whatsapp.com/send?phone=557498121-3461&text=${encodeURIComponent(whatsappMessage)}`;
                         window.open(whatsappUrl, '_blank');
+                        
+                        // Registrar envio do WhatsApp se não for site estático e houver simulationId
+                        if (!isStaticSite && simulationId) {
+                          try {
+                            await fetch(`/api/consortium-simulations/${simulationId}/whatsapp`, {
+                              method: 'PATCH',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                            });
+                          } catch (error) {
+                            console.error('Erro ao registrar envio do WhatsApp:', error);
+                          }
+                        }
                       }}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"
                       data-testid="button-hire-consortium"
@@ -548,15 +634,7 @@ Por favor, me ajudem com os próximos passos!`;
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center text-gray-500 py-12">
-                  <PiggyBank className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">Simulação de Consórcio</p>
-                  <p className="text-sm">
-                    Escolha uma categoria e grupo para começar sua simulação
-                  </p>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

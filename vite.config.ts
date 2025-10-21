@@ -5,7 +5,7 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 // ✅ Configuração única e corrigida
 export default defineConfig({
-  base: '/firmeinvest/', // Caminho base para o GitHub Pages
+  base: process.env.NODE_ENV === 'production' ? '/andreoliconsorcios/' : '/', // Caminho base para o GitHub Pages
 
   plugins: [
     react(),
@@ -35,6 +35,12 @@ export default defineConfig({
   },
 
   server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
       // Permitir leitura fora da raiz para aliases externos
