@@ -5,7 +5,7 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 // ✅ Configuração única e corrigida
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/andreoliconsorcios/' : '/', // Caminho base para o GitHub Pages
+  base: '/', // Caminho base para Vercel (sempre raiz)
 
   plugins: [
     react(),
