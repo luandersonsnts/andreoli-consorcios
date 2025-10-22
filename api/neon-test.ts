@@ -44,6 +44,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           timestamp: new Date().toISOString()
         });
 
+      case 'storage-test':
+        try {
+          // Test importing storage
+          const { storage } = await import('../lib/storage-cloud');
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Storage import successful',
+            storageType: typeof storage,
+            timestamp: new Date().toISOString(),
+            action: 'storage-test'
+          });
+        } catch (error) {
+          return res.status(500).json({
+            success: false,
+            error: 'Storage import failed',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString(),
+            action: 'storage-test'
+          });
+        }
+
       case 'db-test':
         try {
           // Teste simples de conexão
