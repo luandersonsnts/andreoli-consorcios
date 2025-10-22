@@ -1,19 +1,7 @@
 {
-  "version": 2,
-  "name": "andreoli-consorcios-app",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    }
-  ],
   "buildCommand": "npm run build:static",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
-  "devCommand": "npm run dev:client",
   "framework": "vite",
   "rewrites": [
     {
