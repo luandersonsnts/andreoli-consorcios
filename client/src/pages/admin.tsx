@@ -138,7 +138,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
   });
 
   // Filter functions
-  const filteredConsortiumSimulations = consortiumSimulations.filter((simulation: ConsortiumSimulation) => {
+  const filteredConsortiumSimulations = (consortiumSimulations as ConsortiumSimulation[]).filter((simulation) => {
     if (consortiumFilter === 'sent') return simulation.whatsappSent;
     if (consortiumFilter === 'not_sent') return !simulation.whatsappSent;
     return true; // 'all'
@@ -156,13 +156,13 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
 
   // Prepare chart data - Categorias de consórcio
   const chartData = [
-    { name: 'Eletros', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'eletros').length, color: '#3B82F6' },
-    { name: 'Carros', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'carro').length, color: '#10B981' },
-    { name: 'Imóveis', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'imovel').length, color: '#F59E0B' },
-    { name: 'Motos', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'moto').length, color: '#8B5CF6' },
-    { name: 'Serviços', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'servicos').length, color: '#EF4444' },
-    { name: 'Barcos', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'barco').length, color: '#06B6D4' },
-    { name: 'Energia Solar', value: consortiumSimulations.filter((s: ConsortiumSimulation) => s.category === 'energia_solar').length, color: '#F97316' },
+    { name: 'Eletros', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'eletros').length, color: '#3B82F6' },
+    { name: 'Carros', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'carro').length, color: '#10B981' },
+    { name: 'Imóveis', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s) => s.category === 'imovel').length, color: '#F59E0B' },
+    { name: 'Motos', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'moto').length, color: '#8B5CF6' },
+    { name: 'Serviços', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'servicos').length, color: '#EF4444' },
+    { name: 'Barcos', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'barco').length, color: '#06B6D4' },
+    { name: 'Energia Solar', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'energia_solar').length, color: '#F97316' },
   ];
 
   // Monthly data for bar chart - apenas consórcios
@@ -171,7 +171,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
     const targetYear = 2025; // Fixado para 2025
     
     return months.map((month, index) => {
-      const consortiumCount = consortiumSimulations.filter((s: ConsortiumSimulation) =>
+      const consortiumCount = (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) =>
         new Date(s.createdAt).getMonth() === index && 
         new Date(s.createdAt).getFullYear() === targetYear
       ).length;
@@ -238,7 +238,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <Briefcase className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{consortiumSimulations.length}</div>
+              <div className="text-2xl font-bold text-green-600">{(consortiumSimulations as ConsortiumSimulation[]).length}</div>
               <p className="text-xs text-muted-foreground">Total de consórcios</p>
             </CardContent>
           </Card>
@@ -248,7 +248,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <FileText className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{complaints.length}</div>
+              <div className="text-2xl font-bold text-yellow-600">{(complaints as Complaint[]).length}</div>
               <p className="text-xs text-muted-foreground">Total de manifestações</p>
             </CardContent>
           </Card>
@@ -258,7 +258,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <Users className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{jobApplications.length}</div>
+              <div className="text-2xl font-bold text-purple-600">{(jobApplications as JobApplication[]).length}</div>
               <p className="text-xs text-muted-foreground">Total de currículos</p>
             </CardContent>
           </Card>
@@ -380,7 +380,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl">Simulações de Consórcio</CardTitle>
-                  <CardDescription>Total: {consortiumSimulations.length} simulações registradas | Exibindo: {filteredConsortiumSimulations.length}</CardDescription>
+                  <CardDescription>Total: {(consortiumSimulations as ConsortiumSimulation[]).length} simulações registradas | Exibindo: {filteredConsortiumSimulations.length}</CardDescription>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Briefcase className="h-5 w-5 text-green-600" />
@@ -393,7 +393,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                   size="sm"
                   onClick={() => setConsortiumFilter('all')}
                 >
-                  Todas ({consortiumSimulations.length})
+                  Todas ({(consortiumSimulations as ConsortiumSimulation[]).length})
                 </Button>
                 <Button
                   variant={consortiumFilter === 'sent' ? 'default' : 'outline'}
@@ -401,7 +401,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                   onClick={() => setConsortiumFilter('sent')}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  Enviadas ({consortiumSimulations.filter((s: ConsortiumSimulation) => s.whatsappSent).length})
+                  Enviadas ({(consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.whatsappSent).length})
                 </Button>
                 <Button
                   variant={consortiumFilter === 'not_sent' ? 'default' : 'outline'}
@@ -409,7 +409,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                   onClick={() => setConsortiumFilter('not_sent')}
                   className="bg-gray-600 hover:bg-gray-700 text-white"
                 >
-                  Não Enviadas ({consortiumSimulations.filter((s: ConsortiumSimulation) => !s.whatsappSent).length})
+                  Não Enviadas ({(consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => !s.whatsappSent).length})
                 </Button>
               </div>
             </CardHeader>
@@ -468,7 +468,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600">{formatDate(simulation.createdAt)}</td>
                       </tr>
                     ))}
-                    {consortiumSimulations.length === 0 && (
+                    {(consortiumSimulations as ConsortiumSimulation[]).length === 0 && (
                       <tr>
                         <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
                           Nenhuma simulação de consórcio encontrada
@@ -504,7 +504,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                     </tr>
                   </thead>
                   <tbody>
-                    {complaints.map((complaint: Complaint) => (
+                    {(complaints as Complaint[]).map((complaint: Complaint) => (
                       <tr key={complaint.id} className="border-b border-gray-100 hover:bg-yellow-50 transition-colors">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-100">{complaint.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{complaint.email}</td>
@@ -514,7 +514,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600">{formatDate(complaint.createdAt)}</td>
                       </tr>
                     ))}
-                    {complaints.length === 0 && (
+                    {(complaints as Complaint[]).length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                           Nenhuma reclamação encontrada
@@ -551,7 +551,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                     </tr>
                   </thead>
                   <tbody>
-                    {jobApplications.map((application: JobApplication) => (
+                    {(jobApplications as JobApplication[]).map((application: JobApplication) => (
                       <tr key={application.id} className="border-b border-gray-100 hover:bg-purple-50 transition-colors">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-100">{application.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{application.email}</td>
@@ -573,7 +573,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600">{formatDate(application.createdAt)}</td>
                       </tr>
                     ))}
-                    {jobApplications.length === 0 && (
+                    {(jobApplications as JobApplication[]).length === 0 && (
                       <tr>
                         <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                           Nenhuma candidatura encontrada
