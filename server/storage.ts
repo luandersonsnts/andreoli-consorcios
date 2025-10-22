@@ -26,6 +26,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   authenticateUser(username: string, password: string): Promise<User | null>;
+  updateUserPassword(userId: string, newPassword: string): Promise<User>;
   createSimulation(simulation: InsertSimulation): Promise<Simulation>;
   getSimulations(): Promise<Simulation[]>;
   updateSimulationWhatsAppStatus(id: string): Promise<Simulation>;
@@ -115,6 +116,17 @@ class MemoryStorage implements IStorage {
     
     const isValid = await bcrypt.compare(password, user.password);
     return isValid ? user : null;
+  }
+
+  async updateUserPassword(userId: string, newPassword: string): Promise<User> {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    return user;
   }
 
   async createSimulation(insertSimulation: InsertSimulation): Promise<Simulation> {
@@ -288,6 +300,23 @@ export class DatabaseStorage implements IStorage {
     
     const isValid = await bcrypt.compare(password, user.password);
     return isValid ? user : null;
+  }
+
+  async updateUserPassword(userId: string, newPassword: string): Promise<User> {
+    if (!db) throw new Error("Database not initialized");
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const result = await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error("User not found");
+    }
+    
+    return result[0];
   }
 
   async createSimulation(insertSimulation: InsertSimulation): Promise<Simulation> {

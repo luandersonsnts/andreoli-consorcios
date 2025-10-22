@@ -4,10 +4,11 @@ import { isStaticSite } from "@/lib/runtimeEnv";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminLogin from "@/components/AdminLogin";
+import PasswordReset from "@/components/PasswordReset";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { LogOut, Users, FileText, Briefcase, TrendingUp, Settings, Edit, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import { LogOut, Users, FileText, Briefcase, TrendingUp, Settings, Edit, Eye, ToggleLeft, ToggleRight, Key } from 'lucide-react';
 import { CONSORTIUM_GROUPS, getGroupsByCategory, CATEGORY_LABELS, ConsortiumCategory } from '@shared/consortiumTypes';
 
 // Show static site message when running without server
@@ -77,6 +78,7 @@ export default function AdminPage() {
 
 function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
   const [consortiumFilter, setConsortiumFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
 
   // Function to download resume with authentication
   const downloadResume = async (filename: string, candidateName: string) => {
@@ -195,6 +197,15 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">Bem-vindo, {user.username}</span>
+              <Button 
+                onClick={() => setShowPasswordReset(true)} 
+                variant="outline" 
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <Key className="h-4 w-4" />
+                <span>Redefinir Senha</span>
+              </Button>
               <Button 
                 onClick={onLogout} 
                 variant="outline" 
@@ -696,6 +707,22 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
 
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <PasswordReset
+              onCancel={() => setShowPasswordReset(false)}
+              onSuccess={() => {
+                setShowPasswordReset(false);
+                // Optionally, you could logout the user after password change
+                // onLogout();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -159,6 +159,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin password reset endpoint
+  app.post("/api/admin/reset-password", authenticateToken, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = (req as any).user.id;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      // Verify current password
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isCurrentPasswordValid = await storage.authenticateUser(user.username, currentPassword);
+      if (!isCurrentPasswordValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      // Update password
+      await storage.updateUserPassword(userId, newPassword);
+      
+      res.json({ 
+        success: true, 
+        message: "Password updated successfully"
+      });
+    } catch (error) {
+      console.error('Password reset error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Admin dashboard stats endpoint
   app.get("/api/admin/stats", authenticateToken, async (req, res) => {
     try {
