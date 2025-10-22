@@ -22,17 +22,23 @@ import bcrypt from "bcryptjs";
 // Import database connection based on environment
 let db: any;
 
-if (process.env.VERCEL) {
-  // Production: Use Vercel Postgres
-  const { drizzle } = require('drizzle-orm/vercel-postgres');
-  const { sql } = require('@vercel/postgres');
-  db = drizzle(sql);
-} else {
-  // Development: Use SQLite
-  const { drizzle } = require('drizzle-orm/better-sqlite3');
-  const Database = require('better-sqlite3');
-  const sqlite = new Database("database.sqlite");
-  db = drizzle(sqlite);
+async function initializeDatabase() {
+  if (db) return db; // Return existing connection if already initialized
+  
+  if (process.env.VERCEL) {
+    // Production: Use Vercel Postgres
+    const { drizzle } = await import('drizzle-orm/vercel-postgres');
+    const { sql } = await import('@vercel/postgres');
+    db = drizzle(sql);
+  } else {
+    // Development: Use SQLite
+    const { drizzle } = await import('drizzle-orm/better-sqlite3');
+    const Database = (await import('better-sqlite3')).default;
+    const sqlite = new Database("database.sqlite");
+    db = drizzle(sqlite);
+  }
+  
+  return db;
 }
 
 export interface IStorage {
@@ -66,16 +72,19 @@ export interface IStorage {
 
 class CloudStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const database = await initializeDatabase();
+    const result = await database.select().from(users).where(eq(users.id, id)).limit(1);
     return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    const database = await initializeDatabase();
+    const result = await database.select().from(users).where(eq(users.username, username)).limit(1);
     return result[0];
   }
 
   async createUser(user: InsertUser): Promise<User> {
+    const database = await initializeDatabase();
     const id = randomUUID();
     const hashedPassword = await bcrypt.hash(user.password, 10);
     
@@ -86,7 +95,7 @@ class CloudStorage implements IStorage {
       createdAt: new Date()
     };
 
-    await db.insert(users).values(newUser);
+    await database.insert(users).values(newUser);
     return { ...newUser, password: '' }; // Don't return password
   }
 
@@ -101,9 +110,10 @@ class CloudStorage implements IStorage {
   }
 
   async updateUserPassword(userId: string, newPassword: string): Promise<User> {
+    const database = await initializeDatabase();
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
-    await db.update(users)
+    await database.update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, userId));
 
@@ -112,6 +122,7 @@ class CloudStorage implements IStorage {
   }
 
   async createSimulation(simulation: InsertSimulation): Promise<Simulation> {
+    const database = await initializeDatabase();
     const id = randomUUID();
     const newSimulation = {
       id,
@@ -121,12 +132,13 @@ class CloudStorage implements IStorage {
       whatsappSentAt: simulation.whatsappSentAt ?? null
     };
 
-    await db.insert(simulations).values(newSimulation);
+    await database.insert(simulations).values(newSimulation);
     return newSimulation;
   }
 
   async getSimulations(): Promise<Simulation[]> {
-    return await db.select().from(simulations).orderBy(desc(simulations.createdAt));
+    const database = await initializeDatabase();
+    return await database.select().from(simulations).orderBy(desc(simulations.createdAt));
   }
 
   async getAllSimulations(): Promise<Simulation[]> {
@@ -134,15 +146,17 @@ class CloudStorage implements IStorage {
   }
 
   async updateSimulationWhatsAppStatus(id: string): Promise<Simulation> {
-    await db.update(simulations)
-      .set({ whatsappSent: true })
+    const database = await initializeDatabase();
+    await database.update(simulations)
+      .set({ whatsappSent: true, whatsappSentAt: new Date() })
       .where(eq(simulations.id, id));
 
-    const result = await db.select().from(simulations).where(eq(simulations.id, id)).limit(1);
+    const result = await database.select().from(simulations).where(eq(simulations.id, id)).limit(1);
     return result[0];
   }
 
   async createComplaint(complaint: InsertComplaint): Promise<Complaint> {
+    const database = await initializeDatabase();
     const id = randomUUID();
     const newComplaint = {
       id,
@@ -150,12 +164,13 @@ class CloudStorage implements IStorage {
       createdAt: new Date()
     };
 
-    await db.insert(complaints).values(newComplaint);
+    await database.insert(complaints).values(newComplaint);
     return newComplaint;
   }
 
   async getComplaints(): Promise<Complaint[]> {
-    return await db.select().from(complaints).orderBy(desc(complaints.createdAt));
+    const database = await initializeDatabase();
+    return await database.select().from(complaints).orderBy(desc(complaints.createdAt));
   }
 
   async getAllComplaints(): Promise<Complaint[]> {
@@ -163,20 +178,21 @@ class CloudStorage implements IStorage {
   }
 
   async createJobApplication(jobApplication: InsertJobApplication): Promise<JobApplication> {
+    const database = await initializeDatabase();
     const id = randomUUID();
     const newJobApplication = {
       id,
       ...jobApplication,
-      createdAt: new Date(),
-      resumeFilename: jobApplication.resumeFilename ?? null
+      createdAt: new Date()
     };
 
-    await db.insert(jobApplications).values(newJobApplication);
+    await database.insert(jobApplications).values(newJobApplication);
     return newJobApplication;
   }
 
   async getJobApplications(): Promise<JobApplication[]> {
-    return await db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
+    const database = await initializeDatabase();
+    return await database.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
   }
 
   async getAllJobApplications(): Promise<JobApplication[]> {
@@ -184,35 +200,40 @@ class CloudStorage implements IStorage {
   }
 
   async getJobApplicationByResumeFilename(filename: string): Promise<JobApplication | undefined> {
-    const result = await db.select().from(jobApplications).where(eq(jobApplications.resumeFilename, filename)).limit(1);
+    const database = await initializeDatabase();
+    const result = await database.select().from(jobApplications).where(eq(jobApplications.resumeFilename, filename)).limit(1);
     return result[0];
   }
 
   async createConsortiumSimulation(consortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation> {
+    const database = await initializeDatabase();
+    const id = randomUUID();
     const newConsortiumSimulation = {
+      id,
       ...consortiumSimulation,
-      createdAt: new Date(),
-      whatsappSent: false
+      createdAt: new Date()
     };
 
-    const result = await db.insert(consortiumSimulations).values(newConsortiumSimulation).returning();
+    const result = await database.insert(consortiumSimulations).values(newConsortiumSimulation).returning();
     return result[0];
   }
 
   async getConsortiumSimulations(): Promise<ConsortiumSimulation[]> {
-    return await db.select().from(consortiumSimulations).orderBy(desc(consortiumSimulations.createdAt));
+    const database = await initializeDatabase();
+    return await database.select().from(consortiumSimulations).orderBy(desc(consortiumSimulations.createdAt));
   }
 
   async getAllConsortiumSimulations(): Promise<ConsortiumSimulation[]> {
     return this.getConsortiumSimulations();
   }
 
-  async updateConsortiumSimulationWhatsAppStatus(id: number): Promise<ConsortiumSimulation> {
-    await db.update(consortiumSimulations)
-      .set({ whatsappSent: true })
+  async updateConsortiumSimulationWhatsAppStatus(id: string): Promise<ConsortiumSimulation> {
+    const database = await initializeDatabase();
+    await database.update(consortiumSimulations)
+      .set({ whatsappSent: true, whatsappSentAt: new Date() })
       .where(eq(consortiumSimulations.id, id));
 
-    const result = await db.select().from(consortiumSimulations).where(eq(consortiumSimulations.id, id)).limit(1);
+    const result = await database.select().from(consortiumSimulations).where(eq(consortiumSimulations.id, id)).limit(1);
     return result[0];
   }
 
@@ -222,6 +243,7 @@ class CloudStorage implements IStorage {
     simulationsThisMonth: number;
     consortiumSimulationsThisMonth: number;
   }> {
+    const database = await initializeDatabase();
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -231,10 +253,10 @@ class CloudStorage implements IStorage {
       simulationsThisMonthResult,
       consortiumSimulationsThisMonthResult
     ] = await Promise.all([
-      db.select({ count: count() }).from(simulations),
-      db.select({ count: count() }).from(consortiumSimulations),
-      db.select({ count: count() }).from(simulations).where(gte(simulations.createdAt, startOfMonth)),
-      db.select({ count: count() }).from(consortiumSimulations).where(gte(consortiumSimulations.createdAt, startOfMonth))
+      database.select({ count: count() }).from(simulations),
+      database.select({ count: count() }).from(consortiumSimulations),
+      database.select({ count: count() }).from(simulations).where(gte(simulations.createdAt, startOfMonth)),
+      database.select({ count: count() }).from(consortiumSimulations).where(gte(consortiumSimulations.createdAt, startOfMonth))
     ]);
 
     return {
