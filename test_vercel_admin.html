@@ -127,20 +127,20 @@
         }
 
         async function checkUsers() {
-            showInfo('checkUsersResult', 'Verificando usuários...');
+            showInfo('usersResult', 'Verificando usuários...');
             try {
-                const response = await fetch(`${BASE_URL}/api/debug/check-users`);
+                const response = await fetch(`${BASE_URL}/api/debug?action=check-users`);
                 const data = await response.json();
-                showResult('checkUsersResult', data, !response.ok);
+                showResult('usersResult', data, !response.ok);
             } catch (error) {
-                showResult('checkUsersResult', { error: error.message }, true);
+                showResult('usersResult', { error: error.message }, true);
             }
         }
 
         async function initDatabase() {
             showInfo('initDbResult', 'Inicializando banco...');
             try {
-                const response = await fetch(`${BASE_URL}/api/debug/init-db`, {
+                const response = await fetch(`${BASE_URL}/api/debug?action=init-db`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -175,19 +175,20 @@
         }
 
         async function testConnection() {
-            showInfo('connectionResult', 'Testando conexão...');
             try {
-                const response = await fetch(`${BASE_URL}/api/debug/test-basic`);
+                const response = await fetch('/api/debug?action=test-basic');
                 const data = await response.json();
-                showResult('connectionResult', data, !response.ok);
+                document.getElementById('connectionResult').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } catch (error) {
-                showResult('connectionResult', { error: error.message }, true);
+                document.getElementById('connectionResult').innerHTML = 
+                    `<pre style="color: red;">${JSON.stringify({ error: error.message }, null, 2)}</pre>`;
             }
         }
 
         async function testDatabase() {
             try {
-                const response = await fetch('/api/test-db');
+                const response = await fetch('/api/debug?action=test-db');
                 const data = await response.json();
                 document.getElementById('connectionResult').innerHTML = 
                     `<h4>Teste PostgreSQL:</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
