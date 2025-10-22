@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="description" content="Andreoli Consórcios - Ajudamos na realização do seu sonho fornecendo crédito para veículos, imóveis e mais." />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+    
+    <!-- Google Fonts - Optimized by loading only the fonts we need -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Base path handled by Vite configuration -->
+
+    <title>Andreoli Consórcios - Crédito para mudança de vida</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Main entry point -->
+    <script type="module" src="./src/main.tsx"></script>
+
+    <!-- Remove Replit banner for production -->
+    <script>
+      // Only load Replit banner in development environment
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const script = document.createElement('script');
+        script.src = 'https://replit.com/public/js/replit-dev-banner.js';
+        script.type = 'text/javascript';
+        document.body.appendChild(script);
+      }
+    </script>
+  </body>
+</html>

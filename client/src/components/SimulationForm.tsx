@@ -77,15 +77,12 @@ export default function SimulationForm() {
       queryClient.invalidateQueries({ queryKey: ['/api/simulations'] });
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Erro ao enviar",
-        description: "Verifique os dados e tente novamente."
-      });
+      // Error handling is now done in onSubmit function
+      // This prevents showing error toasts when API is not available
     }
   });
 
-  const onSubmit = (data: SimulationFormData) => {
+  const onSubmit = async (data: SimulationFormData) => {
     // Calcular a projeção
     const monthlyAmount = parseFloat(data.monthlyAmount.replace(/[^\d,]/g, '').replace(',', '.'));
     const timeframeYears = parseInt(data.timeframe);
@@ -103,9 +100,13 @@ export default function SimulationForm() {
     setProjectionData({ calculation, clientData });
     setShowProjection(true);
     
-    // Salvar no banco se não for site estático
-    if (!isStaticSite) {
-      mutation.mutate(data);
+    // Try to save to API first (works in both local and Vercel with backend)
+    try {
+      await mutation.mutateAsync(data);
+      // If successful, API is available and data was saved
+    } catch (error) {
+      // API not available - continue with static mode (no action needed)
+      console.log('API not available, continuing in static mode');
     }
   };
 

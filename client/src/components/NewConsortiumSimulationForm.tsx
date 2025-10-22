@@ -217,12 +217,9 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
         description: "Sua simulação foi enviada com sucesso!",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Ocorreu um erro ao enviar sua simulação.",
-        variant: "destructive",
-      });
+    onError: () => {
+      // Error handling is now done in onSubmit function
+      // This prevents showing error toasts when API is not available
     },
   });
 
@@ -249,14 +246,21 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
     setStep('form');
   };
 
-  const onSubmit = (data: ConsortiumFormData) => {
+  const onSubmit = async (data: ConsortiumFormData) => {
     if (!selectedGroup) return;
     
     const result = calculateConsortiumWithGroup(data, selectedGroup);
     setCalculation(result);
     setStep('result');
     
-    if (isStaticSite) {
+    // Try to save to API first (works in both local and Vercel with backend)
+    try {
+      await mutation.mutateAsync(data);
+      // If successful, API is available and data was saved
+    } catch (error) {
+      // API not available - fallback to WhatsApp mode
+      console.log('API not available, using WhatsApp fallback');
+      
       const creditValue = parseFloat(data.creditValue);
       const installments = parseInt(data.installmentCount);
       const calculation = calculateConsortium(
@@ -276,8 +280,6 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
         title: "Simulação calculada!",
         description: "Continue a conversa pelo WhatsApp para mais detalhes."
       });
-    } else {
-      mutation.mutate(data);
     }
   };
 

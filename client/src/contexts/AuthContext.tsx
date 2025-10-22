@@ -43,56 +43,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Static site mode - use hardcoded credentials for demonstration
-      if (isStaticSite) {
-        // Demo credentials for Vercel deployment
-        const validCredentials = [
-          { username: 'admin', password: 'admin123' },
-          { username: 'admin', password: 'Pknoob@0' },
-          { username: 'demo', password: 'demo123' }
-        ];
+      // Try to use real API first (works in both local and Vercel with backend)
+      try {
+        const response = await fetch('/api/admin/login', {
+        method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        });
 
-        const isValid = validCredentials.some(
-          cred => cred.username === username && cred.password === password
-        );
-
-        if (isValid) {
-          const mockUser = { id: '1', username: username };
-          const mockToken = 'static-demo-token-' + Date.now();
-          
-          setToken(mockToken);
-          setUser(mockUser);
+        if (response.ok) {
+          const data = await response.json();
+          setToken(data.token);
+          setUser(data.user);
           
           // Store in localStorage
-          localStorage.setItem('admin_token', mockToken);
-          localStorage.setItem('admin_user', JSON.stringify(mockUser));
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', JSON.stringify(data.user));
           
           return true;
         }
+        
+        // If login failed but API is available, try to initialize database
+        if (response.status === 401 && username === 'admin') {
+          try {
+            const initResponse = await fetch('/api/debug/init-db', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (initResponse.ok) {
+              // Try login again after initialization
+              const retryResponse = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+              });
+              
+              if (retryResponse.ok) {
+                const data = await retryResponse.json();
+                setToken(data.token);
+                setUser(data.user);
+                
+                // Store in localStorage
+                localStorage.setItem('admin_token', data.token);
+                localStorage.setItem('admin_user', JSON.stringify(data.user));
+                
+                return true;
+              }
+            }
+          } catch (initError) {
+            console.log('Database initialization failed:', initError);
+          }
+        }
+        
+        return false;
+      } catch (apiError) {
+        console.error('API error during login:', apiError);
         return false;
       }
-
-      // Normal API mode for local development
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setToken(data.token);
-        setUser(data.user);
-        
-        // Store in localStorage
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_user', JSON.stringify(data.user));
-        
-        return true;
-      }
-      return false;
     } catch (error) {
       console.error('Login error:', error);
       return false;
