@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { isStaticSite } from '@/lib/runtimeEnv';
 
 interface User {
   id: string;
@@ -42,6 +43,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
+      // Static site mode - use hardcoded credentials for demonstration
+      if (isStaticSite) {
+        // Demo credentials for Vercel deployment
+        const validCredentials = [
+          { username: 'admin', password: 'admin123' },
+          { username: 'admin', password: 'Pknoob@0' },
+          { username: 'demo', password: 'demo123' }
+        ];
+
+        const isValid = validCredentials.some(
+          cred => cred.username === username && cred.password === password
+        );
+
+        if (isValid) {
+          const mockUser = { id: '1', username: username };
+          const mockToken = 'static-demo-token-' + Date.now();
+          
+          setToken(mockToken);
+          setUser(mockUser);
+          
+          // Store in localStorage
+          localStorage.setItem('admin_token', mockToken);
+          localStorage.setItem('admin_user', JSON.stringify(mockUser));
+          
+          return true;
+        }
+        return false;
+      }
+
+      // Normal API mode for local development
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {

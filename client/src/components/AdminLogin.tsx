@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lock, User, AlertCircle } from 'lucide-react';
+import { Lock, User, AlertCircle, Info } from 'lucide-react';
+import { isStaticSite } from '@/lib/runtimeEnv';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -44,11 +45,37 @@ export default function AdminLogin() {
           </p>
         </div>
         
+        {isStaticSite && (
+          <Card className="mb-4 border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800 mb-2">
+                    Credenciais de Demonstração
+                  </h3>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p><strong>Usuário:</strong> admin</p>
+                    <p><strong>Senhas válidas:</strong></p>
+                    <ul className="list-disc list-inside ml-4 space-y-1">
+                      <li>admin123</li>
+                      <li>Pknoob@0</li>
+                    </ul>
+                    <p className="mt-2 text-xs">
+                      Esta é uma versão de demonstração. Em produção, use credenciais seguras.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-center">Login do Administrador</CardTitle>
             <CardDescription className="text-center">
-              Entre com suas credenciais para acessar o painel
+              Acesse o painel de controle
             </CardDescription>
           </CardHeader>
           <CardContent>
