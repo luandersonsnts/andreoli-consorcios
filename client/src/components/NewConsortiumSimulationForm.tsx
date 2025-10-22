@@ -34,12 +34,14 @@ type Step = 'category' | 'group' | 'form' | 'result';
 interface ConsortiumCalculationResult {
   grupo: number;
   valorCarta: number;
+  valorCartaReal: number; // Valor da carta que será usada (pode ser maior que o desejado)
   parcelaAtual: number;
   lanceTotal: number;
   lanceEmbutido: number;
   lanceDeduzido: number;
   parcelasRestantes: number;
   novaParcelaValor: number;
+  parcelasAposContemplado: number; // Novo campo solicitado
   encargos: {
     fundoReserva: number;
     taxaAdm: number;
@@ -49,60 +51,90 @@ interface ConsortiumCalculationResult {
 }
 
 function calculateConsortiumWithGroup(data: ConsortiumFormData, group: ConsortiumGroup): ConsortiumCalculationResult {
-  const creditValue = parseFloat(data.creditValue);
+  const creditValueDesejado = parseFloat(data.creditValue);
   const maxInstallment = parseFloat(data.maxInstallmentValue);
   const installmentCount = parseInt(data.installmentCount);
   
   // Usar o número do grupo real extraído do ID (ex: ELE001 -> 1247)
   const grupoNumero = parseInt(group.name.match(/\d+/)?.[0] || "1000");
   
-  // CÁLCULO CORRETO BASEADO NOS DADOS DO GRUPO:
+  // CÁLCULO CORRETO BASEADO NA METODOLOGIA ANDREOLI:
   
-  // 1. Taxa administrativa do grupo específico
-  const taxaAdmPercentual = group.adminTax / 100;
-  const taxaAdm = creditValue * taxaAdmPercentual;
+  let valorCartaReal = creditValueDesejado;
+  let valorCartaExibir = creditValueDesejado;
   
-  // 2. Fundo de reserva do grupo específico
-  const fundoReservaPercentual = group.fundReserve / 100;
-  const fundoReserva = creditValue * fundoReservaPercentual;
+  // Se usar embutido, precisa calcular a carta adequada
+  if (data.useEmbedded) {
+    // Cartas disponíveis no banco (simulando algumas opções)
+    const cartasDisponiveis = [
+      { valor: 30000, parcelas: 60, valorParcela: 600 },
+      { valor: 42000, parcelas: 60, valorParcela: 800 },
+      { valor: 50000, parcelas: 60, valorParcela: 950 },
+      { valor: 52323, parcelas: 51, valorParcela: 1233.67 },
+      { valor: 60000, parcelas: 60, valorParcela: 1150 },
+      { valor: 80000, parcelas: 60, valorParcela: 1500 },
+      { valor: 100000, parcelas: 60, valorParcela: 1900 }
+    ];
+    
+    // Encontrar a carta mais próxima que permita usar o valor desejado
+    for (const carta of cartasDisponiveis) {
+      const totalPagar = carta.valorParcela * carta.parcelas;
+      const valorEmbutido = totalPagar * 0.15;
+      const creditoDisponivel = carta.valor - valorEmbutido;
+      
+      if (creditoDisponivel >= creditValueDesejado) {
+        valorCartaReal = carta.valor;
+        break;
+      }
+    }
+  }
   
-  // 3. Total que será pago = Valor do crédito + Taxa Adm + Fundo de Reserva
-  const totalQueSerapago = creditValue + taxaAdm + fundoReserva;
+  // 1. Cálculo do total que será pago (baseado na parcela escolhida pelo cliente)
+  const totalQueSerapago = maxInstallment * installmentCount;
   
-  // 4. Parcela mensal real = Total / Número de parcelas
-  const parcelaMensalReal = totalQueSerapago / installmentCount;
+  // 2. CÁLCULO DO LANCE (metodologia Andreoli):
+  // Lance necessário = 53% do total que será pago
+  const lanceNecessario = totalQueSerapago * 0.53;
   
-  // 5. CÁLCULO DO LANCE (baseado na metodologia Andreoli):
-  // Lance médio = 53% do total das parcelas pagas
-  const totalParcelasPagas = maxInstallment * installmentCount;
-  let valorDoLance = totalParcelasPagas * 0.53;
+  // 3. Lance embutido (se selecionado) = 15% do total que será pago
+  const lanceEmbutido = data.useEmbedded ? (totalQueSerapago * 0.15) : 0;
   
-  // 6. Lance embutido (se selecionado) = 15% do total das parcelas
-  const lanceEmbutido = data.useEmbedded ? (totalParcelasPagas * 0.15) : 0;
+  // 4. Lance que o cliente realmente precisa pagar
+  const lanceDeduzido = lanceNecessario - lanceEmbutido;
   
-  // 7. Lance que o cliente realmente precisa pagar
-  const lanceDeduzido = valorDoLance - lanceEmbutido;
+  // 5. CÁLCULO DAS PARCELAS APÓS CONTEMPLADO:
+  // Total que será pago x 53% = valor total do lance
+  const valorTotalLance = totalQueSerapago * 0.53;
   
-  // 8. Parcelas restantes após contemplação
+  // Valor restante = valor total do lance / parcelas restantes (total - 1)
   const parcelasRestantes = installmentCount - 1;
+  const valorRestantePorParcela = parcelasRestantes > 0 ? valorTotalLance / parcelasRestantes : 0;
   
-  // 9. Nova parcela após contemplação = (Total - Lance pago) / Parcelas restantes
-  const totalRestante = totalQueSerapago - lanceDeduzido;
-  const novaParcelaValor = parcelasRestantes > 0 ? totalRestante / parcelasRestantes : 0;
+  // Parcelas após contemplado = parcela original - valor restante por parcela
+  const parcelasAposContemplado = Math.max(0, maxInstallment - valorRestantePorParcela);
   
-  // 10. Seguros (baseados nas taxas do grupo)
-  const seguroVida = creditValue * (group.insuranceRate / 100) * installmentCount;
-  const seguroQuebra = creditValue * 0.0007 * installmentCount; // 0,07% padrão
+  // 6. Taxas e encargos (baseados no valor da carta real)
+  const taxaAdmPercentual = group.adminTax / 100;
+  const taxaAdm = valorCartaReal * taxaAdmPercentual;
+  
+  const fundoReservaPercentual = group.fundReserve / 100;
+  const fundoReserva = valorCartaReal * fundoReservaPercentual;
+  
+  // 7. Seguros (baseados no valor da carta real)
+  const seguroVida = valorCartaReal * (group.insuranceRate / 100) * installmentCount;
+  const seguroQuebra = valorCartaReal * 0.0007 * installmentCount; // 0,07% padrão
   
   return {
     grupo: grupoNumero,
-    valorCarta: creditValue,
+    valorCarta: valorCartaExibir, // Valor que o cliente deseja
+    valorCartaReal: valorCartaReal, // Valor da carta que será usada
     parcelaAtual: maxInstallment,
-    lanceTotal: valorDoLance,
+    lanceTotal: lanceNecessario,
     lanceEmbutido,
     lanceDeduzido,
     parcelasRestantes,
-    novaParcelaValor: Math.max(0, novaParcelaValor), // Não pode ser negativo
+    novaParcelaValor: parcelasAposContemplado, // Renomeando para ficar mais claro
+    parcelasAposContemplado: parcelasAposContemplado, // Novo campo solicitado
     encargos: {
       fundoReserva,
       taxaAdm,
@@ -524,6 +556,10 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                         <span className="text-gray-600 font-medium">Lance a pagar</span>
                         <span className="font-bold text-lg text-firme-blue">{formatMoney(calculation.lanceDeduzido)}</span>
                       </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-gray-600">Parcelas após contemplado</span>
+                        <span className="font-bold text-green-600">{formatMoney(calculation.parcelasAposContemplado)}</span>
+                      </div>
                       <div className="bg-gray-50 p-3 rounded mt-4">
                         <div className="text-sm text-gray-600 mb-2">Encargos informativos:</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -549,6 +585,7 @@ Valor da parcela: ${formatMoney(calculation.parcelaAtual)}
 Lance necessário (53%): ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? `
 Lance embutido (15%): ${formatMoney(calculation.lanceEmbutido)}` : ''}
 Lance a pagar: ${formatMoney(calculation.lanceDeduzido)}
+Parcelas após contemplado: ${formatMoney(calculation.parcelasAposContemplado)}
 
 Encargos informativos:
 - Fundo Reserva (0,5%): ${formatMoney(calculation.encargos.fundoReserva)}
