@@ -117,7 +117,8 @@ class CloudStorage implements IStorage {
       id,
       ...simulation,
       createdAt: new Date(),
-      whatsappSent: false
+      whatsappSent: false,
+      whatsappSentAt: simulation.whatsappSentAt ?? null
     };
 
     await db.insert(simulations).values(newSimulation);
@@ -166,7 +167,8 @@ class CloudStorage implements IStorage {
     const newJobApplication = {
       id,
       ...jobApplication,
-      createdAt: new Date()
+      createdAt: new Date(),
+      resumeFilename: jobApplication.resumeFilename ?? null
     };
 
     await db.insert(jobApplications).values(newJobApplication);

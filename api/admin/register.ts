@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Create new admin user
-    const user = await storage.createUser(username, password);
+    const user = await storage.createUser({ username, password });
     
     return res.json({ 
       success: true, 
