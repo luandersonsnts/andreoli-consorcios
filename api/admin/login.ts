@@ -37,9 +37,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       await sql`
         CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-          username TEXT NOT NULL UNIQUE,
-          password TEXT NOT NULL,
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          username VARCHAR(255) NOT NULL UNIQUE,
+          password VARCHAR(255) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
