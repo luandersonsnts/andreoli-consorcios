@@ -32,6 +32,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Verificar se a tabela users existe e criar se necessário
+    console.log('🔧 Verificando/criando tabela users...');
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+          username TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+      console.log('✅ Tabela users verificada/criada');
+    } catch (tableError) {
+      console.log('⚠️ Erro ao criar tabela users:', tableError);
+    }
+
     // Verificar se o usuário existe
     console.log('🔍 Buscando usuário no banco...');
     let userResult = await sql`SELECT id, username, password, created_at FROM users WHERE username = ${username}`;
