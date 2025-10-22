@@ -16,8 +16,8 @@ export default function Footer() {
           <div className="group">
             <div className="flex items-center mb-4 transition-transform duration-300 group-hover:scale-105">
               <img 
-                src="/andreoli-logo.svg?v=3"
-                alt="ANDREOLI CONSÓRCIOS Logo" 
+            src={`${import.meta.env.BASE_URL}andreoli-logo.svg?v=3`}
+            alt="ANDREOLI CONSÓRCIOS Logo" 
                 className="w-14 h-14 mr-4 object-contain transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 drop-shadow-lg"
                 onError={(e) => {
                   console.error('Erro ao carregar logo no footer:', e);

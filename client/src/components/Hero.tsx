@@ -68,7 +68,7 @@ export default function Hero() {
           <div className="lg:w-1/2 relative">
             <div className="relative group w-full h-full">
               <img
-                src="/hero-office.jpg"
+                src={`${import.meta.env.BASE_URL}hero-office.jpg`}
                 alt="Escritório Andreoli Consórcios"
                 loading="lazy"
                 className="rounded-xl shadow-2xl w-full h-auto max-h-[350px] lg:max-h-[420px] object-cover transition-all duration-500 group-hover:scale-105 group-hover:shadow-3xl"

@@ -8,7 +8,7 @@ const instagramTestimonials = [
     url: "https://www.instagram.com/andreoli_consorcio/reel/DNjBoX-RD3S/",
     caption: "🎉 Mais um cliente realizando o sonho da casa própria! Com a ANDREOLI CONSÓRCIOS, você também pode conquistar seu imóvel dos sonhos.",
     date: "2024-12-15",
-    image: "/instagram-post-1.jpg",
+    image: `${import.meta.env.BASE_URL}instagram-post-1.svg`,
     likes: "127",
     comments: "23"
   },
@@ -18,7 +18,7 @@ const instagramTestimonials = [
     url: "https://www.instagram.com/andreoli_consorcio/p/DP9RvEVEfc9/",
     caption: "✨ Depoimento emocionante! Nossa cliente conseguiu seu carro novo através do consórcio. Vem você também realizar seus sonhos conosco!",
     date: "2024-12-14",
-    image: "/instagram-post-2.jpg",
+    image: `${import.meta.env.BASE_URL}instagram-post-2.svg`,
     likes: "89",
     comments: "15"
   },
@@ -28,7 +28,7 @@ const instagramTestimonials = [
     url: "https://www.instagram.com/andreoli_consorcio/p/DP7G_RNkUse/",
     caption: "🏠 Casa própria conquistada! Mais uma família feliz com a ANDREOLI CONSÓRCIOS. Seu sonho também pode se tornar realidade!",
     date: "2024-12-13",
-    image: "/instagram-post-3.jpg",
+    image: `${import.meta.env.BASE_URL}instagram-post-3.svg`,
     likes: "156",
     comments: "31"
   },
@@ -38,7 +38,7 @@ const instagramTestimonials = [
     url: "https://www.instagram.com/andreoli_consorcio/p/DP7GlC_keQs/",
     caption: "🚗 Mais um cliente satisfeito! Consórcio de automóvel aprovado e entregue. Na ANDREOLI CONSÓRCIOS seus sonhos se tornam realidade!",
     date: "2024-12-12",
-    image: "/instagram-post-4.jpg",
+    image: `${import.meta.env.BASE_URL}instagram-post-4.svg`,
     likes: "203",
     comments: "42"
   }

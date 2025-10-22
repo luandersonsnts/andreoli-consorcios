@@ -34,7 +34,7 @@ export default function Header() {
         <div className="flex items-center group cursor-pointer transition-all duration-300">
           <div className="relative">
             <img 
-              src="/andreoli-logo.svg?v=5"
+              src={`${import.meta.env.BASE_URL}andreoli-logo.svg?v=5`}
               alt="ANDREOLI CONSÓRCIOS Logo" 
               className="w-32 h-32 mr-6 object-contain transition-all duration-300 group-hover:scale-105"
               onError={(e) => {

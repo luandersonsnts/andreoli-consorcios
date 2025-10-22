@@ -5,7 +5,7 @@ import { Instagram, Heart, MessageCircle, Share, ChevronLeft, ChevronRight } fro
 const instagramPosts = [
   {
     id: 1,
-    image: "/post1-marcos.jpg", // 1ª postagem - Marcos
+    image: `${import.meta.env.BASE_URL}post1-marcos.jpg`, // 1ª postagem - Marcos
     caption: "Começamos... Contemplado na 2° parcela. Tentamos na primeira e por pouco não saiu, agora deu certo! Venha fazer sua simulação. E veja que seu sonho está próximo de ser realizado",
     likes: 4,
     comments: 0,
@@ -15,7 +15,7 @@ const instagramPosts = [
   },
   {
     id: 2,
-    image: "/post2-ernani.jpg", // 2ª postagem - Ernani Souza
+    image: `${import.meta.env.BASE_URL}post2-ernani.jpg`, // 2ª postagem - Ernani Souza
     caption: "Essa foi guerra, mas ele persistiu e agora seu certo. Pra cima meu irmão. @ernani_souza02 Vamos pegar a máquina agora",
     likes: 17,
     comments: 1,
@@ -25,7 +25,7 @@ const instagramPosts = [
   },
   {
     id: 3,
-    image: "/post3-danilo.jpg", // 3ª postagem - Danilo Souza
+    image: `${import.meta.env.BASE_URL}post3-danilo.jpg`, // 3ª postagem - Danilo Souza
     caption: "Com apenas duas parcelas, o sonho dele se tornou realidade! ✨ Agora é só pegar o carro e viver o que sempre desejou. Andreoli Consórcio — porque quando a conquista vem do coração, acontece mais rápido do que a gente imagina. Tem uns que são na primeira, outros podem demorar ...",
     likes: 27,
     comments: 1,
@@ -35,7 +35,7 @@ const instagramPosts = [
   },
   {
     id: 4,
-    image: "/post4-larissa.jpg", // 4ª postagem - Larissa
+    image: `${import.meta.env.BASE_URL}post4-larissa.jpg`, // 4ª postagem - Larissa
     caption: "SE PROJETAS ALGUMA COISA, ELA TE SAÍRA BEM. Jó 22:28 CONSÓRCIO É PLANEJAMENTO! Larissa me procurou pra comprar um carro de uma forma planejada, eu vi o melhor grupo pra ela, mesmo sem lance inicial, vinha ofertando o lance fixo e participando de sorteios. Agora mês passado me proc...",
     likes: 71,
     comments: 0,
