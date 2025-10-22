@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Verificar se o usuário existe
     console.log('🔍 Buscando usuário no banco...');
-    let userResult = await sql`SELECT id, username, password, email, role FROM users WHERE username = ${username}`;
+    let userResult = await sql`SELECT id, username, password, created_at FROM users WHERE username = ${username}`;
     
     // Se o usuário admin não existir, criar automaticamente
     if (userResult.rows.length === 0 && username === 'admin') {
@@ -42,9 +42,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const hashedPassword = await bcrypt.hash('admin123', 10);
       const createResult = await sql`
-        INSERT INTO users (username, password, email, role) 
-        VALUES ('admin', ${hashedPassword}, 'admin@andreoli.com', 'admin')
-        RETURNING id, username, password, email, role
+        INSERT INTO users (username, password) 
+        VALUES ('admin', ${hashedPassword})
+        RETURNING id, username, password, created_at
       `;
       
       userResult = createResult;
@@ -87,8 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const token = jwt.sign(
       { 
         userId: user.id, 
-        username: user.username, 
-        role: user.role 
+        username: user.username
       },
       jwtSecret,
       { expiresIn: '24h' }
@@ -103,8 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
-        role: user.role
+        created_at: user.created_at
       },
       timestamp: new Date().toISOString()
     });

@@ -40,9 +40,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hashedPassword = await bcrypt.hash('admin123', 10);
     
     const result = await sql`
-      INSERT INTO users (username, password, email, role) 
-      VALUES ('admin', ${hashedPassword}, 'admin@andreoli.com', 'admin')
-      RETURNING id, username, email, role
+      INSERT INTO users (username, password) 
+      VALUES ('admin', ${hashedPassword})
+      RETURNING id, username, created_at
     `;
     
     console.log('✅ Usuário admin criado com sucesso');
