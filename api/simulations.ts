@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { storage } from '../lib/storage-cloud';
 import { insertSimulationSchema } from '../shared/schema';
 
+// Force rebuild - testing API recognition
+
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 // Middleware to verify JWT token
