@@ -1,81 +1,122 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import { sql } from '@vercel/postgres';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { storage } from '../../lib/storage-cloud';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-
-export async function POST(request: NextRequest) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('🔐 API login chamada');
+  
+  // Configurar CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+  
   try {
-    console.log('🔐 Tentativa de login...');
+    const { username, password } = req.body;
     
-    const body = await request.json();
-    const { username, password } = body;
-    
+    console.log('👤 Tentativa de login para usuário:', username);
+
     if (!username || !password) {
-      console.log('❌ Username ou password não fornecidos');
-      return NextResponse.json({ 
-        message: "Username and password are required",
-        success: false 
-      }, { status: 400 });
+      console.log('❌ Credenciais incompletas');
+      return res.status(400).json({
+        success: false,
+        error: 'Username e password são obrigatórios'
+      });
     }
 
-    let user = await storage.authenticateUser(username, password);
+    // Verificar se o usuário existe
+    console.log('🔍 Buscando usuário no banco...');
+    let userResult = await sql`SELECT id, username, password, email, role FROM users WHERE username = ${username}`;
     
-    // If user doesn't exist and it's admin with default password, create it
-    if (!user && username === 'admin' && password === 'admin123') {
-      try {
-        const existingUser = await storage.getUserByUsername('admin');
-        if (!existingUser) {
-          console.log('🔧 Criando usuário admin automaticamente...');
-          // Create admin user
-          await storage.createUser({
-            username: 'admin',
-            password: 'admin123'
-          });
-          
-          // Try authentication again
-          user = await storage.authenticateUser(username, password);
-        }
-      } catch (createError) {
-        console.error('❌ Erro ao criar usuário admin:', createError);
-      }
+    // Se o usuário admin não existir, criar automaticamente
+    if (userResult.rows.length === 0 && username === 'admin') {
+      console.log('🔧 Usuário admin não encontrado, criando automaticamente...');
+      
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const createResult = await sql`
+        INSERT INTO users (username, password, email, role) 
+        VALUES ('admin', ${hashedPassword}, 'admin@andreoli.com', 'admin')
+        RETURNING id, username, password, email, role
+      `;
+      
+      userResult = createResult;
+      console.log('✅ Usuário admin criado automaticamente');
     }
     
-    if (!user) {
-      console.log('❌ Credenciais inválidas para:', username);
-      return NextResponse.json({ 
-        message: "Invalid credentials",
-        success: false 
-      }, { status: 401 });
+    if (userResult.rows.length === 0) {
+      console.log('❌ Usuário não encontrado');
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciais inválidas'
+      });
+    }
+
+    const user = userResult.rows[0];
+    
+    // Verificar senha
+    console.log('🔐 Verificando senha...');
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    
+    if (!isValidPassword) {
+      console.log('❌ Senha inválida');
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciais inválidas'
+      });
+    }
+
+    // Gerar token JWT
+    console.log('🎫 Gerando token JWT...');
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('❌ JWT_SECRET não configurado');
+      return res.status(500).json({
+        success: false,
+        error: 'Configuração do servidor incompleta'
+      });
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
-      JWT_SECRET,
+      { 
+        userId: user.id, 
+        username: user.username, 
+        role: user.role 
+      },
+      jwtSecret,
       { expiresIn: '24h' }
     );
 
-    console.log('✅ Login realizado com sucesso para:', username);
+    console.log('✅ Login realizado com sucesso');
     
-    const response = {
-      success: true, 
+    return res.status(200).json({
+      success: true,
+      message: 'Login realizado com sucesso',
       token,
-      user: { id: user.id, username: user.username },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      },
       timestamp: new Date().toISOString()
-    };
-    
-    return NextResponse.json(response, { status: 200 });
-    
+    });
+
   } catch (error) {
     console.error('❌ Erro no login:', error);
     
-    const errorResponse = {
-      message: "Erro interno do servidor",
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    return res.status(500).json({
       success: false,
+      error: 'Erro interno do servidor',
+      details: error instanceof Error ? error.message : 'Erro desconhecido',
       timestamp: new Date().toISOString()
-    };
-    
-    return NextResponse.json(errorResponse, { status: 500 });
+    });
   }
 }
