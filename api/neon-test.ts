@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { sql } from '@vercel/postgres';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -43,11 +44,34 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
           timestamp: new Date().toISOString()
         });
 
+      case 'db-test':
+        try {
+          // Teste simples de conexão
+          const result = await sql`SELECT NOW() as current_time, version() as postgres_version`;
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Conexão com PostgreSQL bem-sucedida',
+            database_info: {
+              current_time: result.rows[0].current_time,
+              postgres_version: result.rows[0].postgres_version
+            },
+            timestamp: new Date().toISOString()
+          });
+        } catch (dbError) {
+          return res.status(500).json({
+            success: false,
+            error: 'Falha na conexão com PostgreSQL',
+            details: dbError instanceof Error ? dbError.message : 'Erro desconhecido',
+            timestamp: new Date().toISOString()
+          });
+        }
+
       default:
         return res.status(400).json({
           success: false,
           error: 'Ação não reconhecida',
-          available_actions: ['test', 'env-check'],
+          available_actions: ['test', 'env-check', 'db-test'],
           timestamp: new Date().toISOString()
         });
     }
