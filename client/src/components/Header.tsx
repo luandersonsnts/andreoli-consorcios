@@ -30,20 +30,20 @@ export default function Header() {
 
   return (
     <header className="bg-gradient-to-r from-white via-blue-50 to-white shadow-lg fixed w-full top-0 z-50 backdrop-blur-sm border-b border-blue-100">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-1 md:py-2 flex justify-between items-center">
         <div className="flex items-center group cursor-pointer transition-all duration-300">
           <div className="relative">
             <img 
               src={`${import.meta.env.BASE_URL}andreoli-logo.svg?v=5`}
               alt="ANDREOLI CONSÓRCIOS Logo" 
-              className="w-32 h-32 mr-6 object-contain transition-all duration-300 group-hover:scale-105"
+              className="w-16 h-16 md:w-24 md:h-24 mr-3 md:mr-6 object-contain transition-all duration-300 group-hover:scale-105"
               onError={(e) => {
                 console.error('Erro ao carregar logo:', e);
                 e.currentTarget.style.display = 'none';
               }}
             />
           </div>
-          <span className="text-andreoli-gray font-bold text-4xl transition-all duration-300 group-hover:text-andreoli-blue tracking-wide">
+          <span className="text-andreoli-gray font-bold text-xl md:text-3xl transition-all duration-300 group-hover:text-andreoli-blue tracking-wide">
             ANDREOLI CONSÓRCIOS
           </span>
         </div>
@@ -125,7 +125,7 @@ export default function Header() {
       
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t">
-          <div className="container mx-auto px-4 py-4 space-y-4">
+          <div className="container mx-auto px-4 py-2 space-y-2">
             <button 
               onClick={() => scrollToSection('home')} 
               className="block text-firme-gray"
