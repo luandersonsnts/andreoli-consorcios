@@ -62,8 +62,10 @@ function calculateConsortiumWithGroup(data: ConsortiumFormData, group: Consortiu
   
   let valorCartaReal = creditValueDesejado;
   let valorCartaExibir = creditValueDesejado;
+  let parcelaReal = maxInstallment;
+  let parcelasReal = installmentCount;
   
-  // Se usar embutido, precisa calcular a carta adequada
+  // Se usar embutido, precisa buscar uma carta MAIOR que permita usar o valor desejado
   if (data.useEmbedded) {
     // Cartas disponíveis no banco (simulando algumas opções)
     const cartasDisponiveis = [
@@ -76,7 +78,7 @@ function calculateConsortiumWithGroup(data: ConsortiumFormData, group: Consortiu
       { valor: 100000, parcelas: 60, valorParcela: 1900 }
     ];
     
-    // Encontrar a carta mais próxima que permita usar o valor desejado
+    // Encontrar a carta que permita usar o valor desejado após descontar o embutido
     for (const carta of cartasDisponiveis) {
       const totalPagar = carta.valorParcela * carta.parcelas;
       const valorEmbutido = totalPagar * 0.15;
@@ -84,13 +86,15 @@ function calculateConsortiumWithGroup(data: ConsortiumFormData, group: Consortiu
       
       if (creditoDisponivel >= creditValueDesejado) {
         valorCartaReal = carta.valor;
+        parcelaReal = carta.valorParcela;
+        parcelasReal = carta.parcelas;
         break;
       }
     }
   }
   
-  // 1. Cálculo do total que será pago (baseado na parcela escolhida pelo cliente)
-  const totalQueSerapago = maxInstallment * installmentCount;
+  // 1. Cálculo do total que será pago (baseado na carta real selecionada)
+  const totalQueSerapago = parcelaReal * parcelasReal;
   
   // 2. CÁLCULO DO LANCE (metodologia Andreoli):
   // Lance necessário = 53% do total que será pago
@@ -126,9 +130,11 @@ function calculateConsortiumWithGroup(data: ConsortiumFormData, group: Consortiu
   
   return {
     grupo: grupoNumero,
-    valorCarta: valorCartaExibir, // Valor que o cliente deseja
-    valorCartaReal: valorCartaReal, // Valor da carta que será usada
-    parcelaAtual: maxInstallment,
+    valorCarta: creditValueDesejado, // Valor que o cliente deseja usar
+    valorCartaReal: valorCartaReal, // Valor da carta que será usada (maior se embutido)
+    parcelaAtual: parcelaReal, // Parcela da carta real
+    totalParcelas: parcelasReal, // Total de parcelas da carta real
+    totalPagar: totalQueSerapago, // Total que será pago
     lanceTotal: lanceNecessario,
     lanceEmbutido,
     lanceDeduzido,
@@ -534,14 +540,34 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                         <span className="text-gray-600">Grupo</span>
                         <span className="font-bold">{calculation.grupo}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Valor da carta</span>
-                        <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Valor da parcela</span>
-                        <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
-                      </div>
+                      {calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta && (
+                        <>
+                          <div className="flex justify-between bg-blue-50 p-2 rounded">
+                            <span className="text-gray-600">Carta selecionada (para embutido)</span>
+                            <span className="font-bold">{formatMoney(calculation.valorCartaReal)}</span>
+                          </div>
+                          <div className="flex justify-between bg-blue-50 p-2 rounded">
+                            <span className="text-gray-600">Parcela da carta selecionada</span>
+                            <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
+                          </div>
+                          <div className="flex justify-between bg-green-50 p-2 rounded">
+                            <span className="text-gray-600">Crédito disponível para uso</span>
+                            <span className="font-bold text-green-600">{formatMoney(calculation.valorCarta)}</span>
+                          </div>
+                        </>
+                      )}
+                      {!(calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta) && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Valor da carta</span>
+                            <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Valor da parcela</span>
+                            <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
+                          </div>
+                        </>
+                      )}
                       <div className="flex justify-between border-t pt-2">
                         <span className="text-gray-600">Lance necessário (53%)</span>
                         <span className="font-bold text-firme-blue">{formatMoney(calculation.lanceTotal)}</span>
@@ -579,9 +605,12 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                         const whatsappMessage = `Olá! Gostaria de contratar o consórcio com as seguintes informações:
 
 ===== PROPOSTA ANDREOLI CONSÓRCIOS =====
-Grupo: ${calculation.grupo}
+Grupo: ${calculation.grupo}${calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta ? `
+Carta selecionada (para embutido): ${formatMoney(calculation.valorCartaReal)}
+Parcela da carta selecionada: ${formatMoney(calculation.parcelaAtual)}
+Crédito disponível para uso: ${formatMoney(calculation.valorCarta)}` : `
 Valor da carta: ${formatMoney(calculation.valorCarta)}
-Valor da parcela: ${formatMoney(calculation.parcelaAtual)}
+Valor da parcela: ${formatMoney(calculation.parcelaAtual)}`}
 Lance necessário (53%): ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? `
 Lance embutido (15%): ${formatMoney(calculation.lanceEmbutido)}` : ''}
 Lance a pagar: ${formatMoney(calculation.lanceDeduzido)}
