@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { Client } from 'pg';
+import { sql } from '@vercel/postgres';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configurar CORS
@@ -13,23 +13,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { action } = req.query;
 
-  // Configuração direta do Neon
-  const connectionString = 'postgresql://neondb_owner:npg_JLldGqb3ik8z@ep-morning-bush-acj230xb-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
-
   try {
-    const client = new Client({
-      connectionString,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
-
-    await client.connect();
 
     switch (action) {
       case 'test':
-        const testResult = await client.query('SELECT NOW() as current_time, version() as postgres_version');
-        await client.end();
+        const testResult = await sql`SELECT NOW() as current_time, version() as postgres_version`;
         
         return res.status(200).json({
           success: true,
@@ -40,17 +28,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       case 'init':
         // Criar tabela users
-        await client.query(`
+        await sql`
           CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(255) NOT NULL UNIQUE,
             password VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
-        `);
+        `;
 
         // Verificar se admin existe
-        const existingAdmin = await client.query('SELECT id FROM users WHERE username = $1', ['admin']);
+        const existingAdmin = await sql`SELECT id FROM users WHERE username = 'admin'`;
         
         let adminCreated = false;
         if (existingAdmin.rows.length === 0) {
@@ -58,14 +46,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const bcrypt = require('bcryptjs');
           const hashedPassword = await bcrypt.hash('admin123', 10);
           
-          await client.query(
-            'INSERT INTO users (username, password) VALUES ($1, $2)',
-            ['admin', hashedPassword]
-          );
+          await sql`INSERT INTO users (username, password) VALUES ('admin', ${hashedPassword})`;
           adminCreated = true;
         }
-
-        await client.end();
         
         return res.status(200).json({
           success: true,
@@ -75,8 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
       case 'users':
-        const users = await client.query('SELECT id, username, created_at FROM users ORDER BY created_at DESC');
-        await client.end();
+        const users = await sql`SELECT id, username, created_at FROM users ORDER BY created_at DESC`;
         
         return res.status(200).json({
           success: true,
@@ -86,7 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
       default:
-        await client.end();
         return res.status(400).json({
           success: false,
           error: 'Ação não reconhecida',
