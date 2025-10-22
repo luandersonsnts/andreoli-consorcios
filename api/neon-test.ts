@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(req: VercelRequest, res: VercelResponse) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -15,10 +15,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch (action) {
       case 'test':
-        // Teste simples de conectividade
         return res.status(200).json({
           success: true,
-          message: 'API funcionando',
+          message: 'API funcionando perfeitamente',
           action: 'test',
           timestamp: new Date().toISOString(),
           environment: {
@@ -28,7 +27,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
       case 'env-check':
-        // Verificar variáveis de ambiente disponíveis
         const envVars = {
           POSTGRES_URL: process.env.POSTGRES_URL ? 'SET' : 'NOT_SET',
           DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT_SET',
@@ -45,45 +43,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           timestamp: new Date().toISOString()
         });
 
-      case 'neon-direct':
-        // Teste direto com Neon usando fetch
-        const neonUrl = 'https://ep-morning-bush-acj230xb-pooler.sa-east-1.aws.neon.tech';
-        
-        try {
-          const response = await fetch(neonUrl, {
-            method: 'HEAD',
-            headers: {
-              'User-Agent': 'Vercel-Function-Test'
-            }
-          });
-          
-          return res.status(200).json({
-            success: true,
-            message: 'Teste de conectividade com Neon',
-            neon_reachable: response.ok,
-            status: response.status,
-            timestamp: new Date().toISOString()
-          });
-        } catch (fetchError) {
-          return res.status(200).json({
-            success: false,
-            message: 'Erro ao conectar com Neon',
-            error: fetchError instanceof Error ? fetchError.message : 'Erro desconhecido',
-            timestamp: new Date().toISOString()
-          });
-        }
-
       default:
         return res.status(400).json({
           success: false,
           error: 'Ação não reconhecida',
-          available_actions: ['test', 'env-check', 'neon-direct'],
+          available_actions: ['test', 'env-check'],
           timestamp: new Date().toISOString()
         });
     }
 
   } catch (error) {
-    console.error('Erro na API Neon:', error);
+    console.error('Erro na API:', error);
     
     return res.status(500).json({
       success: false,
