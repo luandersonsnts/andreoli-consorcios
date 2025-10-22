@@ -1,28 +1,22 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { storage } from '../../lib/storage-cloud';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const { username, password } = req.body;
+    console.log('🔐 Tentativa de login...');
+    
+    const body = await request.json();
+    const { username, password } = body;
     
     if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
+      console.log('❌ Username ou password não fornecidos');
+      return NextResponse.json({ 
+        message: "Username and password are required",
+        success: false 
+      }, { status: 400 });
     }
 
     let user = await storage.authenticateUser(username, password);
@@ -32,6 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const existingUser = await storage.getUserByUsername('admin');
         if (!existingUser) {
+          console.log('🔧 Criando usuário admin automaticamente...');
           // Create admin user
           await storage.createUser({
             username: 'admin',
@@ -42,12 +37,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           user = await storage.authenticateUser(username, password);
         }
       } catch (createError) {
-        console.error('Error creating admin user:', createError);
+        console.error('❌ Erro ao criar usuário admin:', createError);
       }
     }
     
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      console.log('❌ Credenciais inválidas para:', username);
+      return NextResponse.json({ 
+        message: "Invalid credentials",
+        success: false 
+      }, { status: 401 });
     }
 
     const token = jwt.sign(
@@ -56,13 +55,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       { expiresIn: '24h' }
     );
 
-    res.json({ 
+    console.log('✅ Login realizado com sucesso para:', username);
+    
+    const response = {
       success: true, 
       token,
-      user: { id: user.id, username: user.username }
-    });
+      user: { id: user.id, username: user.username },
+      timestamp: new Date().toISOString()
+    };
+    
+    return NextResponse.json(response, { status: 200 });
+    
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('❌ Erro no login:', error);
+    
+    const errorResponse = {
+      message: "Erro interno do servidor",
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      success: false,
+      timestamp: new Date().toISOString()
+    };
+    
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

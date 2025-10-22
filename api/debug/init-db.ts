@@ -1,30 +1,24 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '../../lib/storage-cloud';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
+    console.log('🔧 Inicializando banco de dados...');
+    
     // Verificar se já existe um usuário admin
     const existingAdmin = await storage.getUserByUsername('admin');
     
     if (existingAdmin) {
-      return res.json({ 
+      const response = {
         message: 'Admin user already exists',
         success: true,
-        created: false
-      });
+        created: false,
+        user: { id: existingAdmin.id, username: existingAdmin.username },
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('ℹ️ Usuário admin já existe');
+      return NextResponse.json(response, { status: 200 });
     }
 
     // Criar usuário admin padrão
@@ -33,18 +27,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       password: 'admin123'
     });
 
-    res.json({ 
+    const response = {
       message: 'Admin user created successfully',
       success: true,
       created: true,
-      user: { id: adminUser.id, username: adminUser.username }
-    });
+      user: { id: adminUser.id, username: adminUser.username },
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('✅ Usuário admin criado com sucesso');
+    return NextResponse.json(response, { status: 200 });
+    
   } catch (error) {
-    console.error('Init DB error:', error);
-    res.status(500).json({ 
-      message: "Internal server error",
-      error: error instanceof Error ? error.message : 'Unknown error',
-      success: false
-    });
+    console.error('❌ Erro ao inicializar banco:', error);
+    
+    const errorResponse = {
+      message: "Erro ao inicializar banco de dados",
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      success: false,
+      timestamp: new Date().toISOString()
+    };
+    
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
