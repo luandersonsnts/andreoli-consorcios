@@ -5,7 +5,6 @@ import InstagramTestimonials from "../components/InstagramTestimonials";
 import ConsortiumButtons from "../components/ConsortiumButtons";
 import HowItWorks from "../components/HowItWorks";
 import NewConsortiumSimulationForm from "../components/NewConsortiumSimulationForm";
-import InstagramHighlights from "../components/InstagramHighlights";
 import MissionVisionValues from "../components/MissionVisionValues";
 import ComplaintsForm from "../components/ComplaintsForm";
 import TrabalheConosco from "../components/TrabalheConosco";
@@ -30,7 +29,6 @@ export default function Home() {
       <ConsortiumButtons onCategorySelect={handleCategorySelect} />
       <HowItWorks />
       <NewConsortiumSimulationForm preSelectedCategory={selectedCategory} />
-      <InstagramHighlights />
       <MissionVisionValues />
       <ComplaintsForm />
       <TrabalheConosco />

@@ -26,7 +26,7 @@ export default function Contact() {
             
             <div className="space-y-4">
               <a 
-                href="https://api.whatsapp.com/send?phone=557498121-3461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20conquistar%20meus%20objetivos!" 
+                href="https://api.whatsapp.com/send?phone=5574981213461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20conquistar%20meus%20objetivos!" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >
@@ -35,7 +35,7 @@ export default function Contact() {
               </a>
               
               <a 
-                href="tel:+557498121-3461" 
+                href="tel:+5574981213461" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-phone"
               >

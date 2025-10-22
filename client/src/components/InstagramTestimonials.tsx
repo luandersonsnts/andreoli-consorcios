@@ -4,41 +4,41 @@ import { Instagram, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react
 const instagramTestimonials = [
   {
     id: 1,
-    type: "reel",
-    url: "https://www.instagram.com/andreoli_consorcio/reel/DNjBoX-RD3S/",
-    caption: "🎉 Mais um cliente realizando o sonho da casa própria! Com a ANDREOLI CONSÓRCIOS, você também pode conquistar seu imóvel dos sonhos.",
+    type: "post",
+    url: "https://www.instagram.com/andreoli_consorcio/p/DP7GlC_keQs/",
+    caption: "🎉 Contemplado na 2ª parcela! Marcos realizou o sonho com a ANDREOLI CONSÓRCIOS. Seu sonho também pode se tornar realidade!",
     date: "2024-12-15",
-    image: `${import.meta.env.BASE_URL}instagram-post-1.svg`,
+    image: "/post1-marcos.jpg",
     likes: "127",
     comments: "23"
   },
   {
     id: 2,
     type: "post",
-    url: "https://www.instagram.com/andreoli_consorcio/p/DP9RvEVEfc9/",
-    caption: "✨ Depoimento emocionante! Nossa cliente conseguiu seu carro novo através do consórcio. Vem você também realizar seus sonhos conosco!",
+    url: "https://www.instagram.com/andreoli_consorcio/p/DP7G_RNkUse/",
+    caption: "✨ Contemplado na 4ª parcela! Ernani conquistou seu objetivo através do consórcio. Vem você também realizar seus sonhos conosco!",
     date: "2024-12-14",
-    image: `${import.meta.env.BASE_URL}instagram-post-2.svg`,
+    image: "/post2-ernani.jpg",
     likes: "89",
     comments: "15"
   },
   {
     id: 3,
     type: "post",
-    url: "https://www.instagram.com/andreoli_consorcio/p/DP7G_RNkUse/",
-    caption: "🏠 Casa própria conquistada! Mais uma família feliz com a ANDREOLI CONSÓRCIOS. Seu sonho também pode se tornar realidade!",
+    url: "https://www.instagram.com/andreoli_consorcio/p/DP9RvEVEfc9/",
+    caption: "🏠 Contemplado na 2ª parcela! Danilo e família felizes com a ANDREOLI CONSÓRCIOS. Seu sonho também pode se tornar realidade!",
     date: "2024-12-13",
-    image: `${import.meta.env.BASE_URL}instagram-post-3.svg`,
+    image: "/post3-danilo.jpg",
     likes: "156",
     comments: "31"
   },
   {
     id: 4,
-    type: "post",
-    url: "https://www.instagram.com/andreoli_consorcio/p/DP7GlC_keQs/",
-    caption: "🚗 Mais um cliente satisfeito! Consórcio de automóvel aprovado e entregue. Na ANDREOLI CONSÓRCIOS seus sonhos se tornam realidade!",
+    type: "reel",
+    url: "https://www.instagram.com/andreoli_consorcio/reel/DNjBoX-RD3S/",
+    caption: "🚗 Entrega realizada! Larissa recebeu seu carro novo. Na ANDREOLI CONSÓRCIOS seus sonhos se tornam realidade!",
     date: "2024-12-12",
-    image: `${import.meta.env.BASE_URL}instagram-post-4.svg`,
+    image: "/post4-larissa.jpg",
     likes: "203",
     comments: "42"
   }
@@ -69,7 +69,7 @@ export default function InstagramTestimonials() {
   const current = instagramTestimonials[currentPost];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <section id="clientes" className="py-16 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full border border-pink-200 mb-4">
@@ -108,8 +108,19 @@ export default function InstagramTestimonials() {
             <div className="flex flex-col lg:flex-row">
               {/* Image Section */}
               <div className="lg:w-1/2 relative">
-                <div className="aspect-square bg-gradient-to-br from-pink-200 to-purple-200 flex items-center justify-center">
-                  <div className="text-center p-8">
+                <div className="aspect-square bg-gradient-to-br from-pink-200 to-purple-200 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src={current.image}
+                    alt={`Post do Instagram - ${current.type === 'reel' ? 'Reel' : 'Post'}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback para placeholder se a imagem não carregar
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className="text-center p-8 hidden">
                     <Instagram className="w-16 h-16 text-pink-500 mx-auto mb-4" />
                     <p className="text-gray-600">Imagem do post do Instagram</p>
                     <p className="text-sm text-gray-500 mt-2">

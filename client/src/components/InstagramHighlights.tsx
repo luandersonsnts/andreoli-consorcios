@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Instagram, Heart, MessageCircle, Share, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Postagens REAIS do perfil @andreoli_consorcio - ATUALIZADAS com imagens reais fornecidas
@@ -6,6 +6,7 @@ const instagramPosts = [
   {
     id: 1,
     image: "/post1-marcos.jpg", // 1ª postagem - Marcos
+    fallbackImage: "/instagram-post-1.svg", // Fallback SVG
     caption: "Começamos... Contemplado na 2° parcela. Tentamos na primeira e por pouco não saiu, agora deu certo! Venha fazer sua simulação. E veja que seu sonho está próximo de ser realizado",
     likes: 4,
     comments: 0,
@@ -16,6 +17,7 @@ const instagramPosts = [
   {
     id: 2,
     image: "/post2-ernani.jpg", // 2ª postagem - Ernani Souza
+    fallbackImage: "/instagram-post-2.svg", // Fallback SVG
     caption: "Essa foi guerra, mas ele persistiu e agora seu certo. Pra cima meu irmão. @ernani_souza02 Vamos pegar a máquina agora",
     likes: 17,
     comments: 1,
@@ -26,6 +28,7 @@ const instagramPosts = [
   {
     id: 3,
     image: "/post3-danilo.jpg", // 3ª postagem - Danilo Souza
+    fallbackImage: "/instagram-post-3.svg", // Fallback SVG
     caption: "Com apenas duas parcelas, o sonho dele se tornou realidade! ✨ Agora é só pegar o carro e viver o que sempre desejou. Andreoli Consórcio — porque quando a conquista vem do coração, acontece mais rápido do que a gente imagina. Tem uns que são na primeira, outros podem demorar ...",
     likes: 27,
     comments: 1,
@@ -36,6 +39,7 @@ const instagramPosts = [
   {
     id: 4,
     image: "/post4-larissa.jpg", // 4ª postagem - Larissa
+    fallbackImage: "/instagram-post-4.svg", // Fallback SVG
     caption: "SE PROJETAS ALGUMA COISA, ELA TE SAÍRA BEM. Jó 22:28 CONSÓRCIO É PLANEJAMENTO! Larissa me procurou pra comprar um carro de uma forma planejada, eu vi o melhor grupo pra ela, mesmo sem lance inicial, vinha ofertando o lance fixo e participando de sorteios. Agora mês passado me proc...",
     likes: 71,
     comments: 0,
@@ -47,6 +51,39 @@ const instagramPosts = [
 
 export default function InstagramHighlights() {
   const [currentPost, setCurrentPost] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [failedImages, setFailedImages] = useState(new Set());
+
+  // Preload todas as imagens
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = instagramPosts.map((post) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            console.log('🖼️ Imagem precarregada:', post.image);
+            resolve(post.image);
+          };
+          img.onerror = () => {
+            console.error('❌ Falha no precarregamento:', post.image);
+            reject(post.image);
+          };
+          img.src = post.image;
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+        console.log('✅ Todas as imagens foram precarregadas');
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error('❌ Erro no precarregamento de imagens:', error);
+        setImagesLoaded(true); // Continua mesmo com erro
+      }
+    };
+
+    preloadImages();
+  }, []);
 
   const nextPost = () => {
     setCurrentPost((prev) => (prev + 1) % instagramPosts.length);
@@ -57,6 +94,7 @@ export default function InstagramHighlights() {
   };
 
   const current = instagramPosts[currentPost];
+  const currentImageSrc = failedImages.has(current.id) ? current.fallbackImage : current.image;
 
   return (
     <section id="clientes" className="py-16 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 relative overflow-hidden">
@@ -99,23 +137,53 @@ export default function InstagramHighlights() {
 
             {/* Imagem do post */}
             <div className="relative group">
+              {!imagesLoaded && (
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+                  <div className="text-gray-500 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-firme-blue mx-auto mb-2"></div>
+                    <p className="text-sm">Carregando imagem...</p>
+                  </div>
+                </div>
+              )}
               <img
-                src={current.image}
+                src={currentImageSrc}
                 alt={`Conquista de ${current.clientName}`}
                 className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105"
-                onError={(e) => {
-                  console.error('Erro ao carregar imagem:', current.image);
-                  // Fallback para placeholder se a imagem não carregar
-                  e.currentTarget.style.display = 'none';
-                  const placeholder = e.currentTarget.nextElementSibling;
-                  if (placeholder) placeholder.style.display = 'flex';
+                loading="eager"
+                decoding="sync"
+                onLoad={(e) => {
+                  console.log('✅ Imagem carregada com sucesso:', currentImageSrc);
+                  console.log('📱 User Agent:', navigator.userAgent);
+                  console.log('📐 Dimensões da imagem:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                  e.currentTarget.style.opacity = '1';
                 }}
+                onError={(e) => {
+                  console.error('❌ Erro ao carregar imagem:', currentImageSrc);
+                  console.error('📱 User Agent:', navigator.userAgent);
+                  console.error('🌐 URL completa:', window.location.origin + currentImageSrc);
+                  console.error('📊 Network status:', navigator.onLine ? 'Online' : 'Offline');
+                  
+                  // Se ainda não tentou o fallback, tenta a imagem SVG
+                  if (!failedImages.has(current.id) && currentImageSrc === current.image) {
+                    console.log('🔄 Tentando imagem de fallback:', current.fallbackImage);
+                    setFailedImages(prev => new Set(Array.from(prev).concat(current.id)));
+                  } else {
+                    // Se o fallback também falhou, mostra placeholder
+                    e.currentTarget.style.display = 'none';
+                    const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (placeholder) placeholder.style.display = 'flex';
+                  }
+                }}
+                style={{ opacity: imagesLoaded ? '1' : '0' }}
               />
               {/* Placeholder de fallback */}
               <div className="absolute inset-0 bg-gray-200 flex items-center justify-center" style={{ display: 'none' }}>
                 <div className="text-gray-500 text-center">
                   <div className="text-4xl mb-2">📷</div>
                   <p className="text-sm">Foto: {current.clientName}</p>
+                  <p className="text-xs mt-1">Tentou: {current.image}</p>
+                  <p className="text-xs mt-1">Fallback: {current.fallbackImage}</p>
+                  <p className="text-xs mt-1 text-red-500">Ambas falharam</p>
                 </div>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
