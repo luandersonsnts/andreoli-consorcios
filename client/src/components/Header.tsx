@@ -29,21 +29,21 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gradient-to-r from-white via-blue-50 to-white shadow-lg fixed w-full top-0 z-50 backdrop-blur-sm border-b border-blue-100">
-      <div className="container mx-auto px-4 py-1 md:py-2 flex justify-between items-center">
-        <div className="flex items-center group cursor-pointer transition-all duration-300">
-          <div className="relative">
+    <header className="bg-gradient-to-r from-white via-blue-50 to-white shadow-lg fixed w-full top-0 z-50 backdrop-blur-sm border-b border-blue-100 overflow-hidden">
+      <div className="container mx-auto px-2 sm:px-4 py-1 md:py-2 flex justify-between items-center max-w-full">
+        <div className="flex items-center group cursor-pointer transition-all duration-300 min-w-0 flex-1">
+          <div className="relative flex-shrink-0">
             <img 
               src={`${import.meta.env.BASE_URL}andreoli-logo.svg?v=5`}
               alt="ANDREOLI CONSÓRCIOS Logo" 
-              className="w-16 h-16 md:w-24 md:h-24 mr-3 md:mr-6 object-contain transition-all duration-300 group-hover:scale-105"
+              className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 mr-2 sm:mr-3 md:mr-6 object-contain transition-all duration-300 group-hover:scale-105"
               onError={(e) => {
                 console.error('Erro ao carregar logo:', e);
                 e.currentTarget.style.display = 'none';
               }}
             />
           </div>
-          <span className="text-andreoli-gray font-bold text-xl md:text-3xl transition-all duration-300 group-hover:text-andreoli-blue tracking-wide">
+          <span className="text-andreoli-gray font-bold text-sm sm:text-lg md:text-3xl transition-all duration-300 group-hover:text-andreoli-blue tracking-wide truncate">
             ANDREOLI CONSÓRCIOS
           </span>
         </div>
@@ -115,7 +115,7 @@ export default function Header() {
         </button>
         
         <button 
-          className="md:hidden text-firme-gray" 
+          className="md:hidden text-firme-gray p-1 flex-shrink-0" 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           data-testid="button-mobile-menu"
         >
