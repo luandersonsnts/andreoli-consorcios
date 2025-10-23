@@ -40,10 +40,10 @@ jobs:
         run: npm cache clean --force
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=dev
 
       - name: Build for GitHub Pages
-        run: npm run build:static
+        run: npx vite build --config vite.config.static.ts
         env:
           NODE_ENV: production
           VITE_STATIC_SITE: 'true'
