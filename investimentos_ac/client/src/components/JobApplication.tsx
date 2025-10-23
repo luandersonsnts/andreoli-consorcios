@@ -111,7 +111,7 @@ export default function JobApplication() {
             FAÇA PARTE DE UMA EQUIPE VENCEDORA EM JUAZEIRO/BA
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
-            Junte-se ao time da ANDREOLI CONSÓRCIOS e ajude pessoas a realizarem seus sonhos. Oportunidades de crescimento e desenvolvimento profissional te esperam!
+            Junte-se ao time da ANDREOLI CONSÓRCIOS e ajude pessoas a transformarem suas vidas financeiras. Oportunidades de crescimento e desenvolvimento profissional te esperam!
           </p>
           
           <h3 className="text-2xl font-bold text-firme-blue">Candidate-se agora</h3>

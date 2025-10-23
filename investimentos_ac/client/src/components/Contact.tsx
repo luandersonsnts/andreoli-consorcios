@@ -16,37 +16,37 @@ export default function Contact() {
           
           <div>
             <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-6">
-          Na ANDREOLI CONSÓRCIOS você encontra as melhores condições para realizar seus sonhos.
+          Na ANDREOLI CONSÓRCIOS você encontra as melhores soluções para construir um patrimônio sólido e duradouro.
         </h2>
             
             <h3 className="text-2xl font-bold text-firme-blue mb-8">Contatos</h3>
             
             <div className="space-y-4">
               <a 
-                href="https://api.whatsapp.com/send?phone=557498121-3461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20realizar%20meu%20sonho!" 
+                href="https://api.whatsapp.com/send?phone=5574988384902&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20realizar%20meu%20sonho!" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >
                 <SiWhatsapp className="text-green-500 text-xl mr-3" />
-(74) 98121-3461
+(74) 98838-4902
               </a>
               
               <a 
-                href="tel:+557498121-3461" 
+                href="tel:+5574988384902" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-phone"
               >
                 <Phone className="text-firme-blue text-xl mr-3" />
-(74) 98121-3461
+(74) 98838-4902
               </a>
               
               <a 
-                href="mailto:luandersonsilvasantos@gmail.com" 
+                href="mailto:andreoli_consorcio@hotmail.com" 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-email"
               >
                 <Mail className="text-firme-blue text-xl mr-3" />
-luandersonsilvasantos@gmail.com
+andreoli_consorcio@hotmail.com
               </a>
               
               <a 

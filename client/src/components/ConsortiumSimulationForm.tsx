@@ -20,6 +20,45 @@ const consortiumFormSchema = z.object({
   useEmbedded: z.boolean().optional(),
   maxInstallmentValue: z.string().min(1, "Valor da parcela é obrigatório"),
   installmentCount: z.string().min(1, "Número de parcelas é obrigatório"),
+}).refine((data) => {
+  const creditValue = parseFloat(data.creditValue) || 0;
+  const maxInstallment = parseFloat(data.maxInstallmentValue) || 0;
+  const installmentCount = parseInt(data.installmentCount) || 0;
+  
+  // VALIDAÇÃO CORRETA CONFORME ESPECIFICADO:
+  // (Quantidade de parcelas × Valor máximo da parcela) >= (Valor total do crédito + (Valor total do crédito × 0,16))
+  
+  let valorCredito = creditValue;
+  
+  // Se usar embutido, precisa de uma carta maior (23% maior)
+  if (data.useEmbedded) {
+    valorCredito = creditValue * 1.23;
+    valorCredito = Math.ceil(valorCredito / 100) * 100; // Arredondar para cima
+  }
+  
+  // Calcular o total necessário: Valor do crédito + 16% de taxa administrativa
+  const totalNecessario = valorCredito + (valorCredito * 0.16);
+  
+  // Calcular o total que será pago com as parcelas
+  const totalParcelas = maxInstallment * installmentCount;
+  
+  // DEBUG: Log dos valores
+  console.log('=== VALIDAÇÃO CONSÓRCIO ===');
+  console.log('Valor do crédito:', creditValue);
+  console.log('Valor máximo da parcela:', maxInstallment);
+  console.log('Número de parcelas:', installmentCount);
+  console.log('Usar embutido:', data.useEmbedded);
+  console.log('Valor do crédito (ajustado):', valorCredito);
+  console.log('Total necessário (crédito + 16%):', totalNecessario);
+  console.log('Total das parcelas:', totalParcelas);
+  console.log('Validação passou:', totalParcelas >= totalNecessario);
+  console.log('========================');
+  
+  // Verificar se o total das parcelas é suficiente
+  return totalParcelas >= totalNecessario;
+}, {
+  message: "O valor total das parcelas deve ser suficiente para cobrir o valor da carta + taxa administrativa (16%). Para lance embutido, é necessária uma carta maior. Aumente o número de parcelas ou o valor da parcela.",
+  path: ["installmentCount"] // Mostra o erro no campo de número de parcelas
 });
 
 type ConsortiumFormData = z.infer<typeof consortiumFormSchema>;
@@ -46,46 +85,40 @@ function calculateConsortium(data: ConsortiumFormData): ConsortiumCalculationRes
   const maxInstallment = parseFloat(data.maxInstallmentValue);
   const installmentCount = parseInt(data.installmentCount);
   
+  // Validação: máximo de 100 parcelas
+  const validInstallmentCount = Math.min(installmentCount, 100);
+  
   // Grupo aleatório entre 1000-9999 (mais realista)
   const grupo = Math.floor(Math.random() * 9000) + 1000;
   
   // CÁLCULO CORRETO BASEADO NA METODOLOGIA ANDREOLI:
   
-  // 1. Taxas padrão (quando não há grupo específico)
-  const taxaAdmPercentual = 0.16; // 16% padrão
-  const fundoReservaPercentual = 0.005; // 0.5% padrão
+  // 1. Total pago pelo crédito = Valor máximo da parcela × número de parcelas
+  const totalPagoPeloCredito = maxInstallment * validInstallmentCount;
   
-  // 2. Encargos sobre o valor do crédito
-  const taxaAdm = creditValue * taxaAdmPercentual;
-  const fundoReserva = creditValue * fundoReservaPercentual;
+  // 2. Valor do lance = Total pago × 0,53 (53%)
+  const lanceTotal = totalPagoPeloCredito * 0.53;
   
-  // 3. Total que será pago = Valor do crédito + Taxa Adm + Fundo de Reserva
-  const totalQueSerapago = creditValue + taxaAdm + fundoReserva;
+  // 3. Lance embutido (se selecionado) = Total pago × 0,15 (15%)
+  const lanceEmbutido = data.useEmbedded ? (totalPagoPeloCredito * 0.15) : 0;
   
-  // 4. Parcela mensal real = Total / Número de parcelas
-  const parcelaMensalReal = totalQueSerapago / installmentCount;
-  
-  // 5. CÁLCULO DO LANCE (metodologia Andreoli):
-  // Lance médio = 53% do total das parcelas informadas pelo cliente
-  const totalParcelasPagas = maxInstallment * installmentCount;
-  let lanceTotal = totalParcelasPagas * 0.53;
-  
-  // 6. Lance embutido (se selecionado) = 15% do total das parcelas
-  const lanceEmbutido = data.useEmbedded ? (totalParcelasPagas * 0.15) : 0;
-  
-  // 7. Lance que o cliente realmente precisa pagar
+  // 4. Lance que o cliente realmente precisa pagar = Lance total - embutido
   const lanceDeduzido = lanceTotal - lanceEmbutido;
   
-  // 8. Parcelas restantes após contemplação
-  const parcelasRestantes = installmentCount - 1;
+  // 5. Parcelas restantes após contemplação
+  const parcelasRestantes = validInstallmentCount - 1;
   
-  // 9. Nova parcela após contemplação = (Total do plano - Lance pago) / Parcelas restantes
-  const totalRestante = totalQueSerapago - lanceDeduzido;
-  const novaParcelaValor = parcelasRestantes > 0 ? Math.max(0, totalRestante / parcelasRestantes) : 0;
+  // 6. Cálculo da parcela após contemplado:
+  // Total do lance ÷ (número de parcelas - 1) = valor restante
+  // Valor restante - valor máximo da parcela = parcela após contemplado
+  const valorRestantePorParcela = parcelasRestantes > 0 ? lanceTotal / parcelasRestantes : 0;
+  const novaParcelaValor = Math.max(0, maxInstallment - valorRestantePorParcela);
   
-  // 10. Seguros (informativos)
-  const seguroVida = creditValue * 0.0012 * installmentCount; // 0,12% ao mês
-  const seguroQuebra = creditValue * 0.0007 * installmentCount; // 0,07% ao mês
+  // 7. Encargos informativos (baseados no valor do crédito)
+  const taxaAdm = creditValue * 0.16; // 16% padrão
+  const fundoReserva = creditValue * 0.005; // 0.5% padrão
+  const seguroVida = creditValue * 0.0012 * validInstallmentCount; // 0,12% ao mês
+  const seguroQuebra = creditValue * 0.0007 * validInstallmentCount; // 0,07% ao mês
   
   return {
     grupo,
@@ -118,7 +151,7 @@ export default function ConsortiumSimulationForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm<ConsortiumFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setError } = useForm<ConsortiumFormData>({
     resolver: zodResolver(consortiumFormSchema),
     defaultValues: {
       useEmbedded: false
@@ -166,15 +199,34 @@ export default function ConsortiumSimulationForm() {
 
   const handleCalculateOnly = () => {
     const formData = watch();
-    if (formData.creditValue && formData.maxInstallmentValue && formData.installmentCount) {
-      const result = calculateConsortium({
+    
+    // Aplicar a mesma validação do schema antes de calcular
+    try {
+      const validatedData = consortiumFormSchema.parse({
         ...formData,
-        name: formData.name || '',
-        phone: formData.phone || '',
-        email: formData.email || '',
+        useEmbedded: useEmbedded
+      });
+      
+      const result = calculateConsortium({
+        ...validatedData,
+        name: validatedData.name || '',
+        phone: validatedData.phone || '',
+        email: validatedData.email || '',
         useEmbedded: useEmbedded
       });
       setCalculation(result);
+    } catch (error) {
+      // Se a validação falhar, mostrar os erros no formulário
+      if (error instanceof z.ZodError) {
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            setError(err.path[0] as any, {
+              type: 'manual',
+              message: err.message
+            });
+          }
+        });
+      }
     }
   };
 

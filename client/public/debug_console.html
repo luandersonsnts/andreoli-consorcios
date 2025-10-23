@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Console - Andreoli Consórcios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .log-info { background: #d1ecf1; color: #0c5460; }
+        .log-success { background: #d4edda; color: #155724; }
+        .log-error { background: #f8d7da; color: #721c24; }
+        .log-warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 Debug Console - Andreoli Consórcios</h1>
+        
+        <div>
+            <h3>Testes Disponíveis:</h3>
+            <button onclick="testConsoleLog()">Testar Console.log</button>
+            <button onclick="testLocalStorage()">Verificar localStorage</button>
+            <button onclick="testLogin()">Fazer Login</button>
+            <button onclick="testAPIs()">Testar APIs</button>
+            <button onclick="testEnvironment()">Verificar Ambiente</button>
+            <button onclick="clearLogs()">Limpar Logs</button>
+        </div>
+
+        <div id="logArea" class="log-area"></div>
+    </div>
+
+    <script>
+        let logCounter = 0;
+
+        function addLog(message, type = 'info') {
+            logCounter++;
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('logArea');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `[${timestamp}] #${logCounter}: ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+            
+            // Também logar no console do navegador
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function testConsoleLog() {
+            addLog('Testando console.log...', 'info');
+            console.log('🧪 Teste de console.log funcionando!');
+            console.error('🧪 Teste de console.error funcionando!');
+            console.warn('🧪 Teste de console.warn funcionando!');
+            addLog('Console.log testado - verifique o console do navegador (F12)', 'success');
+        }
+
+        function testLocalStorage() {
+            addLog('Verificando localStorage...', 'info');
+            
+            const token = localStorage.getItem('admin_token');
+            const user = localStorage.getItem('admin_user');
+            
+            addLog(`Token: ${token ? 'PRESENTE' : 'AUSENTE'}`, token ? 'success' : 'warning');
+            addLog(`Usuário: ${user ? 'PRESENTE' : 'AUSENTE'}`, user ? 'success' : 'warning');
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    addLog(`Usuário logado: ${userData.username}`, 'success');
+                } catch (e) {
+                    addLog(`Erro ao parsear dados do usuário: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        async function testLogin() {
+            addLog('Iniciando teste de login...', 'info');
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    }),
+                    credentials: 'include'
+                });
+
+                addLog(`Status da resposta: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('admin_token', data.token);
+                    localStorage.setItem('admin_user', JSON.stringify(data.user));
+                    addLog(`Login realizado com sucesso!`, 'success');
+                    addLog(`Token: ${data.token.substring(0, 30)}...`, 'info');
+                    addLog(`Usuário: ${data.user.username}`, 'info');
+                } else {
+                    const errorText = await response.text();
+                    addLog(`Erro no login: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Erro na requisição de login: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPIs() {
+            addLog('Testando APIs...', 'info');
+            
+            const token = localStorage.getItem('admin_token');
+            if (!token) {
+                addLog('Token não encontrado. Faça login primeiro.', 'error');
+                return;
+            }
+
+            const apis = [
+                '/api/consortium-simulations',
+                '/api/complaints',
+                '/api/job-applications'
+            ];
+
+            for (const api of apis) {
+                try {
+                    addLog(`Testando ${api}...`, 'info');
+                    
+                    const response = await fetch(api, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                        credentials: 'include'
+                    });
+
+                    addLog(`${api} - Status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        addLog(`${api} - Dados: ${data.length} itens`, 'success');
+                        if (data.length > 0) {
+                            addLog(`${api} - Primeiro item: ${JSON.stringify(data[0]).substring(0, 100)}...`, 'info');
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        addLog(`${api} - Erro: ${errorText}`, 'error');
+                    }
+                } catch (error) {
+                    addLog(`${api} - Erro na requisição: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function testEnvironment() {
+            addLog('Verificando ambiente...', 'info');
+            
+            addLog(`URL atual: ${window.location.href}`, 'info');
+            addLog(`User Agent: ${navigator.userAgent}`, 'info');
+            addLog(`Protocolo: ${window.location.protocol}`, 'info');
+            addLog(`Host: ${window.location.host}`, 'info');
+            addLog(`Pathname: ${window.location.pathname}`, 'info');
+            
+            // Verificar se estamos em desenvolvimento
+            const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            addLog(`Ambiente de desenvolvimento: ${isDev ? 'SIM' : 'NÃO'}`, isDev ? 'success' : 'warning');
+        }
+
+        function clearLogs() {
+            document.getElementById('logArea').innerHTML = '';
+            logCounter = 0;
+            addLog('Logs limpos', 'info');
+        }
+
+        // Inicializar
+        window.onload = function() {
+            addLog('Debug Console carregado', 'success');
+            testEnvironment();
+            testLocalStorage();
+        };
+
+        // Capturar erros globais
+        window.onerror = function(message, source, lineno, colno, error) {
+            addLog(`Erro global: ${message} em ${source}:${lineno}`, 'error');
+        };
+
+        // Capturar erros de promise rejeitadas
+        window.addEventListener('unhandledrejection', function(event) {
+            addLog(`Promise rejeitada: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

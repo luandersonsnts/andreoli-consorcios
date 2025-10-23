@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+// Removidas importações do React Query e API - agora usando localStorage
 import { insertSimulationSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { isStaticSite, openWhatsAppWithMessage } from "@/lib/runtimeEnv";
 import { formatInvestmentForWhatsApp, calculateInvestment, type InvestmentCalculation } from "@/lib/consortiumCalculator";
 import { TrendingUp, PiggyBank, Calculator } from 'lucide-react';
@@ -20,7 +19,6 @@ type SimulationFormData = z.infer<typeof insertSimulationSchema>;
 
 export default function SimulationForm() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [simulationType, setSimulationType] = useState<'investment' | 'consortium'>('investment');
   const [showProjection, setShowProjection] = useState(false);
   const [projectionData, setProjectionData] = useState<{
@@ -55,32 +53,30 @@ export default function SimulationForm() {
 
   const objective = watch("objective");
 
-  const mutation = useMutation({
-    mutationFn: async (data: SimulationFormData) => {
-      const response = await apiRequest("POST", "/api/simulations", data);
-      return response.json();
-    },
-    onSuccess: (result) => {
-      // Atualizar projectionData com o ID da simulação
-      if (projectionData && result.id) {
-        setProjectionData({
-          ...projectionData,
-          simulationId: result.id
-        });
-      }
-      
-      toast({
-        title: "Simulação enviada!",
-        description: "Recebemos sua solicitação e entraremos em contato em breve."
-      });
-      reset();
-      queryClient.invalidateQueries({ queryKey: ['/api/simulations'] });
-    },
-    onError: () => {
-      // Error handling is now done in onSubmit function
-      // This prevents showing error toasts when API is not available
+  // Função para salvar simulação no localStorage
+  const saveSimulationToLocalStorage = (data: SimulationFormData) => {
+    const simulation = {
+      id: Date.now().toString(),
+      ...data,
+      createdAt: new Date().toISOString()
+    };
+
+    // Recuperar simulações existentes
+    const existingSimulations = JSON.parse(localStorage.getItem('investment-simulations') || '[]');
+    
+    // Adicionar nova simulação
+    existingSimulations.push(simulation);
+    
+    // Manter apenas as últimas 50 simulações
+    if (existingSimulations.length > 50) {
+      existingSimulations.splice(0, existingSimulations.length - 50);
     }
-  });
+    
+    // Salvar no localStorage
+    localStorage.setItem('investment-simulations', JSON.stringify(existingSimulations));
+    
+    return simulation;
+  };
 
   const onSubmit = async (data: SimulationFormData) => {
     // Calcular a projeção
@@ -96,21 +92,26 @@ export default function SimulationForm() {
       objective: data.objective
     };
     
-    // Exibir a projeção
-    setProjectionData({ calculation, clientData });
+    // Salvar simulação no localStorage
+    const savedSimulation = saveSimulationToLocalStorage(data);
+    
+    // Exibir a projeção com o ID da simulação
+    setProjectionData({ 
+      calculation, 
+      clientData, 
+      simulationId: savedSimulation.id 
+    });
     setShowProjection(true);
     
-    // Try to save to API first (works in both local and Vercel with backend)
-    try {
-      await mutation.mutateAsync(data);
-      // If successful, API is available and data was saved
-    } catch (error) {
-      // API not available - continue with static mode (no action needed)
-      console.log('API not available, continuing in static mode');
-    }
+    toast({
+      title: "Simulação calculada!",
+      description: "Sua projeção foi gerada com sucesso. Clique em 'Enviar pelo WhatsApp' para continuar."
+    });
+    
+    reset();
   };
 
-  const handleSendWhatsApp = async () => {
+  const handleSendWhatsApp = () => {
     if (!projectionData) return;
     
     const message = formatInvestmentForWhatsApp(
@@ -123,15 +124,6 @@ export default function SimulationForm() {
     );
     
     openWhatsAppWithMessage(message);
-    
-    // Registrar o envio via WhatsApp se não for site estático e tiver ID da simulação
-    if (!isStaticSite && projectionData.simulationId) {
-      try {
-        await apiRequest("PATCH", `/api/simulations/${projectionData.simulationId}/whatsapp`, {});
-      } catch (error) {
-        console.error('Erro ao registrar envio do WhatsApp:', error);
-      }
-    }
     
     toast({
       title: "Redirecionando para WhatsApp",
@@ -292,14 +284,14 @@ export default function SimulationForm() {
             
             <Button 
               type="submit" 
-              disabled={isSubmitting || (!isStaticSite && mutation.isPending)}
+              disabled={isSubmitting}
               className="relative group w-full bg-gradient-to-r from-firme-blue to-blue-600 text-white py-4 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl overflow-hidden"
               data-testid="button-submit-simulation"
             >
               <span className="relative z-10 flex items-center justify-center">
                 <Calculator className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" />
-                {(!isStaticSite && mutation.isPending) ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
-                {!isSubmitting && !(!isStaticSite && mutation.isPending) && (
+                {isSubmitting ? "Enviando..." : "CRIAR MINHA PROJEÇÃO"}
+                {!isSubmitting && (
                   <TrendingUp className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                 )}
               </span>

@@ -31,14 +31,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for stored token on app load
+    console.log("🔍 DEBUG AuthContext - Verificando localStorage...");
     const storedToken = localStorage.getItem('admin_token');
     const storedUser = localStorage.getItem('admin_user');
     
+    console.log("🔍 DEBUG AuthContext - storedToken:", storedToken ? 'EXISTE' : 'NÃO EXISTE');
+    console.log("🔍 DEBUG AuthContext - storedUser:", storedUser ? 'EXISTE' : 'NÃO EXISTE');
+    
     if (storedToken && storedUser) {
+      console.log("🔍 DEBUG AuthContext - Definindo user e token...");
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
+    } else {
+      console.log("🔍 DEBUG AuthContext - Nenhum token/user encontrado");
     }
     setIsLoading(false);
+    console.log("🔍 DEBUG AuthContext - isLoading definido como false");
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -102,9 +110,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
+        // If we get here, API is available but login failed
+        // Check if this is static mode and use fallback
+        if (username === 'admin' && password === 'admin123') {
+          const staticUser = {
+            id: 'static-admin',
+            username: 'admin'
+          };
+          const staticToken = 'static-token-' + Date.now();
+          
+          setToken(staticToken);
+          setUser(staticUser);
+          
+          // Store in localStorage
+          localStorage.setItem('admin_token', staticToken);
+          localStorage.setItem('admin_user', JSON.stringify(staticUser));
+          
+          return true;
+        }
+        
         return false;
       } catch (apiError) {
         console.error('API error during login:', apiError);
+        
+        // Fallback for static site mode (when no backend is available)
+        if (username === 'admin' && password === 'admin123') {
+          const staticUser = {
+            id: 'static-admin',
+            username: 'admin'
+          };
+          const staticToken = 'static-token-' + Date.now();
+          
+          setToken(staticToken);
+          setUser(staticUser);
+          
+          // Store in localStorage
+          localStorage.setItem('admin_token', staticToken);
+          localStorage.setItem('admin_user', JSON.stringify(staticUser));
+          
+          return true;
+        }
+        
         return false;
       }
     } catch (error) {

@@ -14,7 +14,7 @@ O projeto está **100% configurado** para deploy no Vercel! Todos os arquivos ne
 ### 2. **Novo Projeto**
 - Clique em **"New Project"**
 - **Importe seu repositório** do GitHub
-- Selecione o repositório `investimentos_ac`
+- Selecione o repositório `andreoli-consorcios`
 
 ### 3. **Configuração Automática**
 O Vercel detectará automaticamente:

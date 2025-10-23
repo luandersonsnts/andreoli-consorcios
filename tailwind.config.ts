@@ -72,9 +72,19 @@ export default {
         'firme-light-gray': "var(--firme-light-gray)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        serif: ["var(--font-serif)"],
-        mono: ["var(--font-mono)"],
+        sans: [
+          "Inter", 
+          "-apple-system", 
+          "BlinkMacSystemFont", 
+          "Segoe UI", 
+          "Roboto", 
+          "Oxygen", 
+          "Ubuntu", 
+          "Cantarell", 
+          "sans-serif"
+        ],
+        serif: ["Georgia", "serif"],
+        mono: ["Consolas", "Monaco", "Courier New", "monospace"],
       },
       keyframes: {
         "accordion-down": {

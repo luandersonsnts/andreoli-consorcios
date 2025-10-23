@@ -44,46 +44,42 @@ interface ConsortiumCalculationResult {
 function calculateConsortium(data: ConsortiumFormData): ConsortiumCalculationResult {
   const creditValue = parseFloat(data.creditValue);
   const maxInstallment = parseFloat(data.maxInstallmentValue);
-  const installmentCount = parseInt(data.installmentCount);
+  const installmentCount = Math.min(parseInt(data.installmentCount), 98); // Máximo 98 parcelas
   
   // Grupo aleatório entre 1000-9999 (mais realista)
   const grupo = Math.floor(Math.random() * 9000) + 1000;
   
   // CÁLCULO CORRETO BASEADO NA METODOLOGIA ANDREOLI:
   
-  // 1. Taxas padrão (quando não há grupo específico)
+  // 1. Total pago pelo crédito = Valor máximo da parcela × número de parcelas
+  const totalPagoPeloCredito = maxInstallment * installmentCount;
+  
+  // 2. Valor do lance = Total pago × 0,53 (53%)
+  const lanceTotal = totalPagoPeloCredito * 0.53;
+  
+  // 3. Lance embutido (se selecionado) = Total pago × 0,15 (15%)
+  const lanceEmbutido = data.useEmbedded ? (totalPagoPeloCredito * 0.15) : 0;
+  
+  // 4. Lance que o cliente realmente precisa pagar = Lance total - embutido
+  const lanceDeduzido = lanceTotal - lanceEmbutido;
+  
+  // 5. Parcelas restantes após contemplação
+  const parcelasRestantes = installmentCount - 1;
+  
+  // 6. Cálculo da parcela após contemplado:
+  // Total do lance ÷ (número de parcelas - 1) = valor restante por parcela
+  // Valor máximo da parcela - valor restante por parcela = parcela após contemplado
+  const valorRestantePorParcela = parcelasRestantes > 0 ? lanceTotal / parcelasRestantes : 0;
+  const novaParcelaValor = Math.max(0, maxInstallment - valorRestantePorParcela);
+  
+  // 7. Taxas e encargos (baseados no valor do crédito)
   const taxaAdmPercentual = 0.16; // 16% padrão
   const fundoReservaPercentual = 0.005; // 0.5% padrão
   
-  // 2. Encargos sobre o valor do crédito
   const taxaAdm = creditValue * taxaAdmPercentual;
   const fundoReserva = creditValue * fundoReservaPercentual;
   
-  // 3. Total que será pago = Valor do crédito + Taxa Adm + Fundo de Reserva
-  const totalQueSerapago = creditValue + taxaAdm + fundoReserva;
-  
-  // 4. Parcela mensal real = Total / Número de parcelas
-  const parcelaMensalReal = totalQueSerapago / installmentCount;
-  
-  // 5. CÁLCULO DO LANCE (metodologia Andreoli):
-  // Lance médio = 53% do total das parcelas informadas pelo cliente
-  const totalParcelasPagas = maxInstallment * installmentCount;
-  let lanceTotal = totalParcelasPagas * 0.53;
-  
-  // 6. Lance embutido (se selecionado) = 15% do total das parcelas
-  const lanceEmbutido = data.useEmbedded ? (totalParcelasPagas * 0.15) : 0;
-  
-  // 7. Lance que o cliente realmente precisa pagar
-  const lanceDeduzido = lanceTotal - lanceEmbutido;
-  
-  // 8. Parcelas restantes após contemplação
-  const parcelasRestantes = installmentCount - 1;
-  
-  // 9. Nova parcela após contemplação = (Total do plano - Lance pago) / Parcelas restantes
-  const totalRestante = totalQueSerapago - lanceDeduzido;
-  const novaParcelaValor = parcelasRestantes > 0 ? Math.max(0, totalRestante / parcelasRestantes) : 0;
-  
-  // 10. Seguros (informativos)
+  // 8. Seguros (baseados no valor do crédito)
   const seguroVida = creditValue * 0.0012 * installmentCount; // 0,12% ao mês
   const seguroQuebra = creditValue * 0.0007 * installmentCount; // 0,07% ao mês
   

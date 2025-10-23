@@ -36,7 +36,7 @@ export default function Hero() {
             
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
               Tenha acesso às melhores estratégias de investimento e construa uma base financeira sólida para o seu futuro. 
-              Na <strong className="text-firme-blue">ANDREOLI CONSÓRCIOS</strong> você encontra as melhores condições para conquistar seu bem.
+              Na <strong className="text-firme-blue">ANDREOLI CONSÓRCIOS</strong> você encontra soluções personalizadas para cada perfil de investidor.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">

@@ -31,7 +31,7 @@ export const complaints = sqliteTable("complaints", {
   type: text("type").notNull(),
   subject: text("subject").notNull(),
   message: text("message").notNull(),
-  contactAuthorized: text("contact_authorized").notNull(),
+  contactAuthorized: integer("contact_authorized", { mode: 'boolean' }).notNull(),
   createdAt: integer("created_at", { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 

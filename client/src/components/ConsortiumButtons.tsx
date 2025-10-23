@@ -68,9 +68,10 @@ export default function ConsortiumButtons({ onCategorySelect }: ConsortiumButton
   const handleButtonClick = (category: ConsortiumCategory) => {
     if (onCategorySelect) {
       onCategorySelect(category);
+    } else {
+      // Redireciona para a simulação unificada
+      window.location.href = '/simulacao-unificada';
     }
-    // Scroll para a seção de simulação
-    document.getElementById('consorcio')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -116,7 +117,7 @@ export default function ConsortiumButtons({ onCategorySelect }: ConsortiumButton
 
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            Clique em qualquer opção para iniciar sua simulação personalizada
+            Clique em qualquer opção para ir direto para a simulação unificada
           </p>
         </div>
       </div>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Login - Painel Administrativo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .loading {
+            font-size: 18px;
+            color: #007bff;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Auto Login - Painel Administrativo</h1>
+        <div id="status" class="loading">Fazendo login automaticamente...</div>
+        <div id="actions" style="display: none;">
+            <button onclick="goToAdmin()">Ir para o Painel Administrativo</button>
+            <button onclick="retryLogin()">Tentar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        async function autoLogin() {
+            const statusDiv = document.getElementById('status');
+            const actionsDiv = document.getElementById('actions');
+            
+            try {
+                statusDiv.innerHTML = '🔄 Fazendo login...';
+                
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Salvar no localStorage
+                    localStorage.setItem('admin_token', data.token);
+                    localStorage.setItem('admin_user', JSON.stringify(data.user));
+                    
+                    statusDiv.innerHTML = '✅ Login realizado com sucesso!<br>Redirecionando para o painel...';
+                    statusDiv.className = 'success';
+                    
+                    // Redirecionar após 2 segundos
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 2000);
+                    
+                } else {
+                    const errorText = await response.text();
+                    statusDiv.innerHTML = `❌ Erro no login:<br>${errorText}`;
+                    statusDiv.className = 'error';
+                    actionsDiv.style.display = 'block';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Erro na conexão:<br>${error.message}`;
+                statusDiv.className = 'error';
+                actionsDiv.style.display = 'block';
+            }
+        }
+        
+        function goToAdmin() {
+            window.location.href = '/admin';
+        }
+        
+        function retryLogin() {
+            document.getElementById('actions').style.display = 'none';
+            autoLogin();
+        }
+        
+        // Executar automaticamente ao carregar a página
+        window.onload = autoLogin;
+    </script>
+</body>
+</html>

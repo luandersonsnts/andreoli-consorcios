@@ -13,6 +13,9 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install --include=dev --legacy-peer-deps",
   "framework": null,
+  "env": {
+    "VITE_STATIC_SITE": "true"
+  },
   "rewrites": [
     {
       "source": "/(.*)",

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { isStaticSite } from "@/lib/runtimeEnv";
 import { Upload, FileText } from "lucide-react";
 import type { z } from "zod";
 
@@ -32,8 +32,30 @@ export default function JobApplication() {
     }
   });
 
-  const mutation = useMutation({
+  const createJobApplicationMutation = useMutation({
     mutationFn: async (data: JobApplicationFormData & { file?: File }) => {
+      if (isStaticSite()) {
+        // Fallback para localStorage em sites estáticos
+        const applications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
+        
+        const newApplication = {
+          id: Date.now().toString(),
+          ...data,
+          resumeFilename: data.file?.name || null,
+          createdAt: new Date().toISOString()
+        };
+        
+        applications.push(newApplication);
+        
+        if (applications.length > 50) {
+          applications.splice(0, applications.length - 50);
+        }
+        
+        localStorage.setItem('jobApplications', JSON.stringify(applications));
+        return newApplication;
+      }
+      
+      // Salvar no banco de dados
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('phone', data.phone);
@@ -55,24 +77,24 @@ export default function JobApplication() {
     },
     onSuccess: () => {
       toast({
-        title: "Currículo enviado!",
-        description: "Recebemos sua candidatura e entraremos em contato em breve."
+        title: "Candidatura enviada!",
+        description: "Recebemos sua candidatura com sucesso e entraremos em contato em breve."
       });
       reset();
       setSelectedFile(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/job-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['job-applications'] });
     },
     onError: () => {
       toast({
         variant: "destructive",
-        title: "Erro ao enviar",
-        description: "Verifique os dados e tente novamente."
+        title: "Erro ao enviar candidatura",
+        description: "Ocorreu um erro ao enviar sua candidatura. Tente novamente."
       });
     }
   });
 
-  const onSubmit = (data: JobApplicationFormData) => {
-    mutation.mutate({ ...data, file: selectedFile || undefined });
+  const onSubmit = async (data: JobApplicationFormData) => {
+    await createJobApplicationMutation.mutateAsync({ ...data, file: selectedFile || undefined });
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,11 +215,11 @@ export default function JobApplication() {
             
             <Button 
               type="submit" 
-              disabled={isSubmitting || mutation.isPending}
+              disabled={isSubmitting || createJobApplicationMutation.isPending}
               className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-job-application"
             >
-              {mutation.isPending ? "Enviando..." : "ENVIAR CANDIDATURA"}
+              {(isSubmitting || createJobApplicationMutation.isPending) ? "Enviando..." : "ENVIAR CANDIDATURA"}
             </Button>
           </form>
         </div>

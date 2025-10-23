@@ -1,6 +1,6 @@
 # Como Configurar o Site no GitHub Pages
 
-Este guia vai te ajudar a publicar seu site da FIRME INVESTIMENTOS no GitHub Pages.
+Este guia vai te ajudar a publicar seu site da ANDREOLI CONSÓRCIOS no GitHub Pages.
 
 ## O que você precisa saber
 

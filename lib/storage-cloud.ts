@@ -25,7 +25,7 @@ let db: any;
 async function initializeDatabase() {
   if (db) return db; // Return existing connection if already initialized
   
-  if (process.env.VERCEL) {
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV) {
     // Production: Use Vercel Postgres
     const { drizzle } = await import('drizzle-orm/vercel-postgres');
     const { sql } = await import('@vercel/postgres');
@@ -61,7 +61,7 @@ export interface IStorage {
   createConsortiumSimulation(consortiumSimulation: InsertConsortiumSimulation): Promise<ConsortiumSimulation>;
   getConsortiumSimulations(): Promise<ConsortiumSimulation[]>;
   getAllConsortiumSimulations(): Promise<ConsortiumSimulation[]>;
-  updateConsortiumSimulationWhatsAppStatus(id: number): Promise<ConsortiumSimulation>;
+  updateConsortiumSimulationWhatsAppStatus(id: string): Promise<ConsortiumSimulation>;
   getSimulationStats(): Promise<{
     totalSimulations: number;
     totalConsortiumSimulations: number;
@@ -183,6 +183,7 @@ class CloudStorage implements IStorage {
     const newJobApplication = {
       id,
       ...jobApplication,
+      resumeFilename: jobApplication.resumeFilename ?? null,
       createdAt: new Date()
     };
 
@@ -229,11 +230,12 @@ class CloudStorage implements IStorage {
 
   async updateConsortiumSimulationWhatsAppStatus(id: string): Promise<ConsortiumSimulation> {
     const database = await initializeDatabase();
+    const numericId = parseInt(id, 10);
     await database.update(consortiumSimulations)
       .set({ whatsappSent: true, whatsappSentAt: new Date() })
-      .where(eq(consortiumSimulations.id, id));
+      .where(eq(consortiumSimulations.id, numericId));
 
-    const result = await database.select().from(consortiumSimulations).where(eq(consortiumSimulations.id, id)).limit(1);
+    const result = await database.select().from(consortiumSimulations).where(eq(consortiumSimulations.id, numericId)).limit(1);
     return result[0];
   }
 

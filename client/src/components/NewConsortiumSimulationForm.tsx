@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Calculator, TrendingUp, PiggyBank, ArrowLeft } from 'lucide-react';
+import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { isStaticSite, openWhatsAppWithMessage } from '@/lib/runtimeEnv';
 import { calculateConsortium, formatConsortiumForWhatsApp } from '@/lib/consortiumCalculator';
@@ -26,6 +27,53 @@ const consortiumFormSchema = z.object({
   useEmbedded: z.boolean().optional(),
   maxInstallmentValue: z.string().min(1, "Valor da parcela é obrigatório"),
   installmentCount: z.string().min(1, "Número de parcelas é obrigatório"),
+}).refine((data) => {
+  const installmentCount = parseInt(data.installmentCount);
+  
+  // Validar número de parcelas (mínimo 3, máximo 120)
+  if (isNaN(installmentCount) || installmentCount < 3 || installmentCount > 120) {
+    return false;
+  }
+  
+  return true;
+}, {
+  message: "O número de parcelas deve ser entre 3 e 120.",
+  path: ["installmentCount"]
+}).refine((data) => {
+  const creditValue = parseFloat(data.creditValue.replace(/[^\d,]/g, '').replace(',', '.'));
+  const maxInstallmentValue = parseFloat(data.maxInstallmentValue.replace(/[^\d,]/g, '').replace(',', '.'));
+  const installmentCount = parseInt(data.installmentCount);
+  const useEmbedded = data.useEmbedded || false;
+
+  if (isNaN(creditValue) || isNaN(maxInstallmentValue) || isNaN(installmentCount)) {
+    return false;
+  }
+
+  // Validar se o número de parcelas está no range correto
+  if (installmentCount < 3 || installmentCount > 120) {
+    return false;
+  }
+
+  // Para lance embutido, usar a fórmula correta: X = Valor desejado / (1 - (Lance% / 100))
+  let valorCartaNecessario = creditValue;
+  if (useEmbedded) {
+    // Assumindo lance padrão de 50% para embutido
+    valorCartaNecessario = creditValue / (1 - (50 / 100));
+  }
+
+  // Calcular o valor total do plano (carta + 16% taxa administrativa + 0.5% fundo reserva)
+  const valorTotalPlano = valorCartaNecessario * (1 + 0.16 + 0.005);
+  
+  // Calcular valor mínimo da parcela baseado no número de parcelas
+  const minInstallmentValue = valorTotalPlano / installmentCount;
+
+  // Permitir uma margem de tolerância de 15% para flexibilidade
+  const minInstallmentValueWithTolerance = minInstallmentValue * 0.85;
+  
+  return maxInstallmentValue >= minInstallmentValueWithTolerance;
+}, {
+  message: "Valor da parcela muito baixo para o número de parcelas selecionado. Aumente o valor da parcela ou diminua o número de parcelas.",
+  path: ["maxInstallmentValue"]
 });
 
 type ConsortiumFormData = z.infer<typeof consortiumFormSchema>;
@@ -51,101 +99,87 @@ interface ConsortiumCalculationResult {
 }
 
 function calculateConsortiumWithGroup(data: ConsortiumFormData, group: ConsortiumGroup): ConsortiumCalculationResult {
-  const creditValueDesejado = parseFloat(data.creditValue);
-  const maxInstallment = parseFloat(data.maxInstallmentValue);
+  const creditValue = parseFloat(data.creditValue);
+  const maxInstallmentValue = parseFloat(data.maxInstallmentValue);
   const installmentCount = parseInt(data.installmentCount);
+  const useEmbedded = data.useEmbedded || false;
+
+  // Usar os mesmos parâmetros da simulação avançada baseados na categoria
+  const categoria = {
+    fr: 0.005,    // 0,5% - Fundo de Reserva
+    adm: 0.16,    // 16% - Taxa de Administração
+    sv: 0.0012,   // 0,12% ao mês - Seguro de Vida
+    sq: 0.0007,   // 0,07% ao mês - Seguro Quebra
+  };
+
+  // Calcular valor da carta usando a mesma fórmula da simulação avançada
+  let valorCartaReal = creditValue;
+  let lanceEmbutido = 0;
   
-  // Usar o número do grupo real extraído do ID (ex: ELE001 -> 1247)
-  const grupoNumero = parseInt(group.name.match(/\d+/)?.[0] || "1000");
-  
-  // CÁLCULO CORRETO BASEADO NA METODOLOGIA ANDREOLI:
-  
-  let valorCartaReal = creditValueDesejado;
-  let valorCartaExibir = creditValueDesejado;
-  let parcelaReal = maxInstallment;
-  let parcelasReal = installmentCount;
-  
-  // Se usar embutido, precisa buscar uma carta MAIOR que permita usar o valor desejado
-  if (data.useEmbedded) {
-    // Cartas disponíveis no banco (simulando algumas opções)
-    const cartasDisponiveis = [
-      { valor: 30000, parcelas: 60, valorParcela: 600 },
-      { valor: 42000, parcelas: 60, valorParcela: 800 },
-      { valor: 50000, parcelas: 60, valorParcela: 950 },
-      { valor: 52323, parcelas: 51, valorParcela: 1233.67 },
-      { valor: 60000, parcelas: 60, valorParcela: 1150 },
-      { valor: 80000, parcelas: 60, valorParcela: 1500 },
-      { valor: 100000, parcelas: 60, valorParcela: 1900 }
-    ];
-    
-    // Encontrar a carta que permita usar o valor desejado após descontar o embutido
-    for (const carta of cartasDisponiveis) {
-      const totalPagar = carta.valorParcela * carta.parcelas;
-      const valorEmbutido = totalPagar * 0.15;
-      const creditoDisponivel = carta.valor - valorEmbutido;
-      
-      if (creditoDisponivel >= creditValueDesejado) {
-        valorCartaReal = carta.valor;
-        parcelaReal = carta.valorParcela;
-        parcelasReal = carta.parcelas;
-        break;
-      }
-    }
+  if (useEmbedded) {
+    // Usar fórmula correta: X = Valor desejado / (1 - (Lance% / 100))
+    // Para 50% de lance: X = 50000 / (1 - 0.5) = 100000
+    const lancePercentual = 50; // Padrão para lance embutido
+    valorCartaReal = creditValue / (1 - (lancePercentual / 100));
+    lanceEmbutido = valorCartaReal * (lancePercentual / 100);
   }
-  
-  // 1. Cálculo do total que será pago (baseado na carta real selecionada)
-  const totalQueSerapago = parcelaReal * parcelasReal;
-  
-  // 2. CÁLCULO DO LANCE (metodologia Andreoli):
-  // Lance necessário = 53% do total que será pago
-  const lanceNecessario = totalQueSerapago * 0.53;
-  
-  // 3. Lance embutido (se selecionado) = 15% do total que será pago
-  const lanceEmbutido = data.useEmbedded ? (totalQueSerapago * 0.15) : 0;
-  
-  // 4. Lance que o cliente realmente precisa pagar
-  const lanceDeduzido = lanceNecessario - lanceEmbutido;
-  
-  // 5. CÁLCULO DAS PARCELAS APÓS CONTEMPLADO:
-  // Total que será pago x 53% = valor total do lance
-  const valorTotalLance = totalQueSerapago * 0.53;
-  
-  // Valor restante = valor total do lance / parcelas restantes (total - 1)
-  const parcelasRestantes = installmentCount - 1;
-  const valorRestantePorParcela = parcelasRestantes > 0 ? valorTotalLance / parcelasRestantes : 0;
-  
-  // Parcelas após contemplado = parcela original - valor restante por parcela
-  const parcelasAposContemplado = Math.max(0, maxInstallment - valorRestantePorParcela);
-  
-  // 6. Taxas e encargos (baseados no valor da carta real)
-  const taxaAdmPercentual = group.adminTax / 100;
-  const taxaAdm = valorCartaReal * taxaAdmPercentual;
-  
-  const fundoReservaPercentual = group.fundReserve / 100;
-  const fundoReserva = valorCartaReal * fundoReservaPercentual;
-  
-  // 7. Seguros (baseados no valor da carta real)
-  const seguroVida = valorCartaReal * (group.insuranceRate / 100) * installmentCount;
-  const seguroQuebra = valorCartaReal * 0.0007 * installmentCount; // 0,07% padrão
-  
+
+  // Calcular encargos usando os mesmos parâmetros da simulação avançada
+  const fundoReserva = valorCartaReal * categoria.fr;
+  const taxaAdm = valorCartaReal * categoria.adm;
+  const seguroVida = valorCartaReal * categoria.sv;
+  const seguroQuebra = valorCartaReal * categoria.sq;
+  const segurosTotal = seguroVida + seguroQuebra;
+
+  // Valor total do plano
+  const valorTotalPlano = valorCartaReal + fundoReserva + taxaAdm;
+
+  // Fórmula principal: Z = (VC + FR + ADM) / N + (VC × (SV + SQ))
+  const parcelaMensal = (valorTotalPlano / installmentCount) + segurosTotal;
+
+  // Calcular lance
+  let lanceTotal = 0;
+  let lanceDeduzido = 0;
+  let parcelaAposContemplado = maxInstallmentValue;
+
+  if (useEmbedded) {
+    const lancePercentual = 50; // 50% para lance embutido
+    lanceTotal = valorCartaReal * (lancePercentual / 100);
+    lanceDeduzido = 0; // Lance embutido não precisa ser pago em dinheiro
+    
+    // Calcular redução da parcela após contemplação
+    const fatorReducao = 1 - (lanceTotal / valorTotalPlano);
+    parcelaAposContemplado = parcelaMensal * fatorReducao;
+  } else {
+    // Lance normal de 53%
+    const lancePercentual = 53;
+    lanceTotal = valorCartaReal * (lancePercentual / 100);
+    lanceDeduzido = lanceTotal;
+    
+    // Calcular redução da parcela após contemplação
+    const fatorReducao = 1 - (lanceTotal / valorTotalPlano);
+    parcelaAposContemplado = parcelaMensal * fatorReducao;
+  }
+
+  // Extrair número do grupo do ID
+  const grupoNumero = group.name.match(/\d+/)?.[0] || group.id.replace(/[A-Z]/g, '');
+
   return {
-    grupo: grupoNumero,
-    valorCarta: creditValueDesejado, // Valor que o cliente deseja usar
-    valorCartaReal: valorCartaReal, // Valor da carta que será usada (maior se embutido)
-    parcelaAtual: parcelaReal, // Parcela da carta real
-    totalParcelas: parcelasReal, // Total de parcelas da carta real
-    totalPagar: totalQueSerapago, // Total que será pago
-    lanceTotal: lanceNecessario,
-    lanceEmbutido,
+    grupo: parseInt(grupoNumero) || 0,
+    valorCarta: creditValue,
+    valorCartaReal,
+    parcelaAtual: maxInstallmentValue,
+    lanceTotal,
+    lanceEmbutido: useEmbedded ? lanceEmbutido : 0,
     lanceDeduzido,
-    parcelasRestantes,
-    novaParcelaValor: parcelasAposContemplado, // Renomeando para ficar mais claro
-    parcelasAposContemplado: parcelasAposContemplado, // Novo campo solicitado
+    parcelasRestantes: installmentCount - 1,
+    novaParcelaValor: parcelaAposContemplado,
+    parcelasAposContemplado: parcelaAposContemplado,
     encargos: {
       fundoReserva,
       taxaAdm,
-      seguroVida,
-      seguroQuebra
+      seguroVida: seguroVida * installmentCount, // Total do seguro
+      seguroQuebra: seguroQuebra * installmentCount // Total do seguro
     }
   };
 }
@@ -172,12 +206,72 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Mutation para enviar dados para o backend (SIMULAR E ENVIAR)
+  const mutation = useMutation({
+    mutationFn: async (data: ConsortiumFormData) => {
+      console.log('🚀 Mutation iniciada com dados:', data);
+      const formattedData = {
+        ...data,
+        creditValue: parseFloat(data.creditValue.replace(/[^\d,]/g, '').replace(',', '.')),
+        maxInstallmentValue: parseFloat(data.maxInstallmentValue.replace(/[^\d,]/g, '').replace(',', '.')),
+        installmentCount: parseInt(data.installmentCount),
+        useEmbedded: data.useEmbedded || false
+      };
+      console.log('📦 Dados formatados para envio:', formattedData);
+      console.log('🌐 Fazendo requisição POST para /api/consortium-simulations...');
+      const response = await apiRequest("POST", "/api/consortium-simulations", formattedData);
+      console.log('✅ Resposta recebida:', response.status, response.statusText);
+      const result = await response.json();
+      console.log('📄 Dados da resposta:', result);
+      return result;
+    },
+    onSuccess: (result) => {
+      // Invalidar queries para atualizar o painel administrativo
+      queryClient.invalidateQueries({ queryKey: ["/api/consortium-simulations"] });
+      console.log('✅ Mutation bem-sucedida! Resultado:', result);
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro na mutation:', error);
+      console.error('❌ Stack trace:', error.stack);
+      // Não mostrar erro para o usuário, pois o localStorage ainda funciona
+    },
+  });
+
+  // Mutation para salvar simulação sem enviar WhatsApp (SIMULAR APENAS)
+  const simulateOnlyMutation = useMutation({
+    mutationFn: async (data: ConsortiumFormData) => {
+      console.log('📊 Simulação APENAS - salvando no banco com status "Não enviado"');
+      const formattedData = {
+        ...data,
+        creditValue: parseFloat(data.creditValue.replace(/[^\d,]/g, '').replace(',', '.')),
+        maxInstallmentValue: parseFloat(data.maxInstallmentValue.replace(/[^\d,]/g, '').replace(',', '.')),
+        installmentCount: parseInt(data.installmentCount),
+        useEmbedded: data.useEmbedded || false,
+        whatsappSent: false // Marca como não enviado
+      };
+      console.log('📦 Dados formatados para simulação apenas:', formattedData);
+      const response = await apiRequest("POST", "/api/consortium-simulations", formattedData);
+      const result = await response.json();
+      console.log('✅ Simulação salva no banco com status "Não enviado"');
+      return result;
+    },
+    onSuccess: (result) => {
+      // Invalidar queries para atualizar o painel administrativo
+      queryClient.invalidateQueries({ queryKey: ["/api/consortium-simulations"] });
+      console.log('✅ Simulação APENAS salva com sucesso!', result);
+    },
+    onError: (error: any) => {
+      console.error('❌ Erro ao salvar simulação apenas:', error);
+    },
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
-    setValue
+    setValue,
+    setError
   } = useForm<ConsortiumFormData>({
     resolver: zodResolver(consortiumFormSchema),
     defaultValues: {
@@ -193,35 +287,50 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
     }
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data: ConsortiumFormData) => {
-      const formattedData = {
-        ...data,
-        creditValue: parseFloat(data.creditValue),
-        maxInstallmentValue: parseFloat(data.maxInstallmentValue),
-        installmentCount: parseInt(data.installmentCount),
-        useEmbedded: data.useEmbedded || false
-      };
-      const response = await apiRequest("POST", "/api/consortium-simulations", formattedData);
-      return response.json();
-    },
-    onSuccess: (result) => {
-      // Armazenar o ID da simulação
-      if (result.id) {
-        setSimulationId(result.id);
-      }
-      
-      queryClient.invalidateQueries({ queryKey: ["/api/consortium-simulations"] });
-      toast({
-        title: "Sucesso!",
-        description: "Sua simulação foi enviada com sucesso!",
-      });
-    },
-    onError: () => {
-      // Error handling is now done in onSubmit function
-      // This prevents showing error toasts when API is not available
-    },
-  });
+  // Atualizar valores do formulário quando categoria e grupo são selecionados
+  useEffect(() => {
+    if (selectedCategory) {
+      setValue('category', selectedCategory);
+      console.log('🔧 Category definida no formulário:', selectedCategory);
+    }
+  }, [selectedCategory, setValue]);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      setValue('groupId', selectedGroup.id);
+      console.log('🔧 GroupId definido no formulário:', selectedGroup.id);
+    }
+  }, [selectedGroup, setValue]);
+
+  // Função para salvar simulação no localStorage
+  const saveSimulationToLocalStorage = (data: ConsortiumFormData, calculation: ConsortiumCalculationResult) => {
+    const simulation = {
+      id: Date.now().toString(),
+      ...data,
+      creditValue: parseFloat(data.creditValue),
+      maxInstallmentValue: parseFloat(data.maxInstallmentValue),
+      installmentCount: parseInt(data.installmentCount),
+      useEmbedded: data.useEmbedded || false,
+      calculation,
+      createdAt: new Date().toISOString()
+    };
+
+    // Recuperar simulações existentes
+    const existingSimulations = JSON.parse(localStorage.getItem('consortium-simulations') || '[]');
+    
+    // Adicionar nova simulação
+    existingSimulations.push(simulation);
+    
+    // Manter apenas as últimas 50 simulações
+    if (existingSimulations.length > 50) {
+      existingSimulations.splice(0, existingSimulations.length - 50);
+    }
+    
+    // Salvar no localStorage
+    localStorage.setItem('consortium-simulations', JSON.stringify(existingSimulations));
+    
+    return simulation;
+  };
 
   // Reagir às mudanças na preSelectedCategory
   useEffect(() => {
@@ -247,58 +356,158 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
   };
 
   const onSubmit = async (data: ConsortiumFormData) => {
-    if (!selectedGroup) return;
+    console.log('🎯 onSubmit chamada! Dados recebidos:', data);
+    console.log('🎯 selectedGroup:', selectedGroup);
+    console.log('🎯 selectedCategory:', selectedCategory);
+    console.log('🚨 ATENÇÃO: onSubmit foi chamada - isso deveria acontecer apenas com SIMULAR E ENVIAR!');
+    if (!selectedGroup) {
+      console.log('❌ selectedGroup não encontrado, retornando...');
+      return;
+    }
     
     const result = calculateConsortiumWithGroup(data, selectedGroup);
     setCalculation(result);
     setStep('result');
     
-    // Try to save to API first (works in both local and Vercel with backend)
-    try {
-      await mutation.mutateAsync(data);
-      // If successful, API is available and data was saved
-    } catch (error) {
-      // API not available - fallback to WhatsApp mode
-      console.log('API not available, using WhatsApp fallback');
-      
-      const creditValue = parseFloat(data.creditValue);
-      const installments = parseInt(data.installmentCount);
-      const calculation = calculateConsortium(
-        data.category,
-        data.groupId,
-        creditValue,
-        installments
-      );
-      const message = formatConsortiumForWhatsApp(
-        data.name,
-        data.phone,
-        data.email,
-        calculation
-      );
-      openWhatsAppWithMessage(message);
-      toast({
-        title: "Simulação calculada!",
-        description: "Continue a conversa pelo WhatsApp para mais detalhes."
-      });
+    // Salvar simulação no localStorage
+    const savedSimulation = saveSimulationToLocalStorage(data, result);
+    setSimulationId(parseInt(savedSimulation.id, 10));
+    
+    // Preparar dados completos para envio ao backend
+    const completeData = {
+      ...data,
+      category: selectedCategory!,
+      groupId: selectedGroup.id,
+      creditValue: parseFloat(data.creditValue),
+      maxInstallmentValue: parseFloat(data.maxInstallmentValue),
+      installmentCount: parseInt(data.installmentCount),
+      useEmbedded: useEmbedded,
+      whatsappSent: true
+    };
+    
+    // Debug logs
+    console.log('🔍 Debug - isStaticSite:', isStaticSite);
+    console.log('🔍 Debug - VITE_STATIC_SITE env:', import.meta.env.VITE_STATIC_SITE);
+    console.log('🔍 Debug - Dados originais:', data);
+    console.log('🔍 Debug - Dados completos para envio:', completeData);
+    
+    // Enviar dados para o backend (não bloqueia o fluxo se falhar)
+    if (!isStaticSite) {
+      console.log('✅ Enviando dados para o backend...');
+      try {
+        mutation.mutate({
+          ...completeData,
+          creditValue: completeData.creditValue.toString(),
+          maxInstallmentValue: completeData.maxInstallmentValue.toString(),
+          installmentCount: completeData.installmentCount.toString(),
+          category: completeData.category,
+          groupId: completeData.groupId
+        });
+      } catch (error) {
+        console.error('❌ Erro ao enviar para o backend:', error);
+        // Continua o fluxo normalmente mesmo se falhar
+      }
+    } else {
+      console.log('⚠️ Modo estático ativo - não enviando para o backend');
     }
+    
+    // Preparar mensagem para WhatsApp usando o resultado já calculado
+    const message = formatConsortiumForWhatsApp(
+      data.name,
+      data.phone,
+      data.email,
+      result
+    );
+    
+    // Abrir WhatsApp automaticamente
+    openWhatsAppWithMessage(message);
+    
+    toast({
+      title: "Simulação calculada!",
+      description: "Sua simulação foi salva e o WhatsApp foi aberto para continuar o atendimento."
+    });
   };
 
-  const handleCalculateOnly = () => {
+  const handleCalculateOnly = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    console.log('✅ handleCalculateOnly chamada - SIMULAR APENAS clicado');
     if (!selectedGroup) return;
     
     const formData = watch();
-    if (formData.creditValue && formData.maxInstallmentValue && formData.installmentCount) {
-      const result = calculateConsortiumWithGroup({
+    
+    // Aplicar a mesma validação do schema antes de calcular
+    try {
+      const validatedData = consortiumFormSchema.parse({
         ...formData,
-        name: formData.name || '',
-        phone: formData.phone || '',
-        email: formData.email || '',
+        useEmbedded: useEmbedded
+      });
+      
+      const result = calculateConsortiumWithGroup({
+        ...validatedData,
+        name: validatedData.name || '',
+        phone: validatedData.phone || '',
+        email: validatedData.email || '',
         category: selectedCategory!,
         groupId: selectedGroup.id,
         useEmbedded: useEmbedded
       }, selectedGroup);
+      
+      // Salvar simulação no localStorage
+      const savedSimulation = saveSimulationToLocalStorage(validatedData, result);
+      setSimulationId(parseInt(savedSimulation.id, 10));
+      
+      // Mostrar o resultado
       setCalculation(result);
       setStep('result');
+      
+      // Preparar dados completos para envio ao backend
+      const completeData = {
+        ...validatedData,
+        category: selectedCategory!,
+        groupId: selectedGroup.id,
+        creditValue: parseFloat(validatedData.creditValue),
+        maxInstallmentValue: parseFloat(validatedData.maxInstallmentValue),
+        installmentCount: parseInt(validatedData.installmentCount),
+        useEmbedded: useEmbedded,
+        whatsappSent: false
+      };
+      
+      // Salvar no banco de dados com status "Não enviado" (não bloqueia o fluxo se falhar)
+      if (!isStaticSite) {
+        console.log('💾 Salvando simulação no banco com status "Não enviado"...');
+        try {
+          simulateOnlyMutation.mutate({
+            ...completeData,
+            creditValue: completeData.creditValue.toString(),
+            maxInstallmentValue: completeData.maxInstallmentValue.toString(),
+            installmentCount: completeData.installmentCount.toString()
+          });
+        } catch (error) {
+          console.error('❌ Erro ao salvar simulação no banco:', error);
+          // Continua o fluxo normalmente mesmo se falhar
+        }
+      } else {
+        console.log('⚠️ Modo estático ativo - não salvando no banco');
+      }
+      
+      console.log('📊 Simulação calculada e salva com status "Não enviado":', result);
+      
+      toast({
+        title: "Simulação calculada!",
+        description: "Sua simulação foi salva no sistema."
+      });
+    } catch (error) {
+      // Se a validação falhar, mostrar os erros no formulário
+      if (error instanceof z.ZodError) {
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            setError(err.path[0] as any, {
+              type: 'manual',
+              message: err.message
+            });
+          }
+        });
+      }
     }
   };
 
@@ -327,7 +536,10 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
+            <h2 className="text-3xl lg:text-4xl font-bold text-firme-gray mb-4">
+              SIMULAÇÃO DE CONSÓRCIO
+            </h2>
+            <div className="flex items-center justify-center gap-4 mb-6">
               {step !== 'category' && !(step === 'group' && preSelectedCategory) && (
                 <Button
                   variant="ghost"
@@ -340,6 +552,16 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                   Voltar
                 </Button>
               )}
+              <Link href="/simulacao-unificada">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-firme-blue hover:bg-firme-blue/90 text-white"
+                >
+                  <Calculator className="w-4 h-4 mr-1" />
+                  Simulação Unificada
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -396,7 +618,14 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      console.log('🔍 Enter pressionado no formulário');
+                      console.log('🔍 Elemento ativo:', document.activeElement);
+                      console.log('🔍 Tag do elemento ativo:', document.activeElement?.tagName);
+                      console.log('🔍 Tipo do elemento ativo:', (document.activeElement as any)?.type);
+                    }
+                  }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="name">Nome Completo *</Label>
@@ -507,12 +736,12 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                       </Button>
                       <Button
                         type="submit"
-                        disabled={isSubmitting || mutation.isPending}
+                        disabled={isSubmitting}
                         className="bg-firme-blue text-white hover:bg-firme-blue-light"
                         data-testid="button-submit"
                       >
                         <Calculator className="w-5 h-5 mr-2" />
-                        {mutation.isPending ? "Enviando..." : "SIMULAR E ENVIAR"}
+                        {isSubmitting ? "Enviando..." : "SIMULAR E ENVIAR"}
                       </Button>
                     </div>
                   </form>
@@ -534,69 +763,68 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                     </Button>
                   </div>
                   
-                  {/* Proposta no formato refinado */}
+                  {/* Proposta no formato simplificado */}
                   <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-6">
                     <div className="text-center font-bold text-firme-blue mb-4">PROPOSTA ANDREOLI CONSÓRCIOS</div>
                     <div className="space-y-3 text-firme-gray">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Grupo</span>
-                        <span className="font-bold">{calculation.grupo}</span>
-                      </div>
-                      {calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta && (
+                      
+                      {/* Exibição para simulação COM lance embutido */}
+                      {calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta ? (
                         <>
-                          <div className="flex justify-between bg-blue-50 p-2 rounded">
-                            <span className="text-gray-600">Carta selecionada (para embutido)</span>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Carta selecionada para o embutido</span>
                             <span className="font-bold">{formatMoney(calculation.valorCartaReal)}</span>
                           </div>
-                          <div className="flex justify-between bg-blue-50 p-2 rounded">
-                            <span className="text-gray-600">Parcela da carta selecionada</span>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">1ª Parcela da carta selecionada</span>
                             <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
                           </div>
-                          <div className="flex justify-between bg-green-50 p-2 rounded">
+                          <div className="flex justify-between">
                             <span className="text-gray-600">Crédito disponível para uso</span>
                             <span className="font-bold text-green-600">{formatMoney(calculation.valorCarta)}</span>
                           </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-600">Lance necessário 53%</span>
+                            <span className="font-bold text-firme-blue">{formatMoney(calculation.lanceTotal)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Lance embutido</span>
+                            <span className="font-bold text-green-600">{formatMoney(calculation.lanceEmbutido)}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-600 font-medium">Lance a pagar</span>
+                            <span className="font-bold text-lg text-firme-blue">{formatMoney(calculation.lanceDeduzido)}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-600">Parcelas após contemplado</span>
+                            <span className="font-bold text-green-600">{formatMoney(calculation.parcelasAposContemplado)}</span>
+                          </div>
                         </>
-                      )}
-                      {!(calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta) && (
+                      ) : (
+                        /* Exibição para simulação SEM lance embutido */
                         <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Grupo</span>
+                            <span className="font-bold">{calculation.grupo}</span>
+                          </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Valor da carta</span>
                             <span className="font-bold">{formatMoney(calculation.valorCarta)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Valor da parcela</span>
+                            <span className="text-gray-600">Valor da primeira parcela</span>
                             <span className="font-bold">{formatMoney(calculation.parcelaAtual)}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-600">Lance necessário 53%</span>
+                            <span className="font-bold text-firme-blue">{formatMoney(calculation.lanceTotal)}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-600">Parcelas após contemplado</span>
+                            <span className="font-bold text-green-600">{formatMoney(calculation.parcelasAposContemplado)}</span>
                           </div>
                         </>
                       )}
-                      <div className="flex justify-between border-t pt-2">
-                        <span className="text-gray-600">Lance necessário (53%)</span>
-                        <span className="font-bold text-firme-blue">{formatMoney(calculation.lanceTotal)}</span>
-                      </div>
-                      {calculation.lanceEmbutido > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Lance embutido (15%)</span>
-                          <span className="font-bold text-green-600">-{formatMoney(calculation.lanceEmbutido)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between border-t pt-2">
-                        <span className="text-gray-600 font-medium">Lance a pagar</span>
-                        <span className="font-bold text-lg text-firme-blue">{formatMoney(calculation.lanceDeduzido)}</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-2">
-                        <span className="text-gray-600">Parcelas após contemplado</span>
-                        <span className="font-bold text-green-600">{formatMoney(calculation.parcelasAposContemplado)}</span>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded mt-4">
-                        <div className="text-sm text-gray-600 mb-2">Encargos informativos:</div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>Fundo Reserva (0,5%): {formatMoney(calculation.encargos.fundoReserva)}</div>
-                          <div>Taxa Adm (16%): {formatMoney(calculation.encargos.taxaAdm)}</div>
-                          <div>Seguro Vida (0,12%/mês): {formatMoney(calculation.encargos.seguroVida)}</div>
-                          <div>Seguro Quebra (0,07%/mês): {formatMoney(calculation.encargos.seguroQuebra)}</div>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -607,22 +835,17 @@ export default function NewConsortiumSimulationForm({ preSelectedCategory }: New
                         const whatsappMessage = `Olá! Gostaria de contratar o consórcio com as seguintes informações:
 
 ===== PROPOSTA ANDREOLI CONSÓRCIOS =====
-Grupo: ${calculation.grupo}${calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta ? `
-Carta selecionada (para embutido): ${formatMoney(calculation.valorCartaReal)}
-Parcela da carta selecionada: ${formatMoney(calculation.parcelaAtual)}
-Crédito disponível para uso: ${formatMoney(calculation.valorCarta)}` : `
-Valor da carta: ${formatMoney(calculation.valorCarta)}
-Valor da parcela: ${formatMoney(calculation.parcelaAtual)}`}
-Lance necessário (53%): ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? `
-Lance embutido (15%): ${formatMoney(calculation.lanceEmbutido)}` : ''}
+${calculation.lanceEmbutido > 0 && calculation.valorCartaReal !== calculation.valorCarta ? `Carta selecionada para o embutido: ${formatMoney(calculation.valorCartaReal)}
+1ª Parcela da carta selecionada: ${formatMoney(calculation.parcelaAtual)}
+Crédito disponível para uso: ${formatMoney(calculation.valorCarta)}
+Lance necessário 53%: ${formatMoney(calculation.lanceTotal)}
+Lance embutido: ${formatMoney(calculation.lanceEmbutido)}
 Lance a pagar: ${formatMoney(calculation.lanceDeduzido)}
-Parcelas após contemplado: ${formatMoney(calculation.parcelasAposContemplado)}
-
-Encargos informativos:
-- Fundo Reserva (0,5%): ${formatMoney(calculation.encargos.fundoReserva)}
-- Taxa Adm (16%): ${formatMoney(calculation.encargos.taxaAdm)}
-- Seguro Vida (0,12%/mês): ${formatMoney(calculation.encargos.seguroVida)}
-- Seguro Quebra (0,07%/mês): ${formatMoney(calculation.encargos.seguroQuebra)}
+Parcelas após contemplado: ${formatMoney(calculation.parcelasAposContemplado)}` : `Grupo: ${calculation.grupo}
+Valor da carta: ${formatMoney(calculation.valorCarta)}
+Valor da primeira parcela: ${formatMoney(calculation.parcelaAtual)}
+Lance necessário 53%: ${formatMoney(calculation.lanceTotal)}
+Parcelas após contemplado: ${formatMoney(calculation.parcelasAposContemplado)}`}
 
 Por favor, me ajudem com os próximos passos!`;
                         const whatsappUrl = `https://api.whatsapp.com/send?phone=5574981213461&text=${encodeURIComponent(whatsappMessage)}`;

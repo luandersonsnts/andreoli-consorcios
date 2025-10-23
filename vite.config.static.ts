@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   root: path.resolve(__dirname, "client"),
-  base: "/",
+  base: process.env.GITHUB_ACTIONS ? "/andreoli-consorcios/" : "/",
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
@@ -32,6 +32,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000
   },
   define: {
-    'import.meta.env.VITE_STATIC_SITE': JSON.stringify('true')
+    'import.meta.env.VITE_STATIC_SITE': JSON.stringify('true'),
+    'import.meta.env.VITE_BASE_URL': JSON.stringify(process.env.GITHUB_ACTIONS ? "/andreoli-consorcios/" : "/")
   }
 });

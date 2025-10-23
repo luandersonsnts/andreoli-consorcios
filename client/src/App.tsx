@@ -6,6 +6,7 @@ import { Toaster } from "./components/ui/toaster";
 // Removed problematic imports
 import Home from "./pages/home";
 import AdminPage from "./pages/admin";
+import SimulacaoUnificada from "./pages/simulacao-unificada";
 import NotFound from "./pages/not-found";
 
 function AppRoutes() {
@@ -14,6 +15,7 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/simulacao-unificada" component={SimulacaoUnificada} />
       <Route component={NotFound} />
     </Switch>
   );

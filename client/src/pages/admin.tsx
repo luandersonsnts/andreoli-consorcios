@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useEffect, useState as useStateForData } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { isStaticSite } from "@/lib/runtimeEnv";
-import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest } from "@/lib/queryClient";
 import AdminLogin from "@/components/AdminLogin";
 import PasswordReset from "@/components/PasswordReset";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,11 @@ interface JobApplication {
 export default function AdminPage() {
   const { user, logout, isLoading } = useAuth();
 
+  // DEBUG: Log authentication state
+  console.log("🔍 DEBUG AdminPage - isLoading:", isLoading);
+  console.log("🔍 DEBUG AdminPage - user:", user);
+  console.log("🔍 DEBUG AdminPage - token no localStorage:", localStorage.getItem('admin_token') ? 'EXISTE' : 'NÃO EXISTE');
+
   // If not authenticated, show login page
   if (isLoading) {
     return (
@@ -80,67 +86,126 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
   const [consortiumFilter, setConsortiumFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
   const [showPasswordReset, setShowPasswordReset] = useState(false);
 
-  // Function to download resume with authentication
-  const downloadResume = async (filename: string, candidateName: string) => {
-    try {
-      const response = await apiRequest("GET", `/api/download-resume/${filename}`);
-      
-      // Check if response exists and is ok
-      if (!response || !response.ok) {
-        throw new Error(`Erro ao baixar arquivo: ${response?.status || 'Resposta inválida'}`);
-      }
-
-      // Check if response has content
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/pdf')) {
-        throw new Error('Arquivo não é um PDF válido');
-      }
-
-      const blob = await response.blob();
-      
-      // Check if blob has content
-      if (blob.size === 0) {
-        throw new Error('Arquivo está vazio');
-      }
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      // Create a clean filename with candidate's name
-      const cleanName = candidateName
-        .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
-        .replace(/\s+/g, '_') // Replace spaces with underscores
-        .toLowerCase();
-      
-      link.download = `curriculo_${cleanName}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Erro ao baixar currículo:', error);
-      alert(`Erro ao baixar currículo: ${(error as Error).message}. Tente novamente.`);
-    }
+  // Função para mostrar informação sobre currículo
+  const showResumeInfo = (filename: string, candidateName: string) => {
+    alert(`Currículo salvo localmente: ${filename}\nCandidato: ${candidateName}\n\nEm um ambiente de produção, o arquivo seria baixado do servidor.`);
   };
 
-  const { data: consortiumSimulations = [], isLoading: isLoadingConsortium } = useQuery({
-    queryKey: ['/api/consortium-simulations'],
-    enabled: !isStaticSite
+  // Debug das variáveis de ambiente
+  console.log("🌍 DEBUG: VITE_STATIC_SITE env var:", import.meta.env.VITE_STATIC_SITE);
+  console.log("🌍 DEBUG: isStaticSite value:", isStaticSite);
+  console.log("🌍 DEBUG: typeof isStaticSite:", typeof isStaticSite);
+  console.log("🌍 DEBUG: !isStaticSite (enabled):", !isStaticSite);
+
+  // Carregar dados do backend usando useQuery
+  console.log("🔍 DEBUG: Configurando useQuery para consortium-simulations");
+  console.log("🔍 DEBUG: enabled (!isStaticSite):", !isStaticSite);
+  
+  const { data: consortiumSimulations = [], isLoading: isLoadingConsortium, error: consortiumError } = useQuery({
+    queryKey: ["/api/consortium-simulations"],
+    queryFn: async () => {
+      console.log("🔍 DEBUG: Iniciando requisição para /api/consortium-simulations");
+      console.log("🔍 DEBUG: Token no localStorage:", localStorage.getItem('admin_token') ? 'EXISTE' : 'NÃO EXISTE');
+      console.log("🔍 DEBUG: isStaticSite:", isStaticSite);
+      
+      const response = await apiRequest("GET", "/api/consortium-simulations");
+      console.log("🔍 DEBUG: Status da resposta:", response.status);
+      
+      if (!response.ok) {
+        console.error("🔍 DEBUG: Erro na resposta:", response.status, response.statusText);
+        const errorText = await response.text();
+        console.error("🔍 DEBUG: Texto do erro:", errorText);
+        throw new Error(`Erro na API: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("🔍 DEBUG: Dados de consórcio recebidos:", data);
+      console.log("🔍 DEBUG: Quantidade de simulações:", data.length);
+      return data;
+    },
+    enabled: true // FORÇANDO EXECUÇÃO PARA TESTE
   });
+  
+  console.log("🔍 DEBUG: useQuery consortium - isLoading:", isLoadingConsortium);
+  console.log("🔍 DEBUG: useQuery consortium - error:", consortiumError);
+  console.log("🔍 DEBUG: useQuery consortium - data length:", consortiumSimulations.length);
 
   const { data: complaints = [], isLoading: isLoadingComplaints } = useQuery({
-    queryKey: ['/api/complaints'],
-    enabled: !isStaticSite
+    queryKey: ["/api/complaints"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/complaints");
+      const data = await response.json();
+      console.log("🔍 DEBUG: Dados de reclamações recebidos:", data);
+      console.log("🔍 DEBUG: Quantidade de reclamações:", data.length);
+      return data;
+    },
+    enabled: true // FORÇANDO EXECUÇÃO PARA TESTE
   });
 
   const { data: jobApplications = [], isLoading: isLoadingJobs } = useQuery({
-    queryKey: ['/api/job-applications'],
-    enabled: !isStaticSite
+    queryKey: ["/api/job-applications"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/job-applications");
+      const data = await response.json();
+      console.log("🔍 DEBUG: Dados de candidaturas recebidos:", data);
+      console.log("🔍 DEBUG: Quantidade de candidaturas:", data.length);
+      return data;
+    },
+    enabled: true // FORÇANDO EXECUÇÃO PARA TESTE
   });
 
+  // Estados para dados do localStorage (fallback para modo estático)
+  const [localConsortiumSimulations, setLocalConsortiumSimulations] = useStateForData<ConsortiumSimulation[]>([]);
+  const [localComplaints, setLocalComplaints] = useStateForData<Complaint[]>([]);
+  const [localJobApplications, setLocalJobApplications] = useStateForData<JobApplication[]>([]);
+  const [isLoadingLocal, setIsLoadingLocal] = useStateForData(true);
+
+  // Carregar dados do localStorage apenas em modo estático
+  useEffect(() => {
+    if (isStaticSite) {
+      const loadLocalStorageData = () => {
+        try {
+          const storedConsortiumSimulations = JSON.parse(localStorage.getItem('consortiumSimulations') || '[]');
+          const storedComplaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+          const storedJobApplications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
+
+          setLocalConsortiumSimulations(storedConsortiumSimulations);
+          setLocalComplaints(storedComplaints);
+          setLocalJobApplications(storedJobApplications);
+        } catch (error) {
+          console.error('Erro ao carregar dados do localStorage:', error);
+        } finally {
+          setIsLoadingLocal(false);
+        }
+      };
+
+      loadLocalStorageData();
+    }
+  }, []);
+
+  // CORREÇÃO: Forçar uso dos dados da API em desenvolvimento
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const useApiData = isDevelopment || !isStaticSite;
+  
+  // Usar dados do backend ou localStorage dependendo do modo
+  const finalConsortiumSimulations = useApiData ? consortiumSimulations : localConsortiumSimulations;
+  const finalComplaints = useApiData ? complaints : localComplaints;
+  const finalJobApplications = useApiData ? jobApplications : localJobApplications;
+  const isLoadingData = useApiData ? (isLoadingConsortium || isLoadingComplaints || isLoadingJobs) : isLoadingLocal;
+
+  // Debug logs
+  console.log("🔍 DEBUG: isStaticSite:", isStaticSite, typeof isStaticSite);
+  console.log("🔍 DEBUG: isDevelopment:", isDevelopment);
+  console.log("🔍 DEBUG: useApiData:", useApiData);
+  console.log("🔍 DEBUG: consortiumSimulations (API):", consortiumSimulations);
+  console.log("🔍 DEBUG: localConsortiumSimulations (localStorage):", localConsortiumSimulations);
+  console.log("🔍 DEBUG: finalConsortiumSimulations (escolhido):", finalConsortiumSimulations);
+  console.log("🔍 DEBUG: finalComplaints:", finalComplaints);
+  console.log("🔍 DEBUG: finalJobApplications:", finalJobApplications);
+  console.log("🔍 DEBUG: isLoadingData:", isLoadingData);
+
   // Filter functions
-  const filteredConsortiumSimulations = (consortiumSimulations as ConsortiumSimulation[]).filter((simulation) => {
+  const filteredConsortiumSimulations = (finalConsortiumSimulations as ConsortiumSimulation[]).filter((simulation) => {
     if (consortiumFilter === 'sent') return simulation.whatsappSent;
     if (consortiumFilter === 'not_sent') return !simulation.whatsappSent;
     return true; // 'all'
@@ -158,13 +223,13 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
 
   // Prepare chart data - Categorias de consórcio
   const chartData = [
-    { name: 'Eletros', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'eletros').length, color: '#3B82F6' },
-    { name: 'Carros', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'carro').length, color: '#10B981' },
-    { name: 'Imóveis', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s) => s.category === 'imovel').length, color: '#F59E0B' },
-    { name: 'Motos', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'moto').length, color: '#8B5CF6' },
-    { name: 'Serviços', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'servicos').length, color: '#EF4444' },
-    { name: 'Barcos', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'barco').length, color: '#06B6D4' },
-    { name: 'Energia Solar', value: (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'energia_solar').length, color: '#F97316' },
+    { name: 'Eletros', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'eletros').length, color: '#3B82F6' },
+    { name: 'Carros', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'carro' || s.category === 'automovel').length, color: '#10B981' },
+    { name: 'Imóveis', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s) => s.category === 'imovel' || s.category === 'Imóvel').length, color: '#F59E0B' },
+    { name: 'Motos', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'moto').length, color: '#8B5CF6' },
+    { name: 'Serviços', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'servicos').length, color: '#EF4444' },
+    { name: 'Barcos', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'barco').length, color: '#06B6D4' },
+    { name: 'Energia Solar', value: (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) => s.category === 'energia_solar').length, color: '#F97316' },
   ];
 
   // Monthly data for bar chart - apenas consórcios
@@ -173,7 +238,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
     const targetYear = 2025; // Fixado para 2025
     
     return months.map((month, index) => {
-      const consortiumCount = (consortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) =>
+      const consortiumCount = (finalConsortiumSimulations as ConsortiumSimulation[]).filter((s: ConsortiumSimulation) =>
         new Date(s.createdAt).getMonth() === index && 
         new Date(s.createdAt).getFullYear() === targetYear
       ).length;
@@ -221,25 +286,34 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {isStaticSite && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
-                  Modo de Demonstração
-                </h3>
-                <div className="mt-2 text-sm text-yellow-700">
-                  <p>Esta é uma versão estática do painel administrativo. As funcionalidades de API estão desabilitadas no GitHub Pages.</p>
-                </div>
-              </div>
-            </div>
+        {isLoadingData && (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-firme-blue mx-auto"></div>
+            <p className="mt-4 text-gray-600">Carregando dados...</p>
           </div>
         )}
+
+        {!isLoadingData && (
+          <>
+            {isStaticSite && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-yellow-800">
+                      Modo de Demonstração
+                    </h3>
+                    <div className="mt-2 text-sm text-yellow-700">
+                      <p>Painel administrativo usando localStorage. Os dados são salvos localmente no navegador e exibidos aqui para demonstração.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -249,7 +323,14 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <Briefcase className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{(consortiumSimulations as ConsortiumSimulation[]).length}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {(() => {
+                  const count = (finalConsortiumSimulations as ConsortiumSimulation[]).length;
+                  console.log("🎯 RENDERIZAÇÃO: Contagem de simulações:", count);
+                  console.log("🎯 RENDERIZAÇÃO: finalConsortiumSimulations:", finalConsortiumSimulations);
+                  return count;
+                })()}
+              </div>
               <p className="text-xs text-muted-foreground">Total de consórcios</p>
             </CardContent>
           </Card>
@@ -259,7 +340,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <FileText className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{(complaints as Complaint[]).length}</div>
+              <div className="text-2xl font-bold text-yellow-600">{(finalComplaints as Complaint[]).length}</div>
               <p className="text-xs text-muted-foreground">Total de manifestações</p>
             </CardContent>
           </Card>
@@ -269,7 +350,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <Users className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{(jobApplications as JobApplication[]).length}</div>
+              <div className="text-2xl font-bold text-purple-600">{(finalJobApplications as JobApplication[]).length}</div>
               <p className="text-xs text-muted-foreground">Total de currículos</p>
             </CardContent>
           </Card>
@@ -438,7 +519,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">Parcela Máx</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">Parcelas</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">Embutido</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">Linkedin</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Data</th>
                     </tr>
                   </thead>
@@ -479,7 +560,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600">{formatDate(simulation.createdAt)}</td>
                       </tr>
                     ))}
-                    {(consortiumSimulations as ConsortiumSimulation[]).length === 0 && (
+                    {filteredConsortiumSimulations.length === 0 && (
                       <tr>
                         <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
                           Nenhuma simulação de consórcio encontrada
@@ -515,7 +596,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                     </tr>
                   </thead>
                   <tbody>
-                    {(complaints as Complaint[]).map((complaint: Complaint) => (
+                    {(finalComplaints as Complaint[]).map((complaint: Complaint) => (
                       <tr key={complaint.id} className="border-b border-gray-100 hover:bg-yellow-50 transition-colors">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-100">{complaint.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{complaint.email}</td>
@@ -525,7 +606,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600">{formatDate(complaint.createdAt)}</td>
                       </tr>
                     ))}
-                    {(complaints as Complaint[]).length === 0 && (
+                    {(finalComplaints as Complaint[]).length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                           Nenhuma reclamação encontrada
@@ -562,7 +643,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                     </tr>
                   </thead>
                   <tbody>
-                    {(jobApplications as JobApplication[]).map((application: JobApplication) => (
+                    {(finalJobApplications as JobApplication[]).map((application: JobApplication) => (
                       <tr key={application.id} className="border-b border-gray-100 hover:bg-purple-50 transition-colors">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-100">{application.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{application.email}</td>
@@ -572,7 +653,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                           {application.resumeFilename ? (
                           <button 
-                            onClick={() => downloadResume(application.resumeFilename!, application.name)}
+                            onClick={() => showResumeInfo(application.resumeFilename!, application.name)}
                             className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
                           >
                             Baixar currículo
@@ -584,7 +665,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600">{formatDate(application.createdAt)}</td>
                       </tr>
                     ))}
-                    {(jobApplications as JobApplication[]).length === 0 && (
+                    {(finalJobApplications as JobApplication[]).length === 0 && (
                       <tr>
                         <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                           Nenhuma candidatura encontrada
@@ -706,23 +787,25 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
           </Card>
 
         </div>
-      </div>
+          </>
+        )}
 
-      {/* Password Reset Modal */}
-      {showPasswordReset && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <PasswordReset
-              onCancel={() => setShowPasswordReset(false)}
-              onSuccess={() => {
-                setShowPasswordReset(false);
-                // Optionally, you could logout the user after password change
-                // onLogout();
-              }}
-            />
+        {/* Password Reset Modal */}
+        {showPasswordReset && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <PasswordReset
+                onCancel={() => setShowPasswordReset(false)}
+                onSuccess={() => {
+                  setShowPasswordReset(false);
+                  // Optionally, you could logout the user after password change
+                  // onLogout();
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
