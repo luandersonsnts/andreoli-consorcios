@@ -20,13 +20,13 @@ type ComplaintFormData = z.infer<typeof insertComplaintSchema>;
 export default function ComplaintsForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [type, setType] = useState("");
-  const [contactAuthorized, setContactAuthorized] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting }
   } = useForm<ComplaintFormData>({
     resolver: zodResolver(insertComplaintSchema),
@@ -37,9 +37,12 @@ export default function ComplaintsForm() {
       type: "",
       subject: "",
       message: "",
-      contactAuthorized: ""
+      contactAuthorized: false
     }
   });
+
+  const type = watch("type");
+  const contactAuthorized = watch("contactAuthorized");
 
   const mutation = useMutation({
     mutationFn: async (data: ComplaintFormData) => {
@@ -52,8 +55,6 @@ export default function ComplaintsForm() {
         description: "Recebemos sua manifestação e responderemos em até 24 horas úteis."
       });
       reset();
-      setType("");
-      setContactAuthorized(false);
       queryClient.invalidateQueries({ queryKey: ['/api/complaints'] });
     },
     onError: () => {
@@ -67,7 +68,9 @@ export default function ComplaintsForm() {
 
   const onSubmit = (data: ComplaintFormData) => {
     if (isStaticSite) {
-      const typeLabel = type === "reclamacao" ? "Reclamação" : type === "sugestao" ? "Sugestão" : "Elogio";
+      const typeLabel = data.type === "reclamacao" ? "Reclamação" : 
+                       data.type === "sugestao" ? "Sugestão" : 
+                       data.type === "elogio" ? "Elogio" : "Dúvida";
       const message = `*MANIFESTAÇÃO - ANDREOLI CONSÓRCIOS*
 
 👤 *Dados do Cliente:*
@@ -81,7 +84,7 @@ Telefone: ${data.phone}
 💬 *Mensagem:*
 ${data.message}
 
-✅ *Autoriza contato:* ${contactAuthorized ? "Sim" : "Não"}`;
+✅ *Autoriza contato:* ${data.contactAuthorized ? "Sim" : "Não"}`;
 
       openWhatsAppWithMessage(message);
       toast({
@@ -89,14 +92,8 @@ ${data.message}
         description: "Continue sua manifestação pelo WhatsApp!"
       });
       reset();
-      setType("");
-      setContactAuthorized(false);
     } else {
-      mutation.mutate({ 
-        ...data, 
-        type, 
-        contactAuthorized: contactAuthorized ? "sim" : "não" 
-      });
+      mutation.mutate(data);
     }
   };
 
@@ -108,8 +105,7 @@ ${data.message}
             Reclame Aqui
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Sua opinião é muito importante para nós. Utilize este espaço para registrar reclamações, sugestões ou elogios. 
-            Respondemos todas as mensagens em até 24 horas.
+            Sua opinião é muito importante para a ANDREOLI CONSÓRCIOS. Utilize este canal para enviar sugestões, elogios ou reclamações sobre nossos serviços.
           </p>
         </div>
         
@@ -156,7 +152,7 @@ ${data.message}
               </div>
               <div>
                 <Label className="block text-firme-gray font-medium mb-2">Tipo de Manifestação</Label>
-                <Select value={type} onValueChange={setType}>
+                <Select value={type} onValueChange={(value) => setValue("type", value)}>
                   <SelectTrigger className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent" data-testid="select-complaint-type">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
@@ -167,7 +163,7 @@ ${data.message}
                     <SelectItem value="duvida">Dúvida</SelectItem>
                   </SelectContent>
                 </Select>
-                {!type && errors.type && <p className="text-red-500 text-sm mt-1">Selecione um tipo</p>}
+                {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>}
               </div>
             </div>
             
@@ -200,7 +196,7 @@ ${data.message}
               <Checkbox
                 id="contactAuth"
                 checked={contactAuthorized}
-                onCheckedChange={(checked) => setContactAuthorized(checked === true)}
+                onCheckedChange={(checked) => setValue("contactAuthorized", checked === true)}
                 className="w-4 h-4 text-firme-blue border-gray-300 rounded focus:ring-firme-blue"
                 data-testid="checkbox-contact-authorized"
               />

@@ -10,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { isStaticSite, openWhatsAppWithMessage } from "@/lib/runtimeEnv";
+import { apiRequest } from "@/lib/queryClient";
 import { Send, Info } from "lucide-react";
 import type { z } from "zod";
 
@@ -19,14 +19,13 @@ type ComplaintFormData = z.infer<typeof insertComplaintSchema>;
 
 export default function ComplaintsForm() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [type, setType] = useState("");
-  const [contactAuthorized, setContactAuthorized] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting }
   } = useForm<ComplaintFormData>({
     resolver: zodResolver(insertComplaintSchema),
@@ -37,37 +36,53 @@ export default function ComplaintsForm() {
       type: "",
       subject: "",
       message: "",
-      contactAuthorized: ""
+      contactAuthorized: false
     }
   });
 
-  const mutation = useMutation({
+  const type = watch("type");
+  const contactAuthorized = watch("contactAuthorized");
+
+  const queryClient = useQueryClient();
+
+  const createComplaintMutation = useMutation({
     mutationFn: async (data: ComplaintFormData) => {
-      const response = await apiRequest("POST", "/api/complaints", data);
-      return response.json();
+      if (isStaticSite) {
+        // Fallback para localStorage em sites estáticos
+        const complaint = {
+          id: Date.now().toString(),
+          ...data,
+          contactAuthorized: data.contactAuthorized ? "sim" : "não",
+          createdAt: new Date().toISOString()
+        };
+        
+        const existingComplaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+        existingComplaints.push(complaint);
+        
+        if (existingComplaints.length > 50) {
+          existingComplaints.splice(0, existingComplaints.length - 50);
+        }
+        
+        localStorage.setItem('complaints', JSON.stringify(existingComplaints));
+        return complaint;
+      }
+      
+      // Salvar no banco de dados
+      return await apiRequest('/api/complaints', JSON.stringify(data));
     },
     onSuccess: () => {
-      toast({
-        title: "Manifestação enviada!",
-        description: "Recebemos sua manifestação e responderemos em até 24 horas úteis."
-      });
-      reset();
-      setType("");
-      setContactAuthorized(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/complaints'] });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Erro ao enviar",
-        description: "Verifique os dados e tente novamente."
-      });
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
     }
   });
 
-  const onSubmit = (data: ComplaintFormData) => {
-    if (isStaticSite) {
-      const typeLabel = type === "reclamacao" ? "Reclamação" : type === "sugestao" ? "Sugestão" : "Elogio";
+  const onSubmit = async (data: ComplaintFormData) => {
+    try {
+      await createComplaintMutation.mutateAsync(data);
+      
+      // Preparar mensagem para WhatsApp
+      const typeLabel = data.type === "reclamacao" ? "Reclamação" : 
+                       data.type === "sugestao" ? "Sugestão" : 
+                       data.type === "elogio" ? "Elogio" : "Dúvida";
       const message = `*MANIFESTAÇÃO - ANDREOLI CONSÓRCIOS*
 
 👤 *Dados do Cliente:*
@@ -81,21 +96,21 @@ Telefone: ${data.phone}
 💬 *Mensagem:*
 ${data.message}
 
-✅ *Autoriza contato:* ${contactAuthorized ? "Sim" : "Não"}`;
+✅ *Autoriza contato:* ${data.contactAuthorized ? "Sim" : "Não"}`;
 
       openWhatsAppWithMessage(message);
+      
       toast({
-        title: "Redirecionando para WhatsApp",
-        description: "Continue sua manifestação pelo WhatsApp!"
+        title: "Manifestação enviada!",
+        description: "Sua manifestação foi salva com sucesso e o WhatsApp foi aberto para continuar o atendimento."
       });
+      
       reset();
-      setType("");
-      setContactAuthorized(false);
-    } else {
-      mutation.mutate({ 
-        ...data, 
-        type, 
-        contactAuthorized: contactAuthorized ? "sim" : "não" 
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar manifestação",
+        description: "Ocorreu um erro ao salvar sua manifestação. Tente novamente.",
+        variant: "destructive"
       });
     }
   };
@@ -156,7 +171,7 @@ ${data.message}
               </div>
               <div>
                 <Label className="block text-firme-gray font-medium mb-2">Tipo de Manifestação</Label>
-                <Select value={type} onValueChange={setType}>
+                <Select value={type} onValueChange={(value) => setValue("type", value)}>
                   <SelectTrigger className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cavalcante-orange focus:border-transparent" data-testid="select-complaint-type">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
@@ -167,7 +182,7 @@ ${data.message}
                     <SelectItem value="duvida">Dúvida</SelectItem>
                   </SelectContent>
                 </Select>
-                {!type && errors.type && <p className="text-red-500 text-sm mt-1">Selecione um tipo</p>}
+                {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>}
               </div>
             </div>
             
@@ -200,7 +215,7 @@ ${data.message}
               <Checkbox
                 id="contactAuth"
                 checked={contactAuthorized}
-                onCheckedChange={(checked) => setContactAuthorized(checked === true)}
+                onCheckedChange={(checked) => setValue("contactAuthorized", checked === true)}
                 className="w-4 h-4 text-firme-blue border-gray-300 rounded focus:ring-firme-blue"
                 data-testid="checkbox-contact-authorized"
               />
@@ -211,12 +226,12 @@ ${data.message}
             
             <Button 
               type="submit" 
-              disabled={isSubmitting || mutation.isPending}
+              disabled={isSubmitting || createComplaintMutation.isPending}
               className="w-full bg-firme-blue text-white py-3 rounded-lg font-medium hover:bg-firme-blue-light transition-colors"
               data-testid="button-submit-complaint"
             >
               <Send className="w-5 h-5 mr-2" />
-              {mutation.isPending ? "Enviando..." : "ENVIAR MANIFESTAÇÃO"}
+              {(isSubmitting || createComplaintMutation.isPending) ? "Enviando..." : "ENVIAR MANIFESTAÇÃO"}
             </Button>
           </form>
           
