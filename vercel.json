@@ -1,11 +1,11 @@
 {
-  "buildCommand": "npm run build:static",
+  "buildCommand": "npx vite build --config vite.config.static.ts",
   "outputDirectory": "dist/public",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "npm install --include=dev --legacy-peer-deps",
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!api).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "source": "/assets/(.*)",
+      "source": "/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
