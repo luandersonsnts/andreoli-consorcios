@@ -848,7 +848,7 @@ Lance necessário 53%: ${formatMoney(calculation.lanceTotal)}
 Parcelas após contemplado: ${formatMoney(calculation.parcelasAposContemplado)}`}
 
 Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=5574981213461&text=${encodeURIComponent(whatsappMessage)}`;
+                        const whatsappUrl = `https://api.whatsapp.com/send?phone=5574988384902&text=${encodeURIComponent(whatsappMessage)}`;
                         window.open(whatsappUrl, '_blank');
                         
                         // Registrar envio do WhatsApp se não for site estático e houver simulationId
