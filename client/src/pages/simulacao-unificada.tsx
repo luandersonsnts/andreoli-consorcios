@@ -208,7 +208,7 @@ export default function SimulacaoUnificada() {
                   </p>
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => window.open('https://wa.me/5511999999999?text=Olá! Gostaria de mais informações sobre consórcio.', '_blank')}
+                    onClick={() => window.open('https://wa.me/5574988384902?text=Olá! Gostaria de mais informações sobre consórcio.', '_blank')}
                   >
                     Falar no WhatsApp
                   </Button>
