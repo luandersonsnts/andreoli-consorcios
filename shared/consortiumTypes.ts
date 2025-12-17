@@ -675,3 +675,35 @@ export const CATEGORY_LABELS: Record<ConsortiumCategory, string> = {
   barco: 'Barco',
   energia_solar: 'Energia Solar'
 };
+
+// Helpers de exibição para categorias vindas de diferentes fontes
+export function resolveCategoryKey(raw: string): ConsortiumCategory | undefined {
+  const key = (raw || '').toLowerCase();
+  const aliases: Record<string, ConsortiumCategory> = {
+    automovel: 'carro',
+    automóvel: 'carro',
+    carros: 'carro',
+    carro: 'carro',
+    imoveis: 'imovel',
+    imóveis: 'imovel',
+    imovel: 'imovel',
+    moto: 'moto',
+    motocicleta: 'moto',
+    servicos: 'servicos',
+    serviços: 'servicos',
+    eletros: 'eletros',
+    barco: 'barco',
+    energia: 'energia_solar',
+    energia_solar: 'energia_solar'
+  };
+  return aliases[key];
+}
+
+export function getCategoryLabelFromRaw(raw: string): string {
+  const resolved = resolveCategoryKey(raw);
+  if (resolved && CATEGORY_LABELS[resolved]) {
+    return CATEGORY_LABELS[resolved];
+  }
+  // Fallback: capitaliza primeira letra
+  return (raw || '').charAt(0).toUpperCase() + (raw || '').slice(1);
+}

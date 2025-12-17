@@ -34,7 +34,7 @@ export default function JobApplication() {
 
   const createJobApplicationMutation = useMutation({
     mutationFn: async (data: JobApplicationFormData & { file?: File }) => {
-      if (isStaticSite()) {
+      if (isStaticSite) {
         // Fallback para localStorage em sites estáticos
         const applications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
         

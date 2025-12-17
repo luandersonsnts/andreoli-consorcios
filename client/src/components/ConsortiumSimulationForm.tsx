@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, TrendingUp, PiggyBank } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { openWhatsAppWithMessage } from "@/lib/runtimeEnv";
+import { formatConsortiumForWhatsApp } from "@/lib/consortiumCalculator";
 
 // Schema para validação do formulário
 const consortiumFormSchema = z.object({
@@ -506,26 +508,29 @@ export default function ConsortiumSimulationForm() {
                   <div className="mt-6 pt-4 border-t">
                     <Button
                       onClick={() => {
-                        const whatsappMessage = `Olá! Gostaria de contratar o consórcio com as seguintes informações:
+                        if (!calculation) return;
+                        const name = watch("name") || "";
+                        const phone = watch("phone") || "";
+                        const email = watch("email") || "";
 
-===== PROPOSTA =====
-grupo: ${calculation.grupo}
-valor da carta: ${formatMoney(calculation.valorCarta)}
-valor desejado pelo cliente: ${formatMoney(calculation.valorCarta)}
-1ª parcela: ${formatMoney(calculation.parcelaAtual)}
-lance deduzido: ${formatMoney(calculation.lanceDeduzido)} (total: ${formatMoney(calculation.lanceTotal)}${calculation.lanceEmbutido > 0 ? ` | embutido: ${formatMoney(calculation.lanceEmbutido)}` : ''})
-quantidade restantes de parcela: ${calculation.parcelasRestantes}
-reajuste das parcelas após contemplação: ${formatMoney(calculation.novaParcelaValor)}
+                        const message = formatConsortiumForWhatsApp(
+                          name,
+                          phone,
+                          email,
+                          {
+                            // Mapear campos necessários para o formato simplificado
+                            grupo: calculation.grupo,
+                            valorCarta: calculation.valorCarta,
+                            parcelaAtual: calculation.parcelaAtual,
+                            lanceTotal: calculation.lanceTotal,
+                            lanceEmbutido: calculation.lanceEmbutido,
+                            lanceDeduzido: calculation.lanceDeduzido,
+                            parcelasAposContemplado: calculation.parcelasRestantes,
+                            valorCartaReal: calculation.valorCarta,
+                          }
+                        );
 
---- Encargos informativos ---
-Fundo de Reserva (0,5%): ${formatMoney(calculation.encargos.fundoReserva)}
-Taxa Adm (16%): ${formatMoney(calculation.encargos.taxaAdm)}
-Seguro de Vida (0,12% ao mês): ${formatMoney(calculation.encargos.seguroVida)}
-Seguro de Quebra (0,07% ao mês): ${formatMoney(calculation.encargos.seguroQuebra)}
-
-Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=5574988384902&text=${encodeURIComponent(whatsappMessage)}`;
-                        window.open(whatsappUrl, '_blank');
+                        openWhatsAppWithMessage(message);
                       }}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"
                       data-testid="button-hire-consortium"

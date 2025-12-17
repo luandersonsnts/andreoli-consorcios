@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { LogOut, Users, FileText, Briefcase, TrendingUp, Settings, Edit, Eye, ToggleLeft, ToggleRight, Key } from 'lucide-react';
-import { CONSORTIUM_GROUPS, getGroupsByCategory, CATEGORY_LABELS, ConsortiumCategory } from '@shared/consortiumTypes';
+import { CONSORTIUM_GROUPS, getGroupsByCategory, CATEGORY_LABELS, ConsortiumCategory, getCategoryLabelFromRaw } from '@shared/consortiumTypes';
 
 // Show static site message when running without server
 if (isStaticSite) {
@@ -165,7 +165,12 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
     if (isStaticSite) {
       const loadLocalStorageData = () => {
         try {
-          const storedConsortiumSimulations = JSON.parse(localStorage.getItem('consortiumSimulations') || '[]');
+          // Suporte a ambos formatos de chave para compatibilidade
+          const storedConsortiumSimulations = JSON.parse(
+            localStorage.getItem('consortium-simulations') ||
+            localStorage.getItem('consortiumSimulations') ||
+            '[]'
+          );
           const storedComplaints = JSON.parse(localStorage.getItem('complaints') || '[]');
           const storedJobApplications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
 
@@ -472,7 +477,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl">Simulações de Consórcio</CardTitle>
-                  <CardDescription>Total: {(consortiumSimulations as ConsortiumSimulation[]).length} simulações registradas | Exibindo: {filteredConsortiumSimulations.length}</CardDescription>
+                  <CardDescription>Total: {(finalConsortiumSimulations as ConsortiumSimulation[]).length} simulações registradas | Exibindo: {filteredConsortiumSimulations.length}</CardDescription>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Briefcase className="h-5 w-5 text-green-600" />
@@ -531,7 +536,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{simulation.phone}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                            {simulation.category}
+                            {getCategoryLabelFromRaw(simulation.category)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100 font-mono">{simulation.groupId}</td>
@@ -706,7 +711,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                   const categoryDescriptions = {
                     eletros: 'Eletrônicos e eletrodomésticos',
                     carro: 'Veículos de passeio',
-                    automovel: 'Automóveis e motocicletas',
+                    automovel: 'Carros',
                     imovel: 'Casas e apartamentos',
                     moto: 'Motocicletas',
                     servicos: 'Prestação de serviços',

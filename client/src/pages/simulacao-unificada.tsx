@@ -15,6 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import { Link } from 'wouter';
+import { openWhatsAppWithMessage } from '@/lib/runtimeEnv';
 
 export default function SimulacaoUnificada() {
   return (
@@ -208,7 +209,10 @@ export default function SimulacaoUnificada() {
                   </p>
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => window.open('https://wa.me/5574988384902?text=Olá! Gostaria de mais informações sobre consórcio.', '_blank')}
+                    onClick={() => {
+                      const msg = 'Olá! Gostaria de mais informações sobre consórcio.';
+                      openWhatsAppWithMessage(msg);
+                    }}
                   >
                     Falar no WhatsApp
                   </Button>

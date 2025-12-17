@@ -217,7 +217,7 @@ export function AdvancedConsortiumSimulator({ onSimulationComplete }: AdvancedCo
           {/* Botão de Calcular */}
           <Button 
             onClick={handleCalculate} 
-            disabled={!tipo || !valorDesejado || !parcelas || isCalculating}
+            disabled={!tipo || !valorDesejado || !parcelaMaxima || isCalculating}
             className="w-full"
           >
             {isCalculating ? 'Calculando...' : 'Calcular Simulação'}
@@ -256,7 +256,7 @@ export function AdvancedConsortiumSimulator({ onSimulationComplete }: AdvancedCo
                   </p>
                   {resultado.lanceEmbutido && (
                     <p className="text-sm text-gray-500">
-                      Valor bruto da carta: {formatarMoeda(resultado.valorCartaAjustado)}
+                      Valor bruto da carta: {formatarMoeda(resultado.valorCarta + (resultado.lanceEmbutido || 0))}
                     </p>
                   )}
                 </div>
@@ -290,7 +290,7 @@ export function AdvancedConsortiumSimulator({ onSimulationComplete }: AdvancedCo
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Valor da Carta</span>
                   <span className="font-medium">
-                    {formatarMoeda(resultado.lanceEmbutido ? resultado.valorCartaAjustado : resultado.valorCarta)}
+                    {formatarMoeda(resultado.lanceEmbutido ? resultado.valorCarta - (resultado.lanceEmbutido || 0) : resultado.valorCarta)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -367,19 +367,19 @@ export function AdvancedConsortiumSimulator({ onSimulationComplete }: AdvancedCo
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600">Fundo de Reserva Total</p>
                   <p className="text-lg font-bold text-blue-600">
-                    {formatarMoeda(resultado.fundoReservaTotal)}
+                    {formatarMoeda(resultado.fundoReserva)}
                   </p>
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
                   <p className="text-sm text-gray-600">Taxa de Administração Total</p>
                   <p className="text-lg font-bold text-purple-600">
-                    {formatarMoeda(resultado.taxaAdministracaoTotal)}
+                    {formatarMoeda(resultado.taxaAdministracao)}
                   </p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <p className="text-sm text-gray-600">Valor Total do Plano</p>
                   <p className="text-lg font-bold text-green-600">
-                    {formatarMoeda(resultado.parcelaReal * resultado.numeroParcelas)}
+                    {formatarMoeda(resultado.parcelaReal * resultado.parcelasCalculadas)}
                   </p>
                 </div>
               </div>

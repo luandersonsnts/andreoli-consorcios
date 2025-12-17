@@ -9,14 +9,18 @@
       }
     }
   ],
-  "buildCommand": "npm install --include=dev --legacy-peer-deps && npx vite build --config vite.config.static.ts",
+  "buildCommand": "npm install --include=dev --legacy-peer-deps && npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install --include=dev --legacy-peer-deps",
   "framework": null,
   "env": {
-    "VITE_STATIC_SITE": "true"
+    "VITE_STATIC_SITE": "false"
   },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

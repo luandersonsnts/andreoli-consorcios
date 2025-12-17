@@ -286,7 +286,7 @@ export function calcularConsorcioAvancado(
  */
 export function getTiposConsorcio(): Array<{value: string, label: string}> {
   return [
-    { value: 'carro', label: 'Automóvel' },
+    { value: 'carro', label: 'Carro' },
     { value: 'moto', label: 'Motocicleta' },
     { value: 'imoveis', label: 'Imóveis' },
     { value: 'eletros', label: 'Eletrodomésticos' },

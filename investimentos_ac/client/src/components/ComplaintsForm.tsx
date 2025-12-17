@@ -37,7 +37,7 @@ export default function ComplaintsForm() {
       type: "",
       subject: "",
       message: "",
-      contactAuthorized: false
+      contactAuthorized: false as any
     }
   });
 
@@ -195,8 +195,8 @@ ${data.message}
             <div className="flex items-center space-x-3">
               <Checkbox
                 id="contactAuth"
-                checked={contactAuthorized}
-                onCheckedChange={(checked) => setValue("contactAuthorized", checked === true)}
+                checked={!!contactAuthorized}
+                onCheckedChange={(checked) => setValue("contactAuthorized", checked === true ? "true" : "false")}
                 className="w-4 h-4 text-firme-blue border-gray-300 rounded focus:ring-firme-blue"
                 data-testid="checkbox-contact-authorized"
               />

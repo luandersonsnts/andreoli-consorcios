@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,7 @@ import {
   formatarMoeda,
   type AutoConsortiumCalculation 
 } from '@/lib/consortiumCalculator';
+import { openWhatsAppWithMessage } from '@/lib/runtimeEnv';
 import { Calculator, TrendingUp, Info, DollarSign, Calendar, Percent, ArrowLeft } from 'lucide-react';
 
 // Schema de validação
@@ -34,12 +35,14 @@ type SimulationFormData = z.infer<typeof simulationSchema>;
 
 interface UnifiedConsortiumSimulatorProps {
   onSimulationComplete?: (result: AutoConsortiumCalculation) => void;
+  preSelectedTipo?: string;
 }
 
-export function UnifiedConsortiumSimulator({ onSimulationComplete }: UnifiedConsortiumSimulatorProps) {
+export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTipo }: UnifiedConsortiumSimulatorProps) {
   const [resultado, setResultado] = useState<AutoConsortiumCalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [erro, setErro] = useState<string>('');
+  const [editarTipo, setEditarTipo] = useState(false);
 
   const {
     register,
@@ -56,6 +59,18 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete }: UnifiedCons
   });
 
   const tiposConsorcio = getTiposConsorcio();
+
+  // Pré-seleção do tipo via URL ou prop
+  const [tipoPreSelecionado, setTipoPreSelecionado] = useState<string | null>(null);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tipoFromUrl = urlParams.get('tipo');
+    const effectiveTipo = preSelectedTipo ?? tipoFromUrl ?? null;
+    if (effectiveTipo) {
+      setTipoPreSelecionado(effectiveTipo);
+      setValue('tipo', effectiveTipo);
+    }
+  }, [preSelectedTipo, setValue]);
 
   const onSubmit = async (data: SimulationFormData) => {
     setIsCalculating(true);
@@ -98,27 +113,42 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete }: UnifiedCons
   const handleWhatsAppShare = () => {
     if (!resultado) return;
 
+    // Dados do cliente a partir do formulário
+    const nome = watch('name');
+    const telefone = watch('phone');
+    const email = watch('email');
+    const tipo = watch('tipo');
+    const tipoLabel = getTiposConsorcio().find(t => t.value === tipo)?.label || tipo;
+
+    // Mensagem simplificada apenas com dados preenchidos e resumo exibido
     const message = `
-🏦 *Simulação de Consórcio*
+🏦 *Simulação de Consórcio - ANDREOLI*
 
-💰 *Valor da Carta:* ${formatarMoeda(resultado.valorCarta)}
-📅 *Parcelas:* ${resultado.parcelasCalculadas}x
-💳 *Parcela:* ${formatarMoeda(resultado.parcelaReal)}
+👤 *Cliente*
+Nome: ${nome}
+Telefone: ${telefone}
+Email: ${email}
 
-📊 *Composição:*
-• Fundo de Reserva: ${formatarMoeda(resultado.fundoReserva)}
-• Taxa Administração: ${formatarMoeda(resultado.taxaAdministracao)}
-• Seguro Vida: ${formatarMoeda(resultado.seguroVida)}
-• Seguro Quebra: ${formatarMoeda(resultado.seguroQuebra)}
-${resultado.lanceEmbutido ? `• Lance Embutido: ${formatarMoeda(resultado.lanceEmbutido)}` : ''}
+📂 *Tipo*: ${tipoLabel}
 
-💰 *Total do Plano:* ${formatarMoeda(resultado.parcelaReal * resultado.parcelasCalculadas)}
+📈 *Resumo da Simulação*
+• Valor da Carta: ${formatarMoeda(resultado.valorCarta)}
+• Primeira Parcela: ${formatarMoeda(resultado.parcelaReal)}
+• Parcelas: ${resultado.parcelasCalculadas}x
 
-Simulação feita em: ${new Date().toLocaleDateString('pt-BR')}
+💸 *Informações do Lance*
+• Lance Total (50%): ${formatarMoeda(resultado.lanceTotal)}
+• Lance Embutido (15%): ${formatarMoeda(resultado.lanceEmbutido)}
+• A pagar no lance (35%): ${formatarMoeda(resultado.valorAPagar)}
+
+🧮 *Após o Lance*
+• Parcelas Restantes: ${resultado.parcelasCalculadas}x
+• Parcela Reduzida: ${formatarMoeda(resultado.parcelaReduzida)}
+
+Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
     `.trim();
 
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/5574988384902?text=${encodedMessage}`, '_blank');
+    openWhatsAppWithMessage(message);
   };
 
   // Se há resultado, mostra a tela de resultado
@@ -282,20 +312,33 @@ Simulação feita em: ${new Date().toLocaleDateString('pt-BR')}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo de Consórcio</Label>
-                <Select onValueChange={(value) => setValue('tipo', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                     {tiposConsorcio.map((tipo) => (
-                       <SelectItem key={tipo.value} value={tipo.value}>
-                         {tipo.label}
-                       </SelectItem>
-                     ))}
-                   </SelectContent>
-                </Select>
-                {errors.tipo && (
-                  <p className="text-sm text-red-600">{errors.tipo.message}</p>
+                {tipoPreSelecionado && !editarTipo ? (
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline">
+                      {tiposConsorcio.find(t => t.value === tipoPreSelecionado)?.label || tipoPreSelecionado}
+                    </Badge>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditarTipo(true)}>
+                      Mudar categoria
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Select value={watch('tipo') || ''} onValueChange={(value) => setValue('tipo', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tiposConsorcio.map((tipo) => (
+                          <SelectItem key={tipo.value} value={tipo.value}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.tipo && (
+                      <p className="text-sm text-red-600">{errors.tipo.message}</p>
+                    )}
+                  </>
                 )}
               </div>
 
