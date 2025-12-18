@@ -6,7 +6,7 @@ import {
   complaints,
   jobApplications,
   consortiumSimulations
-} from '../shared/schema';
+} from '../shared/schema.pg';
 
 // Create the database connection
 export const db = drizzle(sql, {
@@ -19,4 +19,4 @@ export const db = drizzle(sql, {
   }
 });
 
-export * from '../shared/schema';
+export * from '../shared/schema.pg';

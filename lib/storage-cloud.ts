@@ -14,7 +14,7 @@ import {
   complaints,
   jobApplications,
   consortiumSimulations
-} from "../shared/schema";
+} from "../shared/schema.pg";
 import { randomUUID } from "crypto";
 import { eq, gte, lte, desc, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";

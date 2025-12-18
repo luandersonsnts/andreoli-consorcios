@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
-import { users, simulations, complaints, jobApplications, consortiumSimulations } from '../shared/schema';
+import { users, simulations, complaints, jobApplications, consortiumSimulations } from '../shared/schema.pg';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 
@@ -104,25 +104,29 @@ async function seed() {
     // Simulações de consórcio (exemplo)
     await db.insert(consortiumSimulations).values([
       {
-        id: randomUUID(),
         name: 'Interessado 1',
         phone: '(11) 93333-7777',
         email: 'int1@example.com',
         category: 'Imóveis',
-        creditAmount: '200000',
-        term: '120 meses',
+        groupId: 'GRP-IMOV-001',
+        creditValue: '200000',
+        useEmbedded: false,
+        maxInstallmentValue: '1800',
+        installmentCount: 120,
         whatsappSent: false,
         whatsappSentAt: null,
         createdAt: new Date()
       },
       {
-        id: randomUUID(),
         name: 'Interessado 2',
         phone: '(11) 92222-8888',
         email: 'int2@example.com',
         category: 'Veículos',
-        creditAmount: '80000',
-        term: '60 meses',
+        groupId: 'GRP-AUTO-002',
+        creditValue: '80000',
+        useEmbedded: false,
+        maxInstallmentValue: '950',
+        installmentCount: 60,
         whatsappSent: false,
         whatsappSentAt: null,
         createdAt: new Date()

@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
-import { users } from '../shared/schema';
+import { users } from '../shared/schema.pg';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 
