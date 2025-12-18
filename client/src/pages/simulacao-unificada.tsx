@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { UnifiedConsortiumSimulator } from '@/components/UnifiedConsortiumSimulator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,34 @@ import { Link } from 'wouter';
 import { openWhatsAppWithMessage } from '@/lib/runtimeEnv';
 
 export default function SimulacaoUnificada() {
+  // Exibição direta do status de premiação (ajuda na validação de endereçamento/config)
+  const [premiacaoStatus, setPremiacaoStatus] = useState<{
+    premiacaoEnabled: boolean;
+    campaignLabel: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/config')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data && typeof data.premiacaoEnabled !== 'undefined') {
+          setPremiacaoStatus({
+            premiacaoEnabled: Boolean(data.premiacaoEnabled),
+            campaignLabel: String(data.campaignLabel || 'dezembro').toLowerCase(),
+          });
+          // Log auxiliar para inspeção em produção
+          console.log('[Simulação] /api/config =>', data);
+        }
+      })
+      .catch((err) => {
+        console.warn('[Simulação] Falha ao consultar /api/config', err);
+      });
+    return () => {
+        cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -40,10 +68,18 @@ export default function SimulacaoUnificada() {
                 </p>
               </div>
             </div>
-            <Badge variant="secondary" className="bg-firme-blue/10 text-firme-blue">
-              <Zap className="h-3 w-3 mr-1" />
-              Nova Versão
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-firme-blue/10 text-firme-blue">
+                <Zap className="h-3 w-3 mr-1" />
+                Nova Versão
+              </Badge>
+              {premiacaoStatus && (
+                <Badge variant={premiacaoStatus.premiacaoEnabled ? 'default' : 'secondary'}
+                       className={premiacaoStatus.premiacaoEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}>
+                  {premiacaoStatus.premiacaoEnabled ? 'Premiação ativa' : 'Premiação inativa'}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
