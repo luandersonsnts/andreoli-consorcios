@@ -383,7 +383,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                         setCampaignLabelUi(val);
                         updateConfigMutation.mutate({ campaignLabel: val });
                       }}
-                      disabled={updateConfigMutation.isLoading}
+                      disabled={updateConfigMutation.isPending}
                     >
                       <option value="janeiro">janeiro</option>
                       <option value="fevereiro">fevereiro</option>
@@ -403,12 +403,12 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                     <Button
                       variant={adminConfig?.premiacaoEnabled ? 'destructive' : 'default'}
                       onClick={() => updateConfigMutation.mutate({ premiacaoEnabled: !(adminConfig?.premiacaoEnabled ?? false), campaignLabel: campaignLabelUi })}
-                      disabled={updateConfigMutation.isLoading}
+                      disabled={updateConfigMutation.isPending}
                       className={`flex items-center gap-2 ${adminConfig?.premiacaoEnabled ? 'bg-red-600 text-white hover:bg-red-700' : ''}`}
                     >
                       {adminConfig?.premiacaoEnabled ? 'Desativar' : 'Ativar'}
                     </Button>
-                    {updateConfigMutation.isLoading && (
+                    {updateConfigMutation.isPending && (
                       <span className="text-xs text-gray-500">Salvando...</span>
                     )}
                   </div>

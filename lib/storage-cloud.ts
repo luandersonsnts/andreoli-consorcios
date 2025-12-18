@@ -182,7 +182,11 @@ class CloudStorage implements IStorage {
     const id = randomUUID();
     const newJobApplication = {
       id,
-      ...jobApplication,
+      name: jobApplication.name,
+      phone: jobApplication.phone,
+      email: jobApplication.email,
+      position: jobApplication.position ?? null,
+      linkedin: jobApplication.linkedin ?? null,
       resumeFilename: jobApplication.resumeFilename ?? null,
       createdAt: new Date()
     };

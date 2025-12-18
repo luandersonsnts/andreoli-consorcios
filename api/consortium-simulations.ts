@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
 import { storage } from '../lib/storage-cloud';
-import { insertConsortiumSimulationSchema } from '../shared/schema';
+import { insertConsortiumSimulationSchema } from '../shared/schema.pg';
 
 function isAuthorized(req: VercelRequest): boolean {
   const auth = req.headers.authorization || '';
