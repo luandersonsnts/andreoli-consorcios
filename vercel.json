@@ -13,19 +13,24 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install --include=dev --legacy-peer-deps",
   "framework": null,
+  "functions": {
+    "api/**": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "env": {
     "VITE_STATIC_SITE": "false",
     "VITE_PREMIACAO_ENABLED": "true"
   },
   "redirects": [],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(?!api/).*",
+      "dest": "/index.html"
     }
   ],
   "headers": [
