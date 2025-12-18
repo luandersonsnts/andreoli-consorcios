@@ -43,6 +43,43 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
   const [isCalculating, setIsCalculating] = useState(false);
   const [erro, setErro] = useState<string>('');
   const [editarTipo, setEditarTipo] = useState(false);
+  // Estados para o fluxo de premiação (rascunho)
+  const [showOfferCTA, setShowOfferCTA] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
+  const [offerApplied, setOfferApplied] = useState(false);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const urlParamsDraft = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const [globalConfig, setGlobalConfig] = useState<{ premiacaoEnabled: boolean; campaignLabel: string } | null>(null);
+  const campaignLabel = (globalConfig?.campaignLabel || urlParamsDraft.get('utm_campaign') || 'dezembro').toLowerCase();
+  const mesesPtBr = [
+    'janeiro','fevereiro','março','abril','maio','junho',
+    'julho','agosto','setembro','outubro','novembro','dezembro'
+  ];
+  const baseIndex = mesesPtBr.indexOf(campaignLabel);
+  const effectiveIndex = baseIndex >= 0 ? baseIndex : mesesPtBr.indexOf('dezembro');
+  const deferredMonthLabel = mesesPtBr[(effectiveIndex + 2) % 12];
+  const utmContent = urlParamsDraft.get('utm_content') || '';
+  const utmPremiacao = urlParamsDraft.get('utm_premiacao') || '';
+  const premiacaoEnabledByUrl = utmPremiacao === 'on' || ['premiacao_draft', 'premiacao_on', 'vencedor_dezembro', 'vencedor_fevereiro'].includes(utmContent);
+  const premiacaoDisabledByUrl = utmPremiacao === 'off' || utmContent === 'premiacao_off';
+  const premiacaoEnabledByEnv = (import.meta.env?.VITE_PREMIACAO_ENABLED === 'true');
+  const isPremiacaoEnabledServer = globalConfig?.premiacaoEnabled === true;
+  const isPremiacaoDraft = (premiacaoEnabledByUrl || isPremiacaoEnabledServer || premiacaoEnabledByEnv) && !premiacaoDisabledByUrl;
+
+  useEffect(() => {
+    let cancelled = false;
+    // Tenta ler configuração pública do servidor; ignora erros em modo estático
+    fetch('/api/config')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!cancelled && data && typeof data.premiacaoEnabled !== 'undefined') {
+          setGlobalConfig(data);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const {
     register,
@@ -71,6 +108,18 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
       setValue('tipo', effectiveTipo);
     }
   }, [preSelectedTipo, setValue]);
+
+  // Controla exibição do CTA/roleta em modo rascunho após resultado
+  useEffect(() => {
+    if (resultado && isPremiacaoDraft) {
+      setShowOfferCTA(true);
+    } else {
+      setShowOfferCTA(false);
+      setShowWheel(false);
+      setOfferApplied(false);
+      setWheelSpinning(false);
+    }
+  }, [resultado, isPremiacaoDraft]);
 
   const onSubmit = async (data: SimulationFormData) => {
     setIsCalculating(true);
@@ -120,6 +169,15 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
     const tipo = watch('tipo');
     const tipoLabel = getTiposConsorcio().find(t => t.value === tipo)?.label || tipo;
 
+    // Linha extra da premiação (rascunho) quando aplicada
+    const premiacaoAtiva = (isPremiacaoDraft && offerApplied);
+    const premiacaoLine = premiacaoAtiva
+      ? `\n🎁 Premiação aplicada: 1ª parcela somente em ${deferredMonthLabel}`
+      : "";
+    const premiacaoRegras = premiacaoAtiva
+      ? `\n\n📜 Condição especial\n• Validade: durante a campanha de ${campaignLabel}\n• Regras: elegibilidade sujeita à análise; disponibilidade de grupos; não cumulativa`
+      : "";
+
     // Mensagem simplificada apenas com dados preenchidos e resumo exibido
     const message = `
 🏦 *Simulação de Consórcio - ANDREOLI*
@@ -141,9 +199,9 @@ Email: ${email}
 • Lance Embutido (15%): ${formatarMoeda(resultado.lanceEmbutido)}
 • A pagar no lance (35%): ${formatarMoeda(resultado.valorAPagar)}
 
-🧮 *Após o Lance*
-• Parcelas Restantes: ${resultado.parcelasCalculadas}x
-• Parcela Reduzida: ${formatarMoeda(resultado.parcelaReduzida)}
+ 🧮 *Após o Lance*
+ • Parcelas Restantes: ${resultado.parcelasCalculadas}x
+ • Parcela Reduzida: ${formatarMoeda(resultado.parcelaReduzida)}${premiacaoLine}${premiacaoRegras}
 
 Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
     `.trim();
@@ -168,7 +226,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
             onClick={handleWhatsAppShare}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
-            Enviar por WhatsApp
+            {isPremiacaoDraft && offerApplied ? 'Enviar com premiação' : 'Enviar por WhatsApp'}
           </Button>
         </div>
 
@@ -182,6 +240,45 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {/* Selo de Premiação aplicado (rascunho) */}
+              {isPremiacaoDraft && offerApplied && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    🥳 Premiação aplicada: 1ª parcela somente em {deferredMonthLabel}
+                  </Badge>
+                </div>
+              )}
+
+              {/* Banner explicativo da premiação (rascunho) */}
+              {isPremiacaoDraft && offerApplied && (
+                <div className="p-5 rounded-xl border border-green-200 bg-green-50">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl" aria-hidden>🎉</span>
+                    <div>
+                      <p className="text-base font-semibold text-green-800">Você ganhou uma condição especial</p>
+                      <p className="text-lg font-bold text-green-700 mt-1">1ª parcela somente em fevereiro</p>
+                      <p className="text-sm text-green-800 mt-2">
+                        A premiação foi aplicada à sua simulação. Ao enviar, nossa equipe identifica sua proposta com essa condição para seguir no atendimento.
+                      </p>
+                      <ul className="mt-3 text-sm text-green-900 list-disc list-inside space-y-1">
+                        <li>Válida nesta simulação em modo de testes</li>
+                        <li>Visível para você e para nossa equipe no envio</li>
+                      </ul>
+
+                      <div className="mt-4 pt-3 border-t border-green-200">
+                        <p className="text-sm font-semibold text-green-800">Validade e regras</p>
+                        <ul className="mt-2 text-sm text-green-900 list-disc list-inside space-y-1">
+                          <li>{`Campanha de ${campaignLabel}; válida durante o mês de ${campaignLabel}`}</li>
+                          <li>Elegibilidade sujeita à análise e disponibilidade de grupos</li>
+                          <li>Não cumulativa com outras ofertas ou descontos</li>
+                          <li>Pode variar conforme categoria e consórcio escolhida</li>
+                          <li>Válida apenas para propostas geradas nesta simulação</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Informações Básicas */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -225,6 +322,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
               </div>
 
               {/* Informações das Parcelas Restantes */}
+              {/* Informações das Parcelas Restantes */}
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                 <h3 className="font-semibold text-purple-800 mb-3">Após o Lance</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -243,6 +341,72 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   </div>
                 </div>
               </div>
+
+              {/* CTA para roleta (rascunho) */}
+              {isPremiacaoDraft && showOfferCTA && !showWheel && !offerApplied && (
+                <div className="mt-4 p-6 bg-blue-50 rounded-xl border border-blue-200 text-center">
+                  <p className="text-sm text-blue-800 mb-3">Descubra sua condição exclusiva</p>
+                  <Button
+                    className="mx-auto block px-6 py-3 bg-gradient-to-r from-firme-blue to-blue-600 text-white shadow-lg hover:shadow-xl animate-pulse"
+                    onClick={() => setShowWheel(true)}
+                  >
+                    Gire e receba uma oferta
+                  </Button>
+                  <div className="mt-3">
+                    <Button variant="outline" onClick={handleWhatsAppShare} className="mx-auto">
+                      Prefere enviar sem oferta? Enviar simulação
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Roleta (rascunho) */}
+              {isPremiacaoDraft && showWheel && !offerApplied && (
+                <div className="mt-8 flex flex-col items-center">
+                  {/* Ponteiro */}
+                  <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-red-500 mb-2" aria-hidden/>
+
+                  {/* Roleta aprimorada */}
+                  <div
+                    className={`relative w-56 h-56 rounded-full ring-4 ${wheelSpinning ? 'ring-blue-300' : 'ring-blue-200'} shadow-2xl overflow-hidden`}
+                    style={{
+                      backgroundImage:
+                        'conic-gradient(#c7d2fe 0 60deg, #93c5fd 60deg 120deg, #60a5fa 120deg 180deg, #38bdf8 180deg 240deg, #22d3ee 240deg 300deg, #a5b4fc 300deg 360deg)',
+                      transform: `rotate(${wheelRotation}deg)`,
+                      transition: 'transform 2.2s cubic-bezier(.22,.61,.36,1)'
+                    }}
+                  >
+                    {/* Hub central */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-white/90 border-2 border-blue-200 shadow-md flex items-center justify-center">
+                        <span className="text-xs font-semibold text-firme-blue">GIRAR</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botão de giro */}
+                  <Button
+                    className="mt-4 px-6 py-3 bg-gradient-to-r from-firme-blue to-blue-600 text-white shadow-lg hover:shadow-xl"
+                    onClick={() => {
+                      if (wheelSpinning) return;
+                      setWheelSpinning(true);
+                      const spins = 1440; // 4 voltas completas
+                      const offset = 30; // leve ajuste de parada
+                      setWheelRotation((prev) => prev + spins + offset);
+                      setTimeout(() => {
+                        setWheelSpinning(false);
+                        setOfferApplied(true);
+                        try {
+                          if (navigator?.vibrate) navigator.vibrate([80, 40, 80]);
+                        } catch {}
+                      }, 2200);
+                    }}
+                  >
+                    Girar roleta
+                  </Button>
+                  <p className="text-xs text-gray-600 mt-2">Premiação garantida neste teste: 1ª parcela somente em {deferredMonthLabel}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -276,6 +440,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   id="name"
                   {...register('name')}
                   placeholder="Seu nome completo"
+                  className="placeholder:text-gray-400 text-gray-900"
                 />
                 {errors.name && (
                   <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -287,6 +452,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   id="phone"
                   {...register('phone')}
                   placeholder="(11) 99999-9999"
+                  className="placeholder:text-gray-400 text-gray-900"
                 />
                 {errors.phone && (
                   <p className="text-sm text-red-600">{errors.phone.message}</p>
@@ -299,6 +465,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   type="email"
                   {...register('email')}
                   placeholder="seu@email.com"
+                  className="placeholder:text-gray-400 text-gray-900"
                 />
                 {errors.email && (
                   <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -348,6 +515,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   id="valorDesejado"
                   {...register('valorDesejado')}
                   placeholder="R$ 50.000,00"
+                  className="placeholder:text-gray-400 text-gray-900"
                 />
                 <p className="text-xs text-gray-500">
                   Valor da carta que você deseja adquirir
@@ -363,6 +531,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   id="parcelaMaxima"
                   {...register('parcelaMaxima')}
                   placeholder="R$ 900,00"
+                  className="placeholder:text-gray-400 text-gray-900"
                 />
                 <p className="text-xs text-gray-500">
                   O sistema calculará automaticamente o número de parcelas

@@ -204,6 +204,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin global config (premiação)
+  app.get("/api/admin/config", authenticateToken, async (_req, res) => {
+    try {
+      const config = await storage.getGlobalConfig();
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching admin config:', error);
+      res.status(500).json({ message: "Error fetching admin config" });
+    }
+  });
+
+  app.patch("/api/admin/config", authenticateToken, async (req, res) => {
+    try {
+      const { premiacaoEnabled, campaignLabel } = req.body || {};
+      const updated = await storage.setGlobalConfig({
+        premiacaoEnabled: typeof premiacaoEnabled === 'boolean' ? premiacaoEnabled : undefined,
+        campaignLabel: typeof campaignLabel === 'string' ? campaignLabel : undefined,
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating admin config:', error);
+      res.status(500).json({ message: "Error updating admin config" });
+    }
+  });
+
+  // Public config (read-only)
+  app.get("/api/config", async (_req, res) => {
+    try {
+      const config = await storage.getGlobalConfig();
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching public config:', error);
+      res.status(500).json({ message: "Error fetching public config" });
+    }
+  });
+
   // Investment simulation endpoint
   app.post("/api/simulations", async (req, res) => {
     try {

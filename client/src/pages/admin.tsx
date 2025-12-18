@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useEffect, useState as useStateForData } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { isStaticSite } from "@/lib/runtimeEnv";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
@@ -85,6 +85,8 @@ export default function AdminPage() {
 function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
   const [consortiumFilter, setConsortiumFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
   const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [adminConfig, setAdminConfig] = useState<{ premiacaoEnabled: boolean; campaignLabel: string } | null>(null);
+  const [campaignLabelUi, setCampaignLabelUi] = useState<string>('dezembro');
 
   // Função para mostrar informação sobre currículo
   const showResumeInfo = (filename: string, candidateName: string) => {
@@ -124,6 +126,36 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       return data;
     },
     enabled: true // FORÇANDO EXECUÇÃO PARA TESTE
+  });
+
+  // Carregar configuração global (premiação)
+  const { data: fetchedConfig, isLoading: isLoadingConfig } = useQuery({
+    queryKey: ["/api/admin/config"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/config");
+      return response.json();
+    },
+    enabled: !isStaticSite,
+  });
+
+  useEffect(() => {
+    if (fetchedConfig) {
+      setAdminConfig(fetchedConfig as { premiacaoEnabled: boolean; campaignLabel: string });
+      const label = (fetchedConfig as any).campaignLabel ?? 'dezembro';
+      setCampaignLabelUi(String(label).toLowerCase());
+    }
+  }, [fetchedConfig]);
+
+  const updateConfigMutation = useMutation({
+    mutationFn: async (partial: Partial<{ premiacaoEnabled: boolean; campaignLabel: string }>) => {
+      const response = await apiRequest("PATCH", "/api/admin/config", partial);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const cfg = data as { premiacaoEnabled: boolean; campaignLabel: string };
+      setAdminConfig(cfg);
+      setCampaignLabelUi(String(cfg.campaignLabel).toLowerCase());
+    },
   });
   
   console.log("🔍 DEBUG: useQuery consortium - isLoading:", isLoadingConsortium);
@@ -291,6 +323,88 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Controle de Premiação/Roleta */}
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          <Card>
+            <CardHeader className="flex items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="text-sm font-medium">Premiação/Roleta</CardTitle>
+                <CardDescription>Controle global de exibição da oferta</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                {adminConfig?.premiacaoEnabled ? (
+                  <ToggleRight className="h-5 w-5 text-green-600" />
+                ) : (
+                  <ToggleLeft className="h-5 w-5 text-gray-400" />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isStaticSite ? (
+                <p className="text-sm text-gray-600">Modo estático — controle indisponível sem servidor.</p>
+              ) : (
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-700">Status:</span>
+                    <span className={`text-sm font-medium ${adminConfig?.premiacaoEnabled ? 'text-green-700' : 'text-gray-600'}`}>
+                      {adminConfig?.premiacaoEnabled ? 'Ativado' : 'Desativado'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-700">Mês/Campanha:</span>
+                    <select
+                      className="text-sm border rounded-md px-2 py-1"
+                      value={campaignLabelUi}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCampaignLabelUi(val);
+                        updateConfigMutation.mutate({ campaignLabel: val });
+                      }}
+                      disabled={updateConfigMutation.isLoading}
+                    >
+                      <option value="janeiro">janeiro</option>
+                      <option value="fevereiro">fevereiro</option>
+                      <option value="março">março</option>
+                      <option value="abril">abril</option>
+                      <option value="maio">maio</option>
+                      <option value="junho">junho</option>
+                      <option value="julho">julho</option>
+                      <option value="agosto">agosto</option>
+                      <option value="setembro">setembro</option>
+                      <option value="outubro">outubro</option>
+                      <option value="novembro">novembro</option>
+                      <option value="dezembro">dezembro</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant={adminConfig?.premiacaoEnabled ? 'destructive' : 'default'}
+                      onClick={() => updateConfigMutation.mutate({ premiacaoEnabled: !(adminConfig?.premiacaoEnabled ?? false), campaignLabel: campaignLabelUi })}
+                      disabled={updateConfigMutation.isLoading}
+                      className="flex items-center gap-2"
+                    >
+                      {adminConfig?.premiacaoEnabled ? 'Desativar' : 'Ativar'}
+                    </Button>
+                    {updateConfigMutation.isLoading && (
+                      <span className="text-xs text-gray-500">Salvando...</span>
+                    )}
+                  </div>
+                  {/* Ajuda: primeira parcela (M+2) */}
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    {(() => {
+                      const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+                      const label = (campaignLabelUi || 'dezembro').toLowerCase();
+                      const idx = meses.indexOf(label);
+                      const eff = idx >= 0 ? idx : meses.indexOf('dezembro');
+                      const parcelaMes = meses[(eff + 2) % 12];
+                      return <span>Primeira parcela em {parcelaMes}</span>;
+                    })()}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
         {isLoadingData && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-firme-blue mx-auto"></div>

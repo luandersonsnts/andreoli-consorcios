@@ -44,6 +44,9 @@ export interface IStorage {
     simulationsThisMonth: number;
     consortiumSimulationsThisMonth: number;
   }>;
+  // Global admin-config for promotions/premiação
+  getGlobalConfig(): Promise<{ premiacaoEnabled: boolean; campaignLabel: string }>;
+  setGlobalConfig(config: Partial<{ premiacaoEnabled: boolean; campaignLabel: string }>): Promise<{ premiacaoEnabled: boolean; campaignLabel: string }>;
 }
 
 // Initialize database connection
@@ -74,6 +77,10 @@ class MemoryStorage implements IStorage {
   private jobApplications: JobApplication[] = [];
   private consortiumSimulations: ConsortiumSimulation[] = [];
   private consortiumIdCounter = 1;
+  private globalConfig: { premiacaoEnabled: boolean; campaignLabel: string } = {
+    premiacaoEnabled: false,
+    campaignLabel: "dezembro",
+  };
 
   constructor() {
     // Create a default admin user for testing
@@ -243,9 +250,22 @@ class MemoryStorage implements IStorage {
       consortiumSimulationsThisMonth
     };
   }
+
+  async getGlobalConfig(): Promise<{ premiacaoEnabled: boolean; campaignLabel: string }> {
+    return this.globalConfig;
+  }
+
+  async setGlobalConfig(config: Partial<{ premiacaoEnabled: boolean; campaignLabel: string }>): Promise<{ premiacaoEnabled: boolean; campaignLabel: string }> {
+    this.globalConfig = { ...this.globalConfig, ...config };
+    return this.globalConfig;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
+  private globalConfig: { premiacaoEnabled: boolean; campaignLabel: string } = {
+    premiacaoEnabled: false,
+    campaignLabel: "dezembro",
+  };
   constructor() {
     // Initialize default admin user
     this.initializeDefaultAdmin();
@@ -423,6 +443,15 @@ export class DatabaseStorage implements IStorage {
       simulationsThisMonth: monthSims.length,
       consortiumSimulationsThisMonth: monthConsortiumSims.length,
     };
+  }
+
+  async getGlobalConfig(): Promise<{ premiacaoEnabled: boolean; campaignLabel: string }> {
+    return this.globalConfig;
+  }
+
+  async setGlobalConfig(config: Partial<{ premiacaoEnabled: boolean; campaignLabel: string }>): Promise<{ premiacaoEnabled: boolean; campaignLabel: string }> {
+    this.globalConfig = { ...this.globalConfig, ...config };
+    return this.globalConfig;
   }
 }
 

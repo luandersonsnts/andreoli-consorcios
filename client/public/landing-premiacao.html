@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Andreoli Consórcios — Simule e participe de uma premiação</title>
+    <meta name="description" content="Simule seu consórcio e participe de uma premiação. Gire a roleta para ver sua condição especial — sempre cai em 1ª parcela somente em fevereiro." />
+    <link rel="icon" href="/favicon.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f5fbff', 100: '#eaf6ff', 200: '#d6edff', 300: '#a8dbff', 400: '#6ec3ff',
+                500: '#2aa7ff', 600: '#118bdc', 700: '#0c6ea9', 800: '#0a547f', 900: '#0a3e5d'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Layout refinado e paleta discreta */
+      .hero-bg {
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(42,167,255,0.15), transparent 50%),
+                    radial-gradient(1200px 600px at 80% 110%, rgba(12,110,169,0.15), transparent 50%);
+      }
+      .wheel {
+        width: 340px; height: 340px; border-radius: 50%;
+        border: 12px solid #0c6ea9;
+        box-shadow: 0 14px 40px rgba(10, 84, 127, 0.18);
+        background: repeating-conic-gradient(
+          from 0deg,
+          rgba(10,84,127,0.08) 0deg 45deg,
+          rgba(10,84,127,0.18) 45deg 90deg
+        );
+        position: relative; transition: transform 2.6s cubic-bezier(0.22, 0.8, 0, 1);
+      }
+      .wheel::after {
+        content: '';
+        position: absolute; inset: 24px; border-radius: 50%;
+        background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+      }
+      .wheel-label { position: absolute; left: 50%; top: 50%; transform-origin: 0 0; font: 600 12px/1.2 ui-sans-serif, system-ui; color: #0f172a; }
+      .marker { width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 26px solid #ef4444; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+      /* Efeitos de vitória */
+      @keyframes shake {
+        0%, 100% { transform: translate3d(0,0,0); }
+        20% { transform: translate3d(-3px, 0, 0); }
+        40% { transform: translate3d(3px, 0, 0); }
+        60% { transform: translate3d(-2px, 0, 0); }
+        80% { transform: translate3d(2px, 0, 0); }
+      }
+      .win-shake { animation: shake 480ms ease-in-out 2; }
+      @keyframes pulseRing {
+        0% { box-shadow: 0 0 0 0 rgba(17,139,220,0.5); }
+        100% { box-shadow: 0 0 0 24px rgba(17,139,220,0); }
+      }
+      .wheel.win { animation: pulseRing 800ms ease-out 2; }
+      /* Confete */
+      .confetti { position: fixed; top: -10px; left: 50%; width: 8px; height: 12px; opacity: 0.9; border-radius: 2px; background: var(--color);
+        transform: translateX(var(--x)) rotate(var(--rot)); animation: confettiFall 1500ms ease-out forwards; }
+      @keyframes confettiFall {
+        0% { transform: translateX(var(--x)) translateY(0) rotate(var(--rot)); opacity: 0.95; }
+        100% { transform: translateX(calc(var(--x) + 20px)) translateY(100vh) rotate(calc(var(--rot) + 420deg)); opacity: 0; }
+      }
+    </style>
+  </head>
+  <body class="bg-white text-slate-800">
+    <header class="border-b border-slate-200">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3">
+          <img src="/public/andreoli-logo.svg" alt="Andreoli Consórcios" class="h-9 w-auto" onerror="this.src='/client/public/andreoli-logo.svg'" />
+          <span class="sr-only">Andreoli Consórcios</span>
+        </a>
+        <div class="text-xs text-slate-500">Campanha de premiação — gire a roleta para desbloquear</div>
+      </div>
+    </header>
+
+    <main class="hero-bg">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900">Simule e participe de uma premiação</h1>
+          <p class="mt-5 text-lg text-slate-700">Gire a roleta para revelar sua condição especial e avance para o simulador com sua oferta aplicada.</p>
+          <ul class="mt-6 space-y-2 text-slate-700">
+            <li>• Sem juros no consórcio</li>
+            <li>• Comparação rápida no simulador unificado</li>
+            <li>• Atendimento consultivo e transparente</li>
+          </ul>
+          <div class="mt-8 flex gap-4">
+            <button id="spinBtn" class="inline-flex items-center justify-center rounded-md bg-brand-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-700">Girar roleta</button>
+          </div>
+          <p class="mt-3 text-xs text-slate-500">Promoção válida por tempo limitado, sujeita à regulamento e análise.</p>
+        </div>
+
+        <div class="flex flex-col items-center gap-6">
+          <div class="marker"></div>
+          <div id="wheel" class="wheel"></div>
+          <div id="result" class="hidden w-full max-w-md text-center" aria-live="polite">
+            <div class="rounded-xl border border-brand-200 bg-brand-50 px-6 py-5 text-sm text-brand-900">
+              <div class="flex items-center justify-center text-3xl mb-2">
+                <span id="winEmoji" class="hidden">🥳</span>
+              </div>
+              <strong class="text-slate-900">Parabéns!</strong> Sua premiação: 1ª parcela somente em fevereiro.
+              <p class="mt-2 text-slate-700">Para utilizar a premiação, conclua a simulação aqui:</p>
+              <div class="mt-4 flex items-center justify-center gap-3">
+                <a class="rounded-md bg-brand-600 px-5 py-2.5 text-white hover:bg-brand-700" href="/simulacao-unificada?utm_source=marketplace&utm_medium=landing&utm_campaign=premiacao&utm_content=vencedor_fevereiro">Concluir simulação</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="border-t border-slate-200 mt-10">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 text-sm text-slate-600">
+        <p class="mb-2">Condição “Primeira parcela somente em fevereiro” sujeita à regulamento, análise e disponibilidade de grupos. Consulte termos com nossos consultores.</p>
+        <p>© Andreoli Consórcios. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+
+    <script>
+      // Configuração da roleta
+      const items = [
+        { label: 'Taxa reduzida' },
+        { label: 'Bônus consultoria' },
+        { label: 'Upgrade de carta' },
+        { label: 'Cashback' },
+        { label: 'Brinde especial' },
+        { label: 'Atendimento prioritário' },
+        { label: 'Sorteio contemplação' },
+        { label: '1ª parcela em fevereiro' }, // alvo fixo
+      ];
+      const TARGET_INDEX = 7; // sempre cair na última fatia
+      const wheel = document.getElementById('wheel');
+      const spinBtn = document.getElementById('spinBtn');
+      const result = document.getElementById('result');
+      const winEmoji = document.getElementById('winEmoji');
+
+      // Criar labels ao redor da roda
+      const N = items.length;
+      // Opcional: esconder labels para estética mais limpa
+      const radius = 130;
+      items.forEach((item, i) => {
+        const angleDeg = (i * 360 / N) + (180 / N);
+        const el = document.createElement('div');
+        el.className = 'wheel-label';
+        el.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) translate(${radius}px) rotate(${-angleDeg}deg)`;
+        el.textContent = '';
+        wheel.appendChild(el);
+      });
+
+      // Lógica de rotação determinística
+      let spinning = false;
+      function triggerWinEffects() {
+        // vibração em dispositivos suportados
+        if (navigator.vibrate) {
+          navigator.vibrate([80, 40, 80]);
+        }
+        // shake na página
+        document.body.classList.add('win-shake');
+        setTimeout(() => document.body.classList.remove('win-shake'), 1200);
+        // pulso na wheel
+        wheel.classList.add('win');
+        setTimeout(() => wheel.classList.remove('win'), 1600);
+        // emoji de vitória com pop
+        if (winEmoji) {
+          winEmoji.classList.remove('hidden');
+          winEmoji.classList.add('emoji-pop');
+          setTimeout(() => winEmoji.classList.remove('emoji-pop'), 1200);
+        }
+        // leve mudança de tom visual pós-giro para reforçar conquista
+        const mainEl = document.querySelector('main');
+        const markerEl = document.querySelector('.marker');
+        if (mainEl) {
+          mainEl.style.background = 'radial-gradient(1200px 600px at 20% -10%, rgba(34,197,94,0.16), transparent 50%), radial-gradient(1200px 600px at 80% 110%, rgba(250,204,21,0.18), transparent 50%)';
+        }
+        if (markerEl) {
+          markerEl.style.borderBottomColor = '#22c55e';
+        }
+        // confete simples
+        const colors = ['#22c55e','#ef4444','#3b82f6','#f59e0b','#a855f7','#06b6d4'];
+        for (let i = 0; i < 36; i++) {
+          const piece = document.createElement('span');
+          piece.className = 'confetti';
+          piece.style.setProperty('--x', `${(Math.random() * 2 - 1) * 200}px`);
+          piece.style.setProperty('--rot', `${Math.random() * 360}deg`);
+          piece.style.setProperty('--color', colors[i % colors.length]);
+          document.body.appendChild(piece);
+          setTimeout(() => piece.remove(), 1700);
+        }
+      }
+      spinBtn.addEventListener('click', () => {
+        if (spinning) return;
+        spinning = true;
+        result.classList.add('hidden');
+        // ângulo do centro da fatia alvo
+        const targetCenter = (TARGET_INDEX * 360 / N) + (180 / N);
+        // 4 voltas completas + alinhar alvo no topo (ponteiro)
+        const finalRotation = (360 * 4) - targetCenter; // alvo ao topo
+        wheel.style.transform = `rotate(${finalRotation}deg)`;
+      });
+
+      wheel.addEventListener('transitionend', () => {
+        spinning = false;
+        result.classList.remove('hidden');
+        triggerWinEffects();
+      });
+    </script>
+  </body>
+</html>
