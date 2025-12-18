@@ -62,9 +62,17 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
   const baseIndex = mesesPtBr.indexOf(campaignLabel);
   const effectiveIndex = baseIndex >= 0 ? baseIndex : mesesPtBr.indexOf('dezembro');
   const deferredMonthLabel = mesesPtBr[(effectiveIndex + 2) % 12];
-const premiacaoEnabledByEnv = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
-const isPremiacaoEnabledServer = (typeof globalConfig?.premiacaoEnabled === 'boolean') ? globalConfig!.premiacaoEnabled : undefined;
-const isPremiacaoEnabled = (isPremiacaoEnabledServer === true) ? true : premiacaoEnabledByEnv;
+  // Override via parâmetro de URL para facilitar validação em produção:
+  // ?premiacao=on|true para ligar, ?premiacao=off|false para desligar
+  const premiacaoParam = urlParamsDraft.get('premiacao')?.toLowerCase() || undefined;
+  const premiacaoEnabledByEnv = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
+  const isPremiacaoEnabledServer = (typeof globalConfig?.premiacaoEnabled === 'boolean') ? globalConfig!.premiacaoEnabled : undefined;
+  const isPremiacaoEnabledParam = premiacaoParam === 'on' || premiacaoParam === 'true'
+    ? true
+    : premiacaoParam === 'off' || premiacaoParam === 'false'
+      ? false
+      : undefined;
+  const isPremiacaoEnabled = isPremiacaoEnabledParam ?? ((isPremiacaoEnabledServer === true) ? true : premiacaoEnabledByEnv);
 
   useEffect(() => {
     let cancelled = false;
@@ -408,6 +416,26 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
   if (resultado) {
     return (
       <div className="space-y-6">
+        {/* Painel de debug opcional para inspeção em produção: ?debug=1 */}
+        {(() => {
+          const debugMode = urlParamsDraft.get('debug') === '1' || urlParamsDraft.get('debug') === 'true';
+          if (!debugMode) return null;
+          return (
+            <div className="p-3 rounded-md border border-gray-300 bg-gray-50 text-xs text-gray-800">
+              <p className="font-semibold">Debug Premiação</p>
+              <div className="mt-1 grid grid-cols-2 gap-2">
+                <div>resultado: {Boolean(resultado).toString()}</div>
+                <div>isPremiacaoEnabled: {isPremiacaoEnabled.toString()}</div>
+                <div>showOfferCTA: {showOfferCTA.toString()}</div>
+                <div>showWheel: {showWheel.toString()}</div>
+                <div>offerApplied: {offerApplied.toString()}</div>
+                <div>campaignLabel: {campaignLabel}</div>
+              </div>
+              <p className="mt-1">Controle via URL: use <code>?premiacao=on</code> ou <code>?premiacao=off</code></p>
+            </div>
+          );
+        })()}
+
         {/* Botões de Ação */}
         <div className="flex justify-between items-center">
           <Button
