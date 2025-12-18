@@ -26,7 +26,7 @@ async function ensureConfigTable() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET' && req.method !== 'PATCH') {
+  if (req.method !== 'GET' && req.method !== 'PATCH' && req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed' });
     return;
   }
@@ -46,8 +46,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // PATCH
-    const body = (req.body ?? {}) as Partial<{ premiacaoEnabled: boolean; campaignLabel: string }>;
+    // PATCH/POST update
+    let bodyRaw: any = req.body ?? {};
+    if (typeof bodyRaw === 'string') {
+      try { bodyRaw = JSON.parse(bodyRaw); } catch {}
+    }
+    const body = (bodyRaw ?? {}) as Partial<{ premiacaoEnabled: boolean; campaignLabel: string }>;
     const hasPremiacao = typeof body.premiacaoEnabled === 'boolean';
     const hasLabel = typeof body.campaignLabel === 'string';
 
