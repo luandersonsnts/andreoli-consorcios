@@ -3,7 +3,7 @@ import { useEffect, useState as useStateForData } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { isStaticSite } from "@/lib/runtimeEnv";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import AdminLogin from "@/components/AdminLogin";
 import PasswordReset from "@/components/PasswordReset";
 import { Button } from "@/components/ui/button";
@@ -151,10 +151,33 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       const response = await apiRequest("PATCH", "/api/admin/config", partial);
       return response.json();
     },
+    // Optimistic UI: aplica imediatamente e reverte se der erro
+    onMutate: async (partial) => {
+      setAdminConfig((prev) => {
+        const next = {
+          premiacaoEnabled: partial.premiacaoEnabled ?? (prev?.premiacaoEnabled ?? false),
+          campaignLabel: partial.campaignLabel ?? (prev?.campaignLabel ?? campaignLabelUi),
+        };
+        // Sincroniza seletor de mês
+        setCampaignLabelUi(String(next.campaignLabel).toLowerCase());
+        return next;
+      });
+    },
     onSuccess: (data) => {
       const cfg = data as { premiacaoEnabled: boolean; campaignLabel: string };
       setAdminConfig(cfg);
       setCampaignLabelUi(String(cfg.campaignLabel).toLowerCase());
+    },
+    onError: (_error, _variables, _context) => {
+      // Em caso de erro, re-carrega do servidor para manter consistência
+      console.error('Falha ao atualizar configuração global');
+    },
+    onSettled: () => {
+      // Garante estado sincronizado com backend
+      // Evita refetch agressivo quando isStaticSite está ativo
+      if (!isStaticSite) {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/config"] });
+      }
     },
   });
   
