@@ -62,10 +62,9 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
   const baseIndex = mesesPtBr.indexOf(campaignLabel);
   const effectiveIndex = baseIndex >= 0 ? baseIndex : mesesPtBr.indexOf('dezembro');
   const deferredMonthLabel = mesesPtBr[(effectiveIndex + 2) % 12];
-  const premiacaoEnabledByEnv = (import.meta.env?.VITE_PREMIACAO_ENABLED === 'true');
-  const isPremiacaoEnabledServer = (typeof globalConfig?.premiacaoEnabled === 'boolean') ? globalConfig!.premiacaoEnabled : undefined;
-  // Fonte de verdade: admin (server). Fallback: env apenas quando server indisponível.
-  const isPremiacaoEnabled = (isPremiacaoEnabledServer !== undefined) ? isPremiacaoEnabledServer === true : premiacaoEnabledByEnv;
+const premiacaoEnabledByEnv = (import.meta.env?.VITE_PREMIACAO_ENABLED === 'true');
+const isPremiacaoEnabledServer = (typeof globalConfig?.premiacaoEnabled === 'boolean') ? globalConfig!.premiacaoEnabled : undefined;
+const isPremiacaoEnabled = (isPremiacaoEnabledServer === true) ? true : premiacaoEnabledByEnv;
 
   useEffect(() => {
     let cancelled = false;
