@@ -11,7 +11,8 @@
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "init-cloud-db": "tsx scripts/init-cloud-db.ts"
+    "init-cloud-db": "tsx scripts/init-cloud-db.ts",
+    "seed-cloud-db": "tsx scripts/seed-cloud-data.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
