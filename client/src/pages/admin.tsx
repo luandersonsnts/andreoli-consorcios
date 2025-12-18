@@ -404,7 +404,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
                       variant={adminConfig?.premiacaoEnabled ? 'destructive' : 'default'}
                       onClick={() => updateConfigMutation.mutate({ premiacaoEnabled: !(adminConfig?.premiacaoEnabled ?? false), campaignLabel: campaignLabelUi })}
                       disabled={updateConfigMutation.isLoading}
-                      className="flex items-center gap-2"
+                      className={`flex items-center gap-2 ${adminConfig?.premiacaoEnabled ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}`}
                     >
                       {adminConfig?.premiacaoEnabled ? 'Desativar' : 'Ativar'}
                     </Button>
