@@ -15,6 +15,21 @@
 
     <!-- Base path handled by Vite configuration -->
 
+    <!-- Canonicaliza a URL da homepage removendo ?tipo / ?categoria antes do app carregar -->
+    <script>
+      (function() {
+        try {
+          var url = new URL(window.location.href);
+          if (url.pathname === '/' && (url.searchParams.has('tipo') || url.searchParams.has('categoria'))) {
+            var clean = url.pathname + (url.hash || '');
+            window.history.replaceState(null, '', clean);
+          }
+        } catch (e) {
+          // Silencia erros para não interromper o carregamento
+        }
+      })();
+    </script>
+
     <title>Andreoli Consórcios - Crédito para mudança de vida</title>
   </head>
   <body>

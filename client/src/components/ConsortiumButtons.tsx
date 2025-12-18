@@ -69,19 +69,8 @@ export default function ConsortiumButtons({ onCategorySelect }: ConsortiumButton
     if (onCategorySelect) {
       onCategorySelect(category);
     } else {
-      // Redireciona para a simulação unificada com o tipo pré-selecionado via query
-      const mapToTipoParam = (cat: ConsortiumCategory): string => {
-        switch (cat) {
-          case 'imovel':
-            return 'imoveis';
-          case 'energia_solar':
-            return 'energia';
-          default:
-            return cat;
-        }
-      };
-      const tipo = mapToTipoParam(category);
-      window.location.href = `/simulacao-unificada?tipo=${encodeURIComponent(tipo)}`;
+      // Redireciona para a simulação unificada sem parâmetros de query
+      window.location.href = `/simulacao-unificada`;
     }
   };
 

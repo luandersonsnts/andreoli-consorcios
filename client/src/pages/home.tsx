@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "../components/Header";
 import Hero from "../components/Hero";
 import InstagramTestimonials from "../components/InstagramTestimonials";
@@ -13,6 +14,15 @@ import Footer from "../components/Footer";
 import WhatsAppFloat from "../components/WhatsAppFloat";
 
 export default function Home() {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const { pathname, search, hash } = window.location;
+      if (pathname === '/' && (search.includes('tipo=') || search.includes('categoria='))) {
+        const newUrl = pathname + (hash || '');
+        window.history.replaceState(null, '', newUrl);
+      }
+    }
+  }, []);
   return (
     <div className="font-sans bg-white">
       <Header />

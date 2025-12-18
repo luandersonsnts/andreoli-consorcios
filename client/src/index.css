@@ -220,4 +220,17 @@ body {
       opacity: 0.8;
     }
   }
+
+  /* Tremor de tela para destacar aplicação de premiação */
+  @keyframes screen-shake {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-6px, 0); }
+    40% { transform: translate(6px, 0); }
+    60% { transform: translate(-6px, 0); }
+    80% { transform: translate(6px, 0); }
+    100% { transform: translate(0, 0); }
+  }
+  .shake-screen {
+    animation: screen-shake 0.7s ease-in-out;
+  }
 }

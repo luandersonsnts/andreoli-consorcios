@@ -14,8 +14,10 @@
   "installCommand": "npm install --include=dev --legacy-peer-deps",
   "framework": null,
   "env": {
-    "VITE_STATIC_SITE": "false"
+    "VITE_STATIC_SITE": "false",
+    "VITE_PREMIACAO_ENABLED": "true"
   },
+  "redirects": [],
   "rewrites": [
     {
       "source": "/api/(.*)",

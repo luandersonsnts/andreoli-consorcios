@@ -17,7 +17,9 @@ import {
   formatarMoeda,
   type AutoConsortiumCalculation 
 } from '@/lib/consortiumCalculator';
-import { openWhatsAppWithMessage } from '@/lib/runtimeEnv';
+import { isStaticSite, openWhatsAppWithMessage } from '@/lib/runtimeEnv';
+import { apiRequest } from '@/lib/queryClient';
+import { getGroupsByCategory, type ConsortiumCategory } from '@shared/consortiumTypes';
 import { Calculator, TrendingUp, Info, DollarSign, Calendar, Percent, ArrowLeft } from 'lucide-react';
 
 // Schema de validação
@@ -51,7 +53,8 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
   const [wheelRotation, setWheelRotation] = useState(0);
   const urlParamsDraft = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const [globalConfig, setGlobalConfig] = useState<{ premiacaoEnabled: boolean; campaignLabel: string } | null>(null);
-  const campaignLabel = (globalConfig?.campaignLabel || urlParamsDraft.get('utm_campaign') || 'dezembro').toLowerCase();
+  // Campanha controlada por configuração do servidor; sem dependência de UTM
+  const campaignLabel = (globalConfig?.campaignLabel || 'dezembro').toLowerCase();
   const mesesPtBr = [
     'janeiro','fevereiro','março','abril','maio','junho',
     'julho','agosto','setembro','outubro','novembro','dezembro'
@@ -59,13 +62,10 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
   const baseIndex = mesesPtBr.indexOf(campaignLabel);
   const effectiveIndex = baseIndex >= 0 ? baseIndex : mesesPtBr.indexOf('dezembro');
   const deferredMonthLabel = mesesPtBr[(effectiveIndex + 2) % 12];
-  const utmContent = urlParamsDraft.get('utm_content') || '';
-  const utmPremiacao = urlParamsDraft.get('utm_premiacao') || '';
-  const premiacaoEnabledByUrl = utmPremiacao === 'on' || ['premiacao_draft', 'premiacao_on', 'vencedor_dezembro', 'vencedor_fevereiro'].includes(utmContent);
-  const premiacaoDisabledByUrl = utmPremiacao === 'off' || utmContent === 'premiacao_off';
   const premiacaoEnabledByEnv = (import.meta.env?.VITE_PREMIACAO_ENABLED === 'true');
-  const isPremiacaoEnabledServer = globalConfig?.premiacaoEnabled === true;
-  const isPremiacaoDraft = (premiacaoEnabledByUrl || isPremiacaoEnabledServer || premiacaoEnabledByEnv) && !premiacaoDisabledByUrl;
+  const isPremiacaoEnabledServer = (typeof globalConfig?.premiacaoEnabled === 'boolean') ? globalConfig!.premiacaoEnabled : undefined;
+  // Fonte de verdade: admin (server). Fallback: env apenas quando server indisponível.
+  const isPremiacaoEnabled = (isPremiacaoEnabledServer !== undefined) ? isPremiacaoEnabledServer === true : premiacaoEnabledByEnv;
 
   useEffect(() => {
     let cancelled = false;
@@ -99,20 +99,117 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
 
   // Pré-seleção do tipo via URL ou prop
   const [tipoPreSelecionado, setTipoPreSelecionado] = useState<string | null>(null);
+  // Tipo padrão quando nenhum parâmetro de categoria é fornecido
+  const DEFAULT_TIPO = 'carro';
+  // Normaliza sinônimos de categorias para os valores aceitos pelo calculador
+  const normalizeTipo = (t: string | null): string | null => {
+    if (!t) return t;
+    const key = t.toLowerCase().trim();
+    const map: Record<string, string> = {
+      'imovel': 'imoveis',
+      'imóveis': 'imoveis',
+      'imoveis': 'imoveis',
+      'imóvel': 'imoveis',
+      'energia_solar': 'energia',
+      'energia solar': 'energia',
+      'energia': 'energia',
+      automovel: 'carro',
+      auto: 'carro',
+      carro: 'carro',
+      moto: 'moto',
+      servicos: 'servicos',
+      'serviço': 'servicos',
+      'serviços': 'servicos',
+      eletros: 'eletros',
+      'eletrodomesticos': 'eletros',
+      'eletrodomésticos': 'eletros',
+      barco: 'barco'
+    };
+    return map[key] || key;
+  };
+
+  // Canoniza apenas em /simulacao-unificada e não força tipo padrão no URL
+  const sanitizeQueryParams = () => {
+    try {
+      const url = new URL(window.location.href);
+      // Não alterar URL fora da página de simulação
+      if (!url.pathname.includes('/simulacao-unificada')) return;
+
+      const before = url.searchParams.toString();
+      const tipoRaw = url.searchParams.get('tipo') ?? url.searchParams.get('categoria');
+      const normalized = normalizeTipo(tipoRaw);
+
+      // Se não houver parâmetro relacionado a categoria, não adicionar nada
+      if (!tipoRaw && !url.searchParams.get('categoria')) {
+        return;
+      }
+
+      // Padroniza para `tipo` quando existir e remove `categoria`
+      if (normalized) {
+        url.searchParams.set('tipo', normalized);
+      } else {
+        url.searchParams.delete('tipo');
+      }
+      url.searchParams.delete('categoria');
+
+      const after = url.searchParams.toString();
+      if (before !== after) {
+        history.replaceState(null, '', `${url.pathname}${after ? `?${after}` : ''}${url.hash}`);
+      }
+    } catch {}
+  };
+
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tipoFromUrl = urlParams.get('tipo');
-    const effectiveTipo = preSelectedTipo ?? tipoFromUrl ?? null;
-    if (effectiveTipo) {
-      setTipoPreSelecionado(effectiveTipo);
-      setValue('tipo', effectiveTipo);
-    }
+    const updateTipoFromUrl = () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tipoFromUrl = urlParams.get('tipo') ?? urlParams.get('categoria');
+        const effectiveTipoRaw = preSelectedTipo ?? tipoFromUrl ?? null;
+        const effectiveTipo = normalizeTipo(effectiveTipoRaw) ?? DEFAULT_TIPO;
+        setTipoPreSelecionado(effectiveTipo);
+        setValue('tipo', effectiveTipo);
+      } catch {}
+    };
+
+    // Atualiza imediatamente na montagem
+    sanitizeQueryParams();
+    updateTipoFromUrl();
+
+    // Ouve mudanças de histórico para refletir alterações em ?tipo sem remontar a página
+    // Dispara um evento customizado em pushState/replaceState e trata popstate
+    const originalPush = history.pushState;
+    const originalReplace = history.replaceState;
+    const emitLocationChange = () => window.dispatchEvent(new Event('locationchange'));
+    history.pushState = function (...args) {
+      // @ts-ignore
+      originalPush.apply(this, args);
+      emitLocationChange();
+    };
+    history.replaceState = function (...args) {
+      // @ts-ignore
+      originalReplace.apply(this, args);
+      emitLocationChange();
+    };
+    window.addEventListener('popstate', emitLocationChange);
+    const handleLocationChange = () => {
+      sanitizeQueryParams();
+      updateTipoFromUrl();
+    };
+    window.addEventListener('locationchange', handleLocationChange);
+
+    return () => {
+      // Restaura métodos originais e limpa listeners
+      try {
+        history.pushState = originalPush;
+        history.replaceState = originalReplace;
+      } catch {}
+      window.removeEventListener('popstate', emitLocationChange);
+      window.removeEventListener('locationchange', handleLocationChange);
+    };
   }, [preSelectedTipo, setValue]);
 
-  // Controla exibição da oferta: aplica automaticamente quando ativada (server/env/url)
+  // Controla exibição da oferta: aparece somente após girar a roleta
   useEffect(() => {
-    const autoApply = isPremiacaoEnabledServer || premiacaoEnabledByUrl || premiacaoEnabledByEnv;
-
     if (!resultado) {
       setShowOfferCTA(false);
       setShowWheel(false);
@@ -121,7 +218,7 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
       return;
     }
 
-    if (!isPremiacaoDraft) {
+    if (!isPremiacaoEnabled) {
       setShowOfferCTA(false);
       setShowWheel(false);
       setOfferApplied(false);
@@ -129,16 +226,72 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
       return;
     }
 
-    if (autoApply) {
-      // Com premiação ativa, aplicar automaticamente e ocultar roleta/CTA
-      setOfferApplied(true);
-      setShowOfferCTA(false);
-      setShowWheel(false);
-    } else {
-      // Caso contrário, manter fluxo com CTA/roleta
-      setShowOfferCTA(true);
+    // Com premiação ativa, manter fluxo com CTA/roleta; só aplicar após giro
+    setOfferApplied(false);
+    setShowOfferCTA(true);
+    setShowWheel(false);
+  }, [resultado, isPremiacaoEnabled]);
+
+  // Efeito de destaque: treme a tela quando a premiação é aplicada
+  useEffect(() => {
+    if (offerApplied) {
+      try {
+        document.body.classList.add('shake-screen');
+        const t = setTimeout(() => {
+          document.body.classList.remove('shake-screen');
+        }, 700);
+        return () => clearTimeout(t);
+      } catch {}
     }
-  }, [resultado, isPremiacaoDraft, isPremiacaoEnabledServer, premiacaoEnabledByUrl, premiacaoEnabledByEnv]);
+  }, [offerApplied]);
+
+  // Persist simulação no backend (ou localStorage em modo estático)
+  const [simulationId, setSimulationId] = useState<number | null>(null);
+  const saveSimulation = async (formData: SimulationFormData, result: AutoConsortiumCalculation) => {
+    try {
+      const creditValue = parseFloat(formData.valorDesejado.replace(/[^\d,]/g, '').replace(',', '.'));
+      const maxInstallmentValue = parseFloat(formData.parcelaMaxima.replace(/[^\d,]/g, '').replace(',', '.'));
+      const installmentCount = result.parcelasCalculadas;
+      const category = formData.tipo as ConsortiumCategory;
+      const groups = getGroupsByCategory(category);
+      const sorted = [...groups].sort((a, b) => a.maxDuration - b.maxDuration);
+      const suitable = sorted.find(g => g.maxDuration >= installmentCount) || sorted[0];
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        category: formData.tipo,
+        groupId: suitable?.id ?? 'AUTO',
+        creditValue,
+        useEmbedded: !!formData.usarLanceEmbutido,
+        maxInstallmentValue,
+        installmentCount,
+        whatsappSent: false,
+      };
+
+      if (isStaticSite) {
+        const existingRaw = localStorage.getItem('consortium-simulations') || '[]';
+        const existing = JSON.parse(existingRaw);
+        existing.push({ ...payload, createdAt: new Date().toISOString() });
+        localStorage.setItem('consortium-simulations', JSON.stringify(existing));
+        setSimulationId(null);
+      } else {
+        try {
+          const resp = await apiRequest('POST', '/api/consortium-simulations', payload);
+          const json = await resp.json().catch(() => undefined as any);
+          if (json && typeof json.id === 'number') {
+            setSimulationId(json.id);
+          }
+        } catch (e) {
+          // Silently handle errors; localStorage fallback already done in static mode
+          console.error('Erro ao salvar simulação no backend:', e);
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao preparar dados da simulação:', e);
+    }
+  };
 
   const onSubmit = async (data: SimulationFormData) => {
     setIsCalculating(true);
@@ -165,6 +318,9 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
 
       setResultado(resultadoCalculo);
       onSimulationComplete?.(resultadoCalculo);
+
+      // Persistir simulação
+      await saveSimulation(data, resultadoCalculo);
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Erro no cálculo');
     } finally {
@@ -189,12 +345,12 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
     const tipoLabel = getTiposConsorcio().find(t => t.value === tipo)?.label || tipo;
 
     // Linha extra da premiação (rascunho) quando aplicada
-    const premiacaoAtiva = (isPremiacaoDraft && offerApplied);
+  const premiacaoAtiva = (isPremiacaoEnabled && offerApplied);
     const premiacaoLine = premiacaoAtiva
-      ? `\n🎁 Premiação aplicada: 1ª parcela somente em ${deferredMonthLabel}`
+      ? `\n🎁 Premiação aplicada: 2ª parcela somente em ${deferredMonthLabel}`
       : "";
     const premiacaoRegras = premiacaoAtiva
-      ? `\n\n📜 Condição especial\n• Validade: durante a campanha de ${campaignLabel}\n• Regras: elegibilidade sujeita à análise; disponibilidade de grupos; não cumulativa`
+      ? `\n\n📜 Condição especial\n• Campanha válida durante o mês de ${campaignLabel}\n• Regras: elegibilidade sujeita à análise; disponibilidade de grupos; não cumulativa`
       : "";
 
     // Mensagem simplificada apenas com dados preenchidos e resumo exibido
@@ -226,6 +382,27 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
     `.trim();
 
     openWhatsAppWithMessage(message);
+
+    // Em modo estático, marcar última simulação como enviada via WhatsApp
+    if (isStaticSite) {
+      try {
+        const raw = localStorage.getItem('consortium-simulations') || '[]';
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > 0) {
+          const idx = arr.length - 1;
+          arr[idx].whatsappSent = true;
+          arr[idx].whatsappSentAt = new Date().toISOString();
+          localStorage.setItem('consortium-simulations', JSON.stringify(arr));
+        }
+      } catch (e) {
+        console.error('Falha ao marcar simulação como enviada no localStorage:', e);
+      }
+    } else if (simulationId != null) {
+      // Registrar envio do WhatsApp no backend quando possível
+      apiRequest('PATCH', `/api/consortium-simulations/${simulationId}/whatsapp`).catch((err) => {
+        console.error('Erro ao registrar envio do WhatsApp:', err);
+      });
+    }
   };
 
   // Se há resultado, mostra a tela de resultado
@@ -245,9 +422,28 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
             onClick={handleWhatsAppShare}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
-            {isPremiacaoDraft && offerApplied ? 'Enviar com premiação' : 'Enviar por WhatsApp'}
+                  {isPremiacaoEnabled && offerApplied ? 'Enviar com premiação' : 'Enviar por WhatsApp'}
           </Button>
         </div>
+
+        {/* Banner de Destaque da Premiação (sempre que ativa) */}
+              {isPremiacaoEnabled && (
+          <div className="rounded-2xl border border-green-200 bg-gradient-to-r from-green-50 via-green-100 to-green-50 p-5">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl" aria-hidden>🎁</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-green-800">Premiação ativa</p>
+                <p className="text-base text-green-900">
+                  {offerApplied ? (
+                    <>Condição aplicada nesta simulação. 2ª parcela somente em {deferredMonthLabel}.</>
+                  ) : (
+                    <>Você possui uma condição especial disponível. Gire a roleta para revelar e aplicar.</>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Resultado Simplificado */}
         <Card>
@@ -260,34 +456,34 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
           <CardContent>
             <div className="space-y-4">
               {/* Selo de Premiação aplicado (rascunho) */}
-              {isPremiacaoDraft && offerApplied && (
+              {isPremiacaoEnabled && offerApplied && (
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    🥳 Premiação aplicada: 1ª parcela somente em {deferredMonthLabel}
+                    🥳 Premiação aplicada: 2ª parcela somente em {deferredMonthLabel}
                   </Badge>
                 </div>
               )}
 
-              {/* Banner explicativo da premiação (rascunho) */}
-              {isPremiacaoDraft && offerApplied && (
+              {/* Banner explicativo da premiação */}
+              {isPremiacaoEnabled && offerApplied && (
                 <div className="p-5 rounded-xl border border-green-200 bg-green-50">
                   <div className="flex items-start gap-3">
                     <span className="text-2xl" aria-hidden>🎉</span>
                     <div>
                       <p className="text-base font-semibold text-green-800">Você ganhou uma condição especial</p>
-                      <p className="text-lg font-bold text-green-700 mt-1">1ª parcela somente em fevereiro</p>
+                      <p className="text-lg font-bold text-green-700 mt-1">2ª parcela somente em {deferredMonthLabel}</p>
                       <p className="text-sm text-green-800 mt-2">
                         A premiação foi aplicada à sua simulação. Ao enviar, nossa equipe identifica sua proposta com essa condição para seguir no atendimento.
                       </p>
                       <ul className="mt-3 text-sm text-green-900 list-disc list-inside space-y-1">
-                        <li>Válida nesta simulação em modo de testes</li>
-                        <li>Visível para você e para nossa equipe no envio</li>
+                        <li>Válida somente nesta simulação</li>
+                        <li>Visível para você e para nossa equipe através do envio</li>
                       </ul>
 
                       <div className="mt-4 pt-3 border-t border-green-200">
-                        <p className="text-sm font-semibold text-green-800">Validade e regras</p>
+                        <p className="text-sm font-semibold text-green-800">Validade e regras:</p>
                         <ul className="mt-2 text-sm text-green-900 list-disc list-inside space-y-1">
-                          <li>{`Campanha de ${campaignLabel}; válida durante o mês de ${campaignLabel}`}</li>
+                          <li>{`Campanha válida durante o mês de ${campaignLabel}`}</li>
                           <li>Elegibilidade sujeita à análise e disponibilidade de grupos</li>
                           <li>Não cumulativa com outras ofertas ou descontos</li>
                           <li>Pode variar conforme categoria e consórcio escolhida</li>
@@ -362,14 +558,14 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
               </div>
 
               {/* CTA para roleta (rascunho) */}
-              {isPremiacaoDraft && showOfferCTA && !showWheel && !offerApplied && (
+              {isPremiacaoEnabled && showOfferCTA && !showWheel && (
                 <div className="mt-4 p-6 bg-blue-50 rounded-xl border border-blue-200 text-center">
                   <p className="text-sm text-blue-800 mb-3">Descubra sua condição exclusiva</p>
                   <Button
                     className="mx-auto block px-6 py-3 bg-gradient-to-r from-firme-blue to-blue-600 text-white shadow-lg hover:shadow-xl animate-pulse"
                     onClick={() => setShowWheel(true)}
                   >
-                    Gire e receba uma oferta
+                    {offerApplied ? 'Girar roleta' : 'Gire e receba uma oferta'}
                   </Button>
                   <div className="mt-3">
                     <Button variant="outline" onClick={handleWhatsAppShare} className="mx-auto">
@@ -380,7 +576,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
               )}
 
               {/* Roleta (rascunho) */}
-              {isPremiacaoDraft && showWheel && !offerApplied && (
+              {isPremiacaoEnabled && showWheel && (
                 <div className="mt-8 flex flex-col items-center">
                   {/* Ponteiro */}
                   <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-red-500 mb-2" aria-hidden/>
@@ -423,7 +619,7 @@ Simulação gerada em ${new Date().toLocaleDateString('pt-BR')}
                   >
                     Girar roleta
                   </Button>
-                  <p className="text-xs text-gray-600 mt-2">Premiação garantida neste teste: 1ª parcela somente em {deferredMonthLabel}</p>
+                  <p className="text-xs text-gray-600 mt-2">Premiação garantida: 2ª parcela somente em {deferredMonthLabel}</p>
                 </div>
               )}
             </div>
