@@ -36,10 +36,21 @@ export default function SimulacaoUnificada() {
           });
           // Log auxiliar para inspeção em produção
           console.log('[Simulação] /api/config =>', data);
+        } else if (!cancelled) {
+          const envPrem = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
+          setPremiacaoStatus({
+            premiacaoEnabled: envPrem,
+            campaignLabel: 'dezembro'
+          });
         }
       })
       .catch((err) => {
         console.warn('[Simulação] Falha ao consultar /api/config', err);
+        const envPrem = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
+        setPremiacaoStatus({
+          premiacaoEnabled: envPrem,
+          campaignLabel: 'dezembro'
+        });
       });
     return () => {
         cancelled = true;
