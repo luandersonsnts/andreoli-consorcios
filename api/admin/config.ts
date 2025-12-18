@@ -55,11 +55,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hasPremiacao = typeof body.premiacaoEnabled === 'boolean';
     const hasLabel = typeof body.campaignLabel === 'string';
 
+    // Buscar valores atuais para compor atualização segura
+    const currentRes = await sql`SELECT premiacao_enabled, campaign_label FROM global_config WHERE id = 1`;
+    const current = currentRes.rows[0] || { premiacao_enabled: false, campaign_label: 'dezembro' };
+
+    const nextPremiacaoEnabled = hasPremiacao ? body.premiacaoEnabled! : current.premiacao_enabled;
+    const nextCampaignLabel = hasLabel ? body.campaignLabel! : current.campaign_label;
+
     const updated = await sql`
       UPDATE global_config
       SET
-        premiacao_enabled = ${hasPremiacao ? body.premiacaoEnabled! : sql`premiacao_enabled`},
-        campaign_label = ${hasLabel ? body.campaignLabel! : sql`campaign_label`},
+        premiacao_enabled = ${nextPremiacaoEnabled},
+        campaign_label = ${nextCampaignLabel},
         updated_at = NOW()
       WHERE id = 1
       RETURNING premiacao_enabled, campaign_label
