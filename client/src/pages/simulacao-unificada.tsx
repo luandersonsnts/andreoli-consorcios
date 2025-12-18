@@ -26,35 +26,52 @@ export default function SimulacaoUnificada() {
 
   useEffect(() => {
     let cancelled = false;
+
+    // Permitir override via parâmetro de URL também no cabeçalho:
+    const params = new URLSearchParams(window.location.search);
+    const premiacaoParam = params.get('premiacao')?.toLowerCase() || undefined;
+    const isPremiacaoEnabledParam =
+      premiacaoParam === 'on' || premiacaoParam === 'true'
+        ? true
+        : premiacaoParam === 'off' || premiacaoParam === 'false'
+          ? false
+          : undefined;
+
+    const envPrem = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
+
     fetch('/api/config')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!cancelled && data && typeof data.premiacaoEnabled !== 'undefined') {
-          setPremiacaoStatus({
-            premiacaoEnabled: Boolean(data.premiacaoEnabled),
-            campaignLabel: String(data.campaignLabel || 'dezembro').toLowerCase(),
-          });
+        if (cancelled) return;
+        const serverEnabled = data && typeof data.premiacaoEnabled !== 'undefined'
+          ? Boolean(data.premiacaoEnabled)
+          : undefined;
+        const enabled = (typeof isPremiacaoEnabledParam === 'boolean')
+          ? isPremiacaoEnabledParam
+          : (typeof serverEnabled === 'boolean')
+            ? serverEnabled
+            : envPrem;
+
+        setPremiacaoStatus({
+          premiacaoEnabled: enabled,
+          campaignLabel: String((data && data.campaignLabel) || 'dezembro').toLowerCase(),
+        });
+
+        if (data) {
           // Log auxiliar para inspeção em produção
           console.log('[Simulação] /api/config =>', data);
-        } else if (!cancelled) {
-          const envPrem = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
-          setPremiacaoStatus({
-            premiacaoEnabled: envPrem,
-            campaignLabel: 'dezembro'
-          });
         }
       })
       .catch((err) => {
+        if (cancelled) return;
         console.warn('[Simulação] Falha ao consultar /api/config', err);
-        const envPrem = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
+        const enabled = (typeof isPremiacaoEnabledParam === 'boolean') ? isPremiacaoEnabledParam : envPrem;
         setPremiacaoStatus({
-          premiacaoEnabled: envPrem,
+          premiacaoEnabled: enabled,
           campaignLabel: 'dezembro'
         });
       });
-    return () => {
-        cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
