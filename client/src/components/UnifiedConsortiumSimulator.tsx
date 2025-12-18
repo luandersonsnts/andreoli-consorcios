@@ -109,17 +109,36 @@ export function UnifiedConsortiumSimulator({ onSimulationComplete, preSelectedTi
     }
   }, [preSelectedTipo, setValue]);
 
-  // Controla exibição do CTA/roleta em modo rascunho após resultado
+  // Controla exibição da oferta: aplica automaticamente quando ativada (server/env/url)
   useEffect(() => {
-    if (resultado && isPremiacaoDraft) {
-      setShowOfferCTA(true);
-    } else {
+    const autoApply = isPremiacaoEnabledServer || premiacaoEnabledByUrl || premiacaoEnabledByEnv;
+
+    if (!resultado) {
       setShowOfferCTA(false);
       setShowWheel(false);
       setOfferApplied(false);
       setWheelSpinning(false);
+      return;
     }
-  }, [resultado, isPremiacaoDraft]);
+
+    if (!isPremiacaoDraft) {
+      setShowOfferCTA(false);
+      setShowWheel(false);
+      setOfferApplied(false);
+      setWheelSpinning(false);
+      return;
+    }
+
+    if (autoApply) {
+      // Com premiação ativa, aplicar automaticamente e ocultar roleta/CTA
+      setOfferApplied(true);
+      setShowOfferCTA(false);
+      setShowWheel(false);
+    } else {
+      // Caso contrário, manter fluxo com CTA/roleta
+      setShowOfferCTA(true);
+    }
+  }, [resultado, isPremiacaoDraft, isPremiacaoEnabledServer, premiacaoEnabledByUrl, premiacaoEnabledByEnv]);
 
   const onSubmit = async (data: SimulationFormData) => {
     setIsCalculating(true);
