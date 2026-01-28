@@ -468,7 +468,7 @@ Seguro de Vida (0,12% ao mês): ${formatMoney(calculation.encargos.seguroVida)}
 Seguro de Quebra (0,07% ao mês): ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=5574988384902&text=${encodeURIComponent(whatsappMessage)}`;
+                        const whatsappUrl = `https://api.whatsapp.com/send?phone=5574981213461&text=${encodeURIComponent(whatsappMessage)}`;
                         window.open(whatsappUrl, '_blank');
                       }}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"

@@ -1,7 +1,7 @@
 export const isStaticSite = import.meta.env.VITE_STATIC_SITE === 'true';
 
 export function openWhatsAppWithMessage(message: string) {
-  const phone = '5574988384902';
+  const phone = '5574981213461';
   const encodedMessage = encodeURIComponent(message);
   const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
   window.open(url, '_blank');

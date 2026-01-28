@@ -38,6 +38,14 @@ export default function SimulacaoUnificada() {
           : undefined;
 
     const envPrem = ((import.meta.env?.VITE_PREMIACAO_ENABLED ?? 'true') === 'true');
+    // Fallback local: refletir estado definido no painel admin mesmo sem API
+    let localCfg: { premiacaoEnabled?: boolean; campaignLabel?: string } | null = null;
+    try {
+      const raw = localStorage.getItem('global_config');
+      localCfg = raw ? JSON.parse(raw) : null;
+    } catch {
+      localCfg = null;
+    }
 
     fetch('/api/config')
       .then((r) => (r.ok ? r.json() : null))
@@ -46,15 +54,18 @@ export default function SimulacaoUnificada() {
         const serverEnabled = data && typeof data.premiacaoEnabled !== 'undefined'
           ? Boolean(data.premiacaoEnabled)
           : undefined;
+        // Nova ordem de precedência: URL > localStorage > servidor > env
         const enabled = (typeof isPremiacaoEnabledParam === 'boolean')
           ? isPremiacaoEnabledParam
-          : (typeof serverEnabled === 'boolean')
-            ? serverEnabled
-            : envPrem;
+          : (typeof localCfg?.premiacaoEnabled === 'boolean')
+            ? Boolean(localCfg!.premiacaoEnabled)
+            : (typeof serverEnabled === 'boolean')
+              ? serverEnabled
+              : envPrem;
 
         setPremiacaoStatus({
           premiacaoEnabled: enabled,
-          campaignLabel: String((data && data.campaignLabel) || 'dezembro').toLowerCase(),
+          campaignLabel: String((localCfg?.campaignLabel) || (data && data.campaignLabel) || 'dezembro').toLowerCase(),
         });
 
         if (data) {
@@ -65,10 +76,14 @@ export default function SimulacaoUnificada() {
       .catch((err) => {
         if (cancelled) return;
         console.warn('[Simulação] Falha ao consultar /api/config', err);
-        const enabled = (typeof isPremiacaoEnabledParam === 'boolean') ? isPremiacaoEnabledParam : envPrem;
+        const enabled = (typeof isPremiacaoEnabledParam === 'boolean')
+          ? isPremiacaoEnabledParam
+          : (typeof localCfg?.premiacaoEnabled === 'boolean')
+            ? Boolean(localCfg!.premiacaoEnabled)
+            : envPrem;
         setPremiacaoStatus({
           premiacaoEnabled: enabled,
-          campaignLabel: 'dezembro'
+          campaignLabel: String(localCfg?.campaignLabel || 'dezembro').toLowerCase()
         });
       });
     return () => { cancelled = true; };

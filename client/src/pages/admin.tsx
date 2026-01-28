@@ -88,6 +88,30 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
   const [adminConfig, setAdminConfig] = useState<{ premiacaoEnabled: boolean; campaignLabel: string } | null>(null);
   const [campaignLabelUi, setCampaignLabelUi] = useState<string>('dezembro');
 
+  // Helpers de persistência local para manter o estado mesmo sem API
+  const readLocalAdminConfig = (): { premiacaoEnabled: boolean; campaignLabel: string } | null => {
+    try {
+      const raw = localStorage.getItem('global_config');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.premiacaoEnabled === 'boolean') {
+        return {
+          premiacaoEnabled: Boolean(parsed.premiacaoEnabled),
+          campaignLabel: String(parsed.campaignLabel ?? 'dezembro').toLowerCase(),
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeLocalAdminConfig = (cfg: { premiacaoEnabled: boolean; campaignLabel: string }) => {
+    try {
+      localStorage.setItem('global_config', JSON.stringify(cfg));
+    } catch {}
+  };
+
   // Função para mostrar informação sobre currículo
   const showResumeInfo = (filename: string, candidateName: string) => {
     alert(`Currículo salvo localmente: ${filename}\nCandidato: ${candidateName}\n\nEm um ambiente de produção, o arquivo seria baixado do servidor.`);
@@ -135,13 +159,27 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       const response = await apiRequest("GET", "/api/admin/config");
       return response.json();
     },
-    enabled: !isStaticSite,
+    // Evita consulta quando não há token ou quando é site estático
+    enabled: !isStaticSite && Boolean(localStorage.getItem('admin_token')),
+    retry: false,
   });
 
   useEffect(() => {
+    // 1) Prioriza configuração local, se existir
+    const localCfg = readLocalAdminConfig();
+    if (localCfg) {
+      setAdminConfig(localCfg);
+      setCampaignLabelUi(String(localCfg.campaignLabel).toLowerCase());
+    }
+
+    // 2) Se veio do servidor, só atualiza se não houver local ou se servidor estiver habilitando (true)
     if (fetchedConfig) {
-      setAdminConfig(fetchedConfig as { premiacaoEnabled: boolean; campaignLabel: string });
-      const label = (fetchedConfig as any).campaignLabel ?? 'dezembro';
+      const serverCfg = fetchedConfig as { premiacaoEnabled: boolean; campaignLabel: string };
+      const shouldOverride = !localCfg || serverCfg.premiacaoEnabled === true;
+      const nextCfg = shouldOverride ? serverCfg : localCfg;
+      setAdminConfig(nextCfg);
+      writeLocalAdminConfig(nextCfg);
+      const label = (nextCfg as any).campaignLabel ?? 'dezembro';
       setCampaignLabelUi(String(label).toLowerCase());
     }
   }, [fetchedConfig]);
@@ -160,6 +198,8 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
         };
         // Sincroniza seletor de mês
         setCampaignLabelUi(String(next.campaignLabel).toLowerCase());
+        // Persiste imediatamente para sobreviver a recarregamentos
+        writeLocalAdminConfig(next);
         return next;
       });
     },
@@ -167,10 +207,17 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       const cfg = data as { premiacaoEnabled: boolean; campaignLabel: string };
       setAdminConfig(cfg);
       setCampaignLabelUi(String(cfg.campaignLabel).toLowerCase());
+      writeLocalAdminConfig(cfg);
     },
     onError: (_error, _variables, _context) => {
       // Em caso de erro, re-carrega do servidor para manter consistência
       console.error('Falha ao atualizar configuração global');
+      // Mantém estado local para não perder a configuração após reload
+      const localCfg = readLocalAdminConfig();
+      if (localCfg) {
+        setAdminConfig(localCfg);
+        setCampaignLabelUi(String(localCfg.campaignLabel).toLowerCase());
+      }
     },
     onSettled: () => {
       // Garante estado sincronizado com backend
