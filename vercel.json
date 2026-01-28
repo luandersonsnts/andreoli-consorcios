@@ -21,7 +21,8 @@
   },
   "env": {
     "VITE_STATIC_SITE": "false",
-    "VITE_PREMIACAO_ENABLED": "true"
+    "VITE_PREMIACAO_ENABLED": "true",
+    "VITE_WHATSAPP_PHONE": "5574981213461"
   },
   "redirects": [],
   "routes": [
