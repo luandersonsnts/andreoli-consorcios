@@ -1,3 +1,5 @@
+import { whatsappPhone, formatNationalPhoneE164ToBR } from "../lib/runtimeEnv";
+
 export default function Footer() {
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
