@@ -15,6 +15,9 @@
   "installCommand": "npm install",
   "devCommand": "npm run dev:client",
   "framework": "vite",
+  "env": {
+    "VITE_WHATSAPP_PHONE": "5574981213461"
+  },
   "routes": [
     {
       "src": "/(.*)",
