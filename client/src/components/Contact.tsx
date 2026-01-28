@@ -1,5 +1,6 @@
 import { Phone, Mail, MapPin } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
+import { whatsappPhone, formatNationalPhoneE164ToBR } from "../lib/runtimeEnv";
 
 export default function Contact() {
   return (
@@ -26,21 +27,21 @@ export default function Contact() {
             
             <div className="space-y-4">
               <a 
-                href="https://api.whatsapp.com/send?phone=5574981213461&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20conquistar%20meus%20objetivos!" 
+                href={`https://api.whatsapp.com/send?phone=${whatsappPhone}&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20conquistar%20meus%20objetivos!`} 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >
                 <SiWhatsapp className="text-green-500 text-xl mr-3" />
-(74) 98121-3461
+{formatNationalPhoneE164ToBR(whatsappPhone)}
               </a>
               
               <a 
-                href="tel:+5574981213461" 
+                href={`tel:+${whatsappPhone}`} 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-phone"
               >
                 <Phone className="text-firme-blue text-xl mr-3" />
-(74) 98121-3461
+{formatNationalPhoneE164ToBR(whatsappPhone)}
               </a>
               
               <a 
