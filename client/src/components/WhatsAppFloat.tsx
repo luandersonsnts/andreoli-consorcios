@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { SiWhatsapp } from "react-icons/si";
-import { openWhatsAppWithMessage } from "../lib/runtimeEnv";
+import { getWhatsAppUrlWithMessage } from "../lib/runtimeEnv";
 import { ArrowUp } from "lucide-react";
 
 export default function WhatsAppFloat() {
@@ -24,15 +24,17 @@ export default function WhatsAppFloat() {
 
   return (
     <>
-      {/* WhatsApp Float Button */}
-      <button
-        onClick={() => openWhatsAppWithMessage("Olá! Gostaria de mais informações sobre consórcios para conquistar meus objetivos!")}
+      {/* WhatsApp Float Link */}
+      <a
+        href={getWhatsAppUrlWithMessage("Olá! Gostaria de mais informações sobre consórcios para conquistar meus objetivos!")}
+        target="_blank"
+        rel="noopener noreferrer"
         className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors z-50"
         data-testid="whatsapp-float"
         aria-label="Abrir WhatsApp"
       >
         <SiWhatsapp className="text-2xl" />
-      </button>
+      </a>
 
       {/* Scroll to top button */}
       {showScrollTop && (

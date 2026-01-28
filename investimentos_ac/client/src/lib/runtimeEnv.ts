@@ -1,12 +1,16 @@
 export const isStaticSite = import.meta.env.VITE_STATIC_SITE === 'true';
 
-export const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || '5574981213461';
+export const whatsappPhone = '5574981213461';
 
 export function openWhatsAppWithMessage(message: string) {
+  const url = getWhatsAppUrlWithMessage(message);
+  window.open(url, '_blank');
+}
+
+export function getWhatsAppUrlWithMessage(message: string) {
   const phone = whatsappPhone;
   const encodedMessage = encodeURIComponent(message);
-  const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
-  window.open(url, '_blank');
+  return `https://wa.me/${phone}?text=${encodedMessage}`;
 }
 
 export function formatNationalPhoneE164ToBR(phone: string) {
