@@ -1,6 +1,6 @@
 export const isStaticSite = import.meta.env.VITE_STATIC_SITE === 'true';
 
-export const whatsappPhone = '5574981213461';
+export const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || '5574981213461';
 
 export function openWhatsAppWithMessage(message: string) {
   const url = getWhatsAppUrlWithMessage(message);
