@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Calculator, TrendingUp, PiggyBank, ArrowLeft } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { isStaticSite, openWhatsAppWithMessage, whatsappPhone } from '@/lib/runtimeEnv';
+import { isStaticSite, openWhatsAppWithMessage, getWhatsAppUrlWithMessage } from '@/lib/runtimeEnv';
 import { calculateConsortium, formatConsortiumForWhatsApp } from '@/lib/consortiumCalculator';
 import { ConsortiumCategory, ConsortiumGroup, getGroupById } from '@shared/consortiumTypes';
 import ConsortiumGroupSelector from './ConsortiumGroupSelector';
@@ -557,7 +557,7 @@ Encargos informativos:
 - Seguro Quebra (0,07%/mês): ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodeURIComponent(whatsappMessage)}`;
+                        const whatsappUrl = getWhatsAppUrlWithMessage(whatsappMessage);
                         window.open(whatsappUrl, '_blank');
                         
                         // Registrar envio do WhatsApp se não for site estático e houver simulationId

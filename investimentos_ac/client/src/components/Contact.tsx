@@ -1,6 +1,6 @@
 import { Phone, Mail, MapPin } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
-import { whatsappPhone, formatNationalPhoneE164ToBR } from "../lib/runtimeEnv";
+import { whatsappPhone, formatNationalPhoneE164ToBR, getWhatsAppUrlWithMessage } from "../lib/runtimeEnv";
 
 export default function Contact() {
   return (
@@ -24,7 +24,7 @@ export default function Contact() {
             
             <div className="space-y-4">
               <a 
-                href={`https://api.whatsapp.com/send?phone=${whatsappPhone}&text=Olá,%20tenho%20interesse%20em%20conhecer%20as%20soluções%20da%20ANDREOLI%20CONSÓRCIOS%20para%20realizar%20meu%20sonho!`} 
+                href={getWhatsAppUrlWithMessage("Olá, tenho interesse em conhecer as soluções da ANDREOLI CONSÓRCIOS para realizar meu sonho!")} 
                 className="flex items-center text-firme-gray hover:text-firme-blue transition-colors"
                 data-testid="link-whatsapp"
               >

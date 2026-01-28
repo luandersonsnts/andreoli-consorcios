@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, TrendingUp, PiggyBank } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { whatsappPhone } from "@/lib/runtimeEnv";
+import { getWhatsAppUrlWithMessage } from "@/lib/runtimeEnv";
 
 // Schema para validação do formulário
 const consortiumFormSchema = z.object({
@@ -469,8 +469,8 @@ Seguro de Vida (0,12% ao mês): ${formatMoney(calculation.encargos.seguroVida)}
 Seguro de Quebra (0,07% ao mês): ${formatMoney(calculation.encargos.seguroQuebra)}
 
 Por favor, me ajudem com os próximos passos!`;
-                        const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodeURIComponent(whatsappMessage)}`;
-                        window.open(whatsappUrl, '_blank');
+        const whatsappUrl = getWhatsAppUrlWithMessage(whatsappMessage);
+        window.open(whatsappUrl, '_blank');
                       }}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"
                       data-testid="button-hire-consortium"
