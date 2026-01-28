@@ -253,7 +253,7 @@ function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void })
       console.log("🔍 DEBUG: Quantidade de candidaturas:", data.length);
       return data;
     },
-    enabled: true // FORÇANDO EXECUÇÃO PARA TESTE
+    enabled: !isStaticSite && !!user
   });
 
   // Estados para dados do localStorage (fallback para modo estático)

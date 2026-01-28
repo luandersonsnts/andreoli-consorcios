@@ -28,7 +28,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const token = jwt.sign({ sub: user.id, username: user.username }, secret, { expiresIn: '7d' });
-    res.status(200).json({ token });
+    res.status(200).json({ 
+      token,
+      user: { id: user.id, username: user.username }
+    });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
