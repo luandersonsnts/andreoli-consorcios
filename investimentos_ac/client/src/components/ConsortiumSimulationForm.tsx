@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, TrendingUp, PiggyBank } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { whatsappPhone } from "@/lib/runtimeEnv";
 
 // Schema para validação do formulário
 const consortiumFormSchema = z.object({

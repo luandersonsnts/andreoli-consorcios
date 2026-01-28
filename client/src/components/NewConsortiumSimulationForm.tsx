@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calculator, TrendingUp, PiggyBank, ArrowLeft } from 'lucide-react';
 import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
-import { isStaticSite, openWhatsAppWithMessage } from '@/lib/runtimeEnv';
+import { isStaticSite, openWhatsAppWithMessage, whatsappPhone } from '@/lib/runtimeEnv';
 import { calculateConsortium, formatConsortiumForWhatsApp } from '@/lib/consortiumCalculator';
 import { ConsortiumCategory, ConsortiumGroup, getGroupById } from '@shared/consortiumTypes';
 import ConsortiumGroupSelector from './ConsortiumGroupSelector';
